@@ -143,6 +143,101 @@ $ builtin functions _ls
 
 ### Tag
 Tag用来标识补全的对象是什么.
+
+ - zsh相关
+     - accounts: host
+     - my-accounts
+     - other-accounts
+     - urls
+     - all-expansions: 包含全部补全的字符串
+     - arguments: 命令的参数
+     - parameters: 参数名
+     - options: 命令的选项
+     - arrays: 数组
+     - association-keys: 关联数组的key
+     - indexes: 数组的下标
+     - functions: 函数
+     - history-words: 历史
+     - jobs: 
+     - modules: zsh模块
+     - packages
+     - original: 矫正器使用, 表示被纠正内容的原始值
+     - path-directories:  cdpath中的目录
+     - named-directories:
+     - values: 列表里的某个值
+     - strings
+     - expansions: _expand用
+     - styles: zstyle
+     - widgets: zsh widgets
+     - zsh-options: zsh options
+     - builtins: 内置命令
+     - characters: 
+     - commands: 外部命令, 或者外部命令的子命令
+     - contexts: zstyle专用
+     - corrections: 可能的修正
+     - default
+     - descriptions: 表述信息的格式化定义
+     - keymaps: zsh快捷键
+     
+ - 操作系统相关
+     - devices: 设备名
+     - all-files: 全部文件
+     - files: 文件
+     - other-files:
+     - globbed-files
+     - suffixes: 文件后缀名
+     - file-descriptors: 文件描述符
+     - directories: 目录
+     - local-directories
+     - directory-stack: 目录栈
+     - fstypes: 文件系统类型
+     - users: 用户名
+     - groups: 用户组
+     - hosts: 
+     - domains: 域名, 如ping命令之后
+     - interfaces: 网络接口
+     - libraries: 库
+     - limits: 
+     - manuals: man手册
+     - printers: 打印队列
+     - signals: 信号名
+     - processes: pid
+     - processes-names: pname
+     - time-zones: 时区
+     - ports: 端口号
+     - paths: 
+ 
+ - X相关
+     - displays: XWndows
+     - colormapids: XWindows的colormap中的color ID
+     - cursors: X系统的光标名
+     - colors: 颜色名
+     - extensions: XWindows的扩展
+     - fonts: XWindows的字体
+     - keysyms: XWindows的keysyms
+     - modifiers: 
+     - visuals
+     - windows
+ 
+ - 其他
+     - bookmarks:
+     - email-plugin
+     - mailboxes: 邮件目录
+     - messages: 
+     - warnings: 警告消息的格式
+     - newsgroups
+     - names
+     - nicknames
+     - targets: Makefile的target
+     - maps
+     - pods: perl pods
+     - prefixes
+     - sequences
+     - sessions: zFTP sessions
+     - types
+     - variant
+     - tags
+
  
 ### Style
 Style用说明以什么样的方式完成补全.
@@ -156,7 +251,18 @@ Style用说明以什么样的方式完成补全.
  * menu-expand-or-complete
  * reverse-menu-complete
 
-### 加载补全系统
+### 补全插件(Completion Widget)
+
+> zle -C complete expand-or-complete completer
+
+ * complete-word
+ * expand-or-complete
+ * expand-or-complete-prefix
+ * menu-complete
+ * menu-expand-or-complete
+ * reverse-menu-complete
+ * list-choices
+ * delete-char-or-list
 
 ### 配置补全系统
 ### 系统自带的补全函数在哪?
