@@ -5,4 +5,5 @@ hexo g && {
     git commit -am "Commit From IDEA: $(date '+%Y-%m-%d %H:%M')"
     git pull
     git push
+    echo "============[ OVER ]=============="
 }
