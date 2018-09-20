@@ -6,14 +6,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="HandheldFriendly" content="True">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <meta property="og:type" content="article">
-<meta property="og:title" content="zsh_completion_system">
+    <meta name="description" content="Completion Widget 补全系统 Context 如何查看Context? Context的结构 completer complete all_matches approximate   match Special Contexts 使用用_comps查找补全函数   Tag Style 加载补全系统 配置补全系统 系统自带的补全函数在哪?   参考      Completi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ZSH补全系统">
 <meta property="og:url" content="http://yoursite.com/2018/09/19/zsh-completion-system/index.html">
 <meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Completion Widget 补全系统 Context 如何查看Context? Context的结构 completer complete all_matches approximate   match Special Contexts 使用用_comps查找补全函数   Tag Style 加载补全系统 配置补全系统 系统自带的补全函数在哪?   参考      Completi">
 <meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2018-09-19T03:43:21.000Z">
+<meta property="og:updated_time" content="2018-09-20T03:26:50.451Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="zsh_completion_system">
+<meta name="twitter:title" content="ZSH补全系统">
+<meta name="twitter:description" content="Completion Widget 补全系统 Context 如何查看Context? Context的结构 completer complete all_matches approximate   match Special Contexts 使用用_comps查找补全函数   Tag Style 加载补全系统 配置补全系统 系统自带的补全函数在哪?   参考      Completi">
     
     
         
@@ -33,7 +36,7 @@
         
     
     <!-- title -->
-    <title>zsh_completion_system</title>
+    <title>ZSH补全系统</title>
     <!-- styles -->
     <link rel="stylesheet" href="/css/style.css">
     <!-- persian styles -->
@@ -84,20 +87,20 @@
     <div id="share" style="display: none">
       <ul>
   <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/09/19/zsh-completion-system/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/09/19/zsh-completion-system/&text=zsh_completion_system"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/09/19/zsh-completion-system/&is_video=false&description=zsh_completion_system"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=zsh_completion_system&body=Check out this article: http://yoursite.com/2018/09/19/zsh-completion-system/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/09/19/zsh-completion-system/&name=zsh_completion_system&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/09/19/zsh-completion-system/&text=ZSH补全系统"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/09/19/zsh-completion-system/&is_video=false&description=ZSH补全系统"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=ZSH补全系统&body=Check out this article: http://yoursite.com/2018/09/19/zsh-completion-system/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/09/19/zsh-completion-system/&name=ZSH补全系统&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
     <div id="toc">
-      
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Completion Widget</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">补全系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.</span> <span class="toc-text">Context</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.1.</span> <span class="toc-text">如何查看Context?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.2.</span> <span class="toc-text">Context的结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.</span> <span class="toc-text">completer</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.1.</span> <span class="toc-text">complete</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.2.</span> <span class="toc-text">all_matches</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.3.</span> <span class="toc-text">approximate</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.4.</span> <span class="toc-text">match</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.5.</span> <span class="toc-text">Special Contexts</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.6.</span> <span class="toc-text">使用用_comps查找补全函数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.2.</span> <span class="toc-text">Tag</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.3.</span> <span class="toc-text">Style</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.4.</span> <span class="toc-text">加载补全系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.</span> <span class="toc-text">配置补全系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.6.</span> <span class="toc-text">系统自带的补全函数在哪?</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">参考</span></a>
     </div>
   </span>
 </div>
@@ -109,7 +112,7 @@
   <header>
     
     <h1 class="posttitle" itemprop="name headline">
-        zsh_completion_system
+        ZSH补全系统
     </h1>
 
 
@@ -131,7 +134,120 @@
   
 
   <div class="content" itemprop="articleBody">
-    
+    <div class="toc">
+
+<!-- toc -->
+<ul>
+<li><a href="#completion-widget">Completion Widget</a></li>
+<li><a href="#bu-quan-xi-tong">补全系统</a><ul>
+<li><a href="#context">Context</a><ul>
+<li><a href="#ru-he-cha-kan-context">如何查看Context?</a></li>
+<li><a href="#context-de-jie-gou">Context的结构</a></li>
+<li><a href="#completer">completer</a><ul>
+<li><a href="#complete">complete</a></li>
+<li><a href="#all-matches">all_matches</a></li>
+<li><a href="#approximate">approximate</a></li>
+</ul>
+</li>
+<li><a href="#match">match</a></li>
+<li><a href="#special-contexts">Special Contexts</a></li>
+<li><a href="#shi-yong-yong-comps-cha-zhao-bu-quan-han-shu">使用用_comps查找补全函数</a></li>
+</ul>
+</li>
+<li><a href="#tag">Tag</a></li>
+<li><a href="#style">Style</a></li>
+<li><a href="#jia-zai-bu-quan-xi-tong">加载补全系统</a></li>
+<li><a href="#pei-zhi-bu-quan-xi-tong">配置补全系统</a></li>
+<li><a href="#xi-tong-zi-dai-de-bu-quan-han-shu-zai-na">系统自带的补全函数在哪?</a></li>
+</ul>
+<ul>
+<li><a href="#can-kao">参考</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<p></div></p>
+<h2><span id="completion-widget">Completion Widget</span></h2><h2><span id="bu-quan-xi-tong">补全系统</span></h2><h3><span id="context">Context</span></h3><p>Context是一个字符串, 用来标识用户输入光标正在什么位置. 所有的补全动作都是跟上下文相关的. 这个是补全系统的核心概念.</p>
+<h4><span id="ru-he-cha-kan-context">如何查看Context?</span></h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">_complete_help这个函数可以帮助我们打印Context. 这个函数其实是一个ZleWidget, 你直接像正常命令一样输入它是不会得到</span><br><span class="line">有用的结果的. 使用ZleWidget有两种方法.</span><br><span class="line"> 1. ALT+x 然后输入ZleWidget的名字</span><br><span class="line"> 2. 将ZleWidget绑定到一个快捷键上, 通过快捷键调用</span><br><span class="line"> </span><br><span class="line">默认_complete_help会绑定到CTRL-x h这个快捷键上, 你也可以使用bindkey来查看一下快捷键设置.</span><br><span class="line"></span><br><span class="line">$ bindkey | grep _complete_help</span><br><span class="line">&quot;^Xh&quot; _complete_help</span><br><span class="line"></span><br><span class="line">^就是CTRL, 这个意思就是你要先按下CTRL-x, 然后再按下h</span><br><span class="line">``` </span><br><span class="line"></span><br><span class="line"></span><br><span class="line">``` </span><br><span class="line"># 先输入ls空格, 然后按CTRL-x h</span><br><span class="line">$ ls  </span><br><span class="line">tags in context :completion::complete:ls::</span><br><span class="line">    argument-rest options  (_arguments _ls)</span><br><span class="line">tags in context :completion::complete:ls:argument-rest:</span><br><span class="line">    globbed-files  (_files _arguments _ls)</span><br></pre></td></tr></table></figure>
+<p>这一串字符串就是输入ls后的Context<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">context :completion::complete:ls::</span><br><span class="line">context :completion::complete:ls:argument-rest:</span><br></pre></td></tr></table></figure></p>
+<h4><span id="context-de-jie-gou">Context的结构</span></h4><blockquote>
+<p>:completion:function:completer:[command|special_context]:argument:tag:</p>
+<ul>
+<li>completion</li>
+<li>function</li>
+<li>completer</li>
+<li>command 或 special_context</li>
+<li>argument</li>
+<li>tag</li>
+</ul>
+</blockquote>
+<h4><span id="completer">completer</span></h4><p>每当系统需要在当前上下文处理补全的时候, 都会调用_main_complete, _main_complete会找到合适的completer处理这次补全.<br>可以指定多个completer依次处理, 直到完成补全或者全部失败.</p>
+<ul>
+<li>每个completer对应一个函数, 在completer名字前面加上下划线就是函数的名字</li>
+<li>一个上下文之下可以指定多个completer, 按照顺序依次调用completer函数, 若返回0则表示补全完成.否则继续调用后面的completer</li>
+<li>可以使用zstyle指定在什么样的上下文之下使用哪些completer</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># 对所有的补全使用complete和correct两种补全</span><br><span class="line">$ zstyle &apos;:completion:*&apos; completer _complete _correct</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># 你也可以实现一个补全函数, 下面这个函数啥正事儿都没干, 但可以助你理解completer如何工作. </span><br><span class="line">$ function completer_spy() &#123; print $argv; return -1; &#125;</span><br><span class="line">$ zstyle &apos;:completion:*&apos; completer completer_spy _complete _correct</span><br></pre></td></tr></table></figure>
+<p>completer有一下几种:</p>
+<h5><span id="complete">complete</span></h5><p>这个为SpecialContext提供补全, 提供整个系统最基本的补全功能.</p>
+<h5><span id="all-matches">all_matches</span></h5><p>这个一般作为第一个completer, 可以将所有的补全结果拼成一个字符串. </p>
+<h5><span id="approximate">approximate</span></h5><p>通常配置在complete后面, 允许补全系统出错的时候进行一定数量的尝试, 你可以在context中看到<br>approximate-1这样的状态, 就表示approximate在尝试一次修正.</p>
+<p>这个补全的代价是非常高的, 但是可以通过max-error限制尝试的次数:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ zstyle &apos;:completion:*:approximate:*&apos; max-errors 1 numeric</span><br></pre></td></tr></table></figure></p>
+<h4><span id="match">match</span></h4><p>通常配置在complete后面, </p>
+<ul>
+<li>canonical_paths</li>
+<li>cmdambivalent</li>
+<li>cmdstring</li>
+<li>correct</li>
+<li>expand</li>
+<li>expand_alias</li>
+<li>extensions</li>
+<li>external_pwds</li>
+<li>history</li>
+<li>ignored</li>
+<li><p>list</p>
+</li>
+<li><p>menu</p>
+</li>
+<li>oldlist</li>
+<li>precommand</li>
+<li>prefix</li>
+<li>user_expand</li>
+</ul>
+<h4><span id="special-contexts">Special Contexts</span></h4><ul>
+<li>-array-value- : The right hand side of an array-assignment (‘name=(…)’)</li>
+<li>-brace-parameter- :The name of a parameter expansion within braces (‘${…}’)</li>
+<li>-assign-parameter- :The name of a parameter in an assignment, i.e. on the left hand side of an ‘=’</li>
+<li>-command- : A word in command position</li>
+<li>-condition- : A word inside a condition (‘[[…]]’)</li>
+<li>-default- :Any word for which no other completion is defined</li>
+<li>-equal- : A word beginning with an equals sign</li>
+<li>-first- :This is tried before any other completion function. The function called may set the _compskip parameter to one of various values: all: no further completion is attempted; a string containing the substring patterns: no pattern completion functions will be called; a string containing default: the function for the ‘-default-’ context will not be called, but functions defined for commands will be.</li>
+<li>-math- : Inside mathematical contexts, such as ‘((…))’</li>
+<li>-parameter- : The name of a parameter expansion (‘$…’)</li>
+<li>-redirect- : The word after a redirection operator.</li>
+<li>-subscript- : The contents of a parameter subscript.</li>
+<li>-tilde- : 输入~之后</li>
+<li>-value- : name=value之后</li>
+</ul>
+<h4><span id="shi-yong-yong-comps-cha-zhao-bu-quan-han-shu">使用用_comps查找补全函数</span></h4><p>当我们输入一条命令的时候, 补全系统会根据当前的上下文去调用指定的补全函数. 那么怎么查看呢?</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"># 查看ls的补全函数</span><br><span class="line">$ print $_comps[ls]</span><br><span class="line">_ls</span><br><span class="line"></span><br><span class="line"># 想看看这个补全函数的源码?</span><br><span class="line">$ builtin functions _ls</span><br></pre></td></tr></table></figure>
+<h3><span id="tag">Tag</span></h3><p>Tag用来标识补全的对象是什么.</p>
+<h3><span id="style">Style</span></h3><p>Style用说明以什么样的方式完成补全.</p>
+<ul>
+<li>complete-word</li>
+<li>delete-char-or-list</li>
+<li>expand-or-complete</li>
+<li>expand-or-complete-prefix</li>
+<li>list-choices</li>
+<li>menu-complete</li>
+<li>menu-expand-or-complete</li>
+<li>reverse-menu-complete</li>
+</ul>
+<h3><span id="jia-zai-bu-quan-xi-tong">加载补全系统</span></h3><h3><span id="pei-zhi-bu-quan-xi-tong">配置补全系统</span></h3><h3><span id="xi-tong-zi-dai-de-bu-quan-han-shu-zai-na">系统自带的补全函数在哪?</span></h3><h1><span id="can-kao">参考</span></h1><ul>
+<li><a href="http://zsh.sourceforge.net/Doc/Release/Completion-System.html" target="_blank" rel="noopener">http://zsh.sourceforge.net/Doc/Release/Completion-System.html</a></li>
+</ul>
+
   </div>
 </article>
 
@@ -157,21 +273,21 @@
     </div>
 
     <div id="toc-footer" style="display: none">
-      
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Completion Widget</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">补全系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.</span> <span class="toc-text">Context</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.1.</span> <span class="toc-text">如何查看Context?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.2.</span> <span class="toc-text">Context的结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.</span> <span class="toc-text">completer</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.1.</span> <span class="toc-text">complete</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.2.</span> <span class="toc-text">all_matches</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.3.</span> <span class="toc-text">approximate</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.4.</span> <span class="toc-text">match</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.5.</span> <span class="toc-text">Special Contexts</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.6.</span> <span class="toc-text">使用用_comps查找补全函数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.2.</span> <span class="toc-text">Tag</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.3.</span> <span class="toc-text">Style</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.4.</span> <span class="toc-text">加载补全系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.</span> <span class="toc-text">配置补全系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.6.</span> <span class="toc-text">系统自带的补全函数在哪?</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">参考</span></a>
     </div>
 
     <div id="share-footer" style="display: none">
       <ul>
   <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/09/19/zsh-completion-system/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/09/19/zsh-completion-system/&text=zsh_completion_system"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/09/19/zsh-completion-system/&is_video=false&description=zsh_completion_system"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=zsh_completion_system&body=Check out this article: http://yoursite.com/2018/09/19/zsh-completion-system/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=zsh_completion_system"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/09/19/zsh-completion-system/&name=zsh_completion_system&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/09/19/zsh-completion-system/&text=ZSH补全系统"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/09/19/zsh-completion-system/&is_video=false&description=ZSH补全系统"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=ZSH补全系统&body=Check out this article: http://yoursite.com/2018/09/19/zsh-completion-system/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/09/19/zsh-completion-system/&title=ZSH补全系统"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/09/19/zsh-completion-system/&name=ZSH补全系统&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
