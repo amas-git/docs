@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- hexo-inject:begin --><!-- hexo-inject:end --><!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="TerminalTerminal EmulatorShellANSI escape code有时候我们不仅仅需要在终端上输入一些文字, 还有需要控制终端干些别的事儿,比如:  改变光标的位置 改变文字的颜色  12EscapeCode = Escape + CodeEscape     = Character 27 = 033 = 0x1b = ^[ = \e 是时候使用转意码大法了:1ESC =">
+<meta property="og:type" content="article">
+<meta property="og:title" content="终端和终端模拟器">
+<meta property="og:url" content="http://yoursite.com/2018/09/12/cli-all-in-one/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="TerminalTerminal EmulatorShellANSI escape code有时候我们不仅仅需要在终端上输入一些文字, 还有需要控制终端干些别的事儿,比如:  改变光标的位置 改变文字的颜色  12EscapeCode = Escape + CodeEscape     = Character 27 = 033 = 0x1b = ^[ = \e 是时候使用转意码大法了:1ESC =">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-09-17T06:46:43.707Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="终端和终端模拟器">
+<meta name="twitter:description" content="TerminalTerminal EmulatorShellANSI escape code有时候我们不仅仅需要在终端上输入一些文字, 还有需要控制终端干些别的事儿,比如:  改变光标的位置 改变文字的颜色  12EscapeCode = Escape + CodeEscape     = Character 27 = 033 = 0x1b = ^[ = \e 是时候使用转意码大法了:1ESC =">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>终端和终端模拟器</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- persian styles -->
+    
+      <link rel="stylesheet" href="/css/rtl.css">
+    
+    <!-- rss --><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+    
+    
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Inici</a></li>
+         
+          <li><a href="/about/">Qui som</a></li>
+         
+          <li><a href="/archives/">Articles</a></li>
+         
+          <li><a href="/projects_url">Projectes</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2018/09/19/zsh-completion-system/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2018/08/18/etc-adventures-in-logicworld/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Post Anterior</span>
+      <span id="i-next" class="info" style="display:none;">Post Següent</span>
+      <span id="i-top" class="info" style="display:none;">Adalt</span>
+      <span id="i-share" class="info" style="display:none;">Compartir Post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/09/12/cli-all-in-one/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/09/12/cli-all-in-one/&text=终端和终端模拟器"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/09/12/cli-all-in-one/&is_video=false&description=终端和终端模拟器"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=终端和终端模拟器&body=Check out this article: http://yoursite.com/2018/09/12/cli-all-in-one/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/09/12/cli-all-in-one/&name=终端和终端模拟器&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Terminal</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">Terminal Emulator</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">Shell</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">4.</span> <span class="toc-text">ANSI escape code</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">清空屏幕</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">“\e[0m” : 清楚文字显示属性</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Vendor-specific escape sequences</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">参考</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        终端和终端模拟器
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Hexo</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2018-09-12T09:23:08.000Z" itemprop="datePublished">2018-09-12</time>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h2><span id="terminal">Terminal</span></h2><h2><span id="terminal-emulator">Terminal Emulator</span></h2><h2><span id="shell">Shell</span></h2><h2><span id="ansi-escape-code">ANSI escape code</span></h2><p>有时候我们不仅仅需要在终端上输入一些文字, 还有需要控制终端干些别的事儿,比如:</p>
+<ul>
+<li>改变光标的位置</li>
+<li>改变文字的颜色</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">EscapeCode = Escape + Code</span><br><span class="line">Escape     = Character 27 = 033 = 0x1b = ^[ = \e</span><br></pre></td></tr></table></figure>
+<p>是时候使用转意码大法了:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ESC = ^[</span><br></pre></td></tr></table></figure></p>
+<p>当终端读取到这个固定前缀的字符的时候,那么它就意识到后面的是发送给它的命令. 这个想法诞生于1970年.</p>
+<p>我们来看看一个寻常无比的操作: </p>
+<ol>
+<li>在终端上按下右键移动一个字符</li>
+<li>实际上, 终端接受到了一串字符, 在我的电脑上它大概是<strong>^[[C</strong></li>
+<li>我们来捕捉一下,输入cat,回车,然后按下方向键下.</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ cat</span><br><span class="line">^[[C</span><br><span class="line">``` </span><br><span class="line"></span><br><span class="line">终端读取到这个特殊的字符序列,然后将光标向右移动了一下. </span><br><span class="line">### CSI sequences (ESC [ 或者 ^[)</span><br></pre></td></tr></table></figure>
+<p>ESC [<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">### SGR (Select Graphic Rendition)</span><br><span class="line"></span><br><span class="line"> - 设置显示属性</span><br><span class="line"> - 多个属性可以在一个sequence中指定, 通过;分割即可</span><br><span class="line"> - 每个属性遇到SGR-RESET的时候恢复默认情形</span><br><span class="line"> - SGR-RESET: ESC m 或 ESC 0 m</span><br><span class="line"> - 粗体: 1</span><br><span class="line"> - 斜体: 3</span><br><span class="line"> - 下划线: 4</span><br><span class="line"> - 设置前景色: 30-37</span><br><span class="line"> - 设置前景色: 38;5;n 或者 38;2;r;g;b</span><br><span class="line"> - 默认前景色: 39</span><br><span class="line"> - 设置背景色: 40-47</span><br><span class="line"> - 设置背景色: 48;5;n 或者 48;2;r;g;b</span><br><span class="line"> - 默认背景色: 49</span><br><span class="line"> </span><br><span class="line"></span><br><span class="line">上面这个可能有点抽象,我们来具体拼装一下:</span><br></pre></td></tr></table></figure></p>
+<p>$ print “\e[31mHELLO” </p>
+<h1><span id="qing-kong-ping-mu">清空屏幕</span></h1><p>$ print “\ec”</p>
+<h1><span id="e-0m-qing-chu-wen-zi-xian-shi-shu-xing">“\e[0m” : 清楚文字显示属性</span></h1><p>$ print “\e[31mABC\e[0m123”<br>```</p>
+<h2><span id="vendor-specific-escape-sequences">Vendor-specific escape sequences</span></h2><p>早期的计算机很贵, 不是一般人可以随意就能拥有的. 为了能够让大家可以充分利用计算机, 通常采用搭配廉价终端的方式. 终端本身不具备<br>计算能力, 但是可以通过终端链接到主机, 通过终端远程使用计算机.</p>
+<h2><span id="can-kao">参考</span></h2><ul>
+<li><a href="https://www.ansilove.org/" target="_blank" rel="noopener">https://www.ansilove.org/</a></li>
+</ul>
+
+  </div>
+</article>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Inici</a></li>
+         
+          <li><a href="/about/">Qui som</a></li>
+         
+          <li><a href="/archives/">Articles</a></li>
+         
+          <li><a href="/projects_url">Projectes</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Terminal</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">Terminal Emulator</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">3.</span> <span class="toc-text">Shell</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">4.</span> <span class="toc-text">ANSI escape code</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">清空屏幕</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">“\e[0m” : 清楚文字显示属性</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Vendor-specific escape sequences</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">参考</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/09/12/cli-all-in-one/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/09/12/cli-all-in-one/&text=终端和终端模拟器"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/09/12/cli-all-in-one/&is_video=false&description=终端和终端模拟器"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=终端和终端模拟器&body=Check out this article: http://yoursite.com/2018/09/12/cli-all-in-one/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/09/12/cli-all-in-one/&title=终端和终端模拟器"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/09/12/cli-all-in-one/&name=终端和终端模拟器&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menú</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Compartir</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Cap amunt</a>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 amas
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Inici</a></li>
+         
+          <li><a href="/about/">Qui som</a></li>
+         
+          <li><a href="/archives/">Articles</a></li>
+         
+          <li><a href="/projects_url">Projectes</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Disqus Comments -->
+
+

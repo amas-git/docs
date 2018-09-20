@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang=zh>
+<head>
+    <!-- hexo-inject:begin --><!-- hexo-inject:end --><!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="玩转以太坊客户端 geth geth console geth attach admin.nodeInfo admin.peers   自定义创世块 设定静态节点   abigen bootnode evm gethrpctest rlpdump swarm puppeth      玩转以太坊客户端gethgeth console12345678910111213141516171819">
+<meta property="og:type" content="article">
+<meta property="og:title" content="玩转以太坊客户端">
+<meta property="og:url" content="http://yoursite.com/2018/08/03/eth-play-eth-node/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="玩转以太坊客户端 geth geth console geth attach admin.nodeInfo admin.peers   自定义创世块 设定静态节点   abigen bootnode evm gethrpctest rlpdump swarm puppeth      玩转以太坊客户端gethgeth console12345678910111213141516171819">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2018-08-04T08:54:11.294Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="玩转以太坊客户端">
+<meta name="twitter:description" content="玩转以太坊客户端 geth geth console geth attach admin.nodeInfo admin.peers   自定义创世块 设定静态节点   abigen bootnode evm gethrpctest rlpdump swarm puppeth      玩转以太坊客户端gethgeth console12345678910111213141516171819">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>玩转以太坊客户端</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- persian styles -->
+    
+      <link rel="stylesheet" href="/css/rtl.css">
+    
+    <!-- rss --><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+    
+    
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Inici</a></li>
+         
+          <li><a href="/about/">Qui som</a></li>
+         
+          <li><a href="/archives/">Articles</a></li>
+         
+          <li><a href="/projects_url">Projectes</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2018/08/18/etc-adventures-in-logicworld/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2018/07/19/amas-bookmarks/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Post Anterior</span>
+      <span id="i-next" class="info" style="display:none;">Post Següent</span>
+      <span id="i-top" class="info" style="display:none;">Adalt</span>
+      <span id="i-share" class="info" style="display:none;">Compartir Post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/08/03/eth-play-eth-node/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&text=玩转以太坊客户端"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&is_video=false&description=玩转以太坊客户端"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=玩转以太坊客户端&body=Check out this article: http://yoursite.com/2018/08/03/eth-play-eth-node/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&name=玩转以太坊客户端&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">玩转以太坊客户端</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.</span> <span class="toc-text">geth</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.1.</span> <span class="toc-text">geth console</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.2.</span> <span class="toc-text">geth attach</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.2.1.</span> <span class="toc-text">admin.nodeInfo</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.2.2.</span> <span class="toc-text">admin.peers</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.3.</span> <span class="toc-text">自定义创世块</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.4.</span> <span class="toc-text">设定静态节点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.2.</span> <span class="toc-text">abigen</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.3.</span> <span class="toc-text">bootnode</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.4.</span> <span class="toc-text">evm</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.5.</span> <span class="toc-text">gethrpctest</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.6.</span> <span class="toc-text">rlpdump</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.7.</span> <span class="toc-text">swarm</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.8.</span> <span class="toc-text">puppeth</span></a></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        玩转以太坊客户端
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Hexo</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2018-08-03T10:26:22.000Z" itemprop="datePublished">2018-08-03</time>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <div class="toc">
+
+<!-- toc -->
+<ul>
+<li><a href="#wan-zhuan-yi-tai-fang-ke-hu-duan">玩转以太坊客户端</a><ul>
+<li><a href="#geth">geth</a><ul>
+<li><a href="#geth-console">geth console</a></li>
+<li><a href="#geth-attach">geth attach</a><ul>
+<li><a href="#admin-nodeinfo">admin.nodeInfo</a></li>
+<li><a href="#admin-peers">admin.peers</a></li>
+</ul>
+</li>
+<li><a href="#zi-ding-yi-chuang-shi-kuai">自定义创世块</a></li>
+<li><a href="#she-ding-jing-tai-jie-dian">设定静态节点</a></li>
+</ul>
+</li>
+<li><a href="#abigen">abigen</a></li>
+<li><a href="#bootnode">bootnode</a></li>
+<li><a href="#evm">evm</a></li>
+<li><a href="#gethrpctest">gethrpctest</a></li>
+<li><a href="#rlpdump">rlpdump</a></li>
+<li><a href="#swarm">swarm</a></li>
+<li><a href="#puppeth">puppeth</a></li>
+</ul>
+</li>
+</ul>
+<!-- tocstop -->
+<p></div></p>
+<h1><span id="wan-zhuan-yi-tai-fang-ke-hu-duan">玩转以太坊客户端</span></h1><h2><span id="geth">geth</span></h2><h3><span id="geth-console">geth console</span></h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">$ geth console</span><br><span class="line">INFO [08-03|19:46:12] Maximum peer count                       ETH=25 LES=0 total=25</span><br><span class="line">INFO [08-03|19:46:12] Starting peer-to-peer node               instance=Geth/v1.8.2-stable-b8b9f7f4/linux-amd64/go1.10</span><br><span class="line">INFO [08-03|19:46:12] Allocated cache and file handles         database=/home/amas/.ethereum/geth/chaindata cache=768 handles=512</span><br><span class="line">INFO [08-03|19:46:12] Writing default main-net genesis block </span><br><span class="line">INFO [08-03|19:46:12] Persisted trie from memory database      nodes=12356 size=2.34mB time=34.918604ms gcnodes=0 gcsize=0.00B gctime=0s livenodes=1 livesize=0.00B</span><br><span class="line">INFO [08-03|19:46:12] Initialised chain configuration          config=<span class="string">"&#123;ChainID: 1 Homestead: 1150000 DAO: 1920000 DAOSupport: true EIP150: 2463000 EIP155: 2675000 EIP158: 2675000 Byzantium: 4370000 Constantinople: &lt;nil&gt; Engine: ethash&#125;"</span></span><br><span class="line">INFO [08-03|19:46:12] Disk storage enabled <span class="keyword">for</span> ethash caches   dir=/home/amas/.ethereum/geth/ethash count=3</span><br><span class="line">INFO [08-03|19:46:12] Disk storage enabled <span class="keyword">for</span> ethash DAGs     dir=/home/amas/.ethash               count=2</span><br><span class="line">INFO [08-03|19:46:12] Initialising Ethereum protocol           versions=<span class="string">"[63 62]"</span> network=1</span><br><span class="line">INFO [08-03|19:46:12] Loaded most recent <span class="built_in">local</span> header          number=0 <span class="built_in">hash</span>=d4e567…cb8fa3 td=17179869184</span><br><span class="line">INFO [08-03|19:46:12] Loaded most recent <span class="built_in">local</span> full block      number=0 <span class="built_in">hash</span>=d4e567…cb8fa3 td=17179869184</span><br><span class="line">INFO [08-03|19:46:12] Loaded most recent <span class="built_in">local</span> fast block      number=0 <span class="built_in">hash</span>=d4e567…cb8fa3 td=17179869184</span><br><span class="line">INFO [08-03|19:46:12] Regenerated <span class="built_in">local</span> transaction journal    transactions=0 accounts=0</span><br><span class="line">INFO [08-03|19:46:12] Starting P2P networking </span><br><span class="line">INFO [08-03|19:46:14] UDP listener up                          self=enode://61c5ad55c2d77cffb8da106be4eb1050cef8b913f189ea885c116c6d17fde6f7c475de5a29cd4485585fb25e52c387c0ad5e2131ac3b514b4d37a4619c3bd8dd@[::]:30303</span><br><span class="line">INFO [08-03|19:46:14] RLPx listener up                         self=enode://61c5ad55c2d77cffb8da106be4eb1050cef8b913f189ea885c116c6d17fde6f7c475de5a29cd4485585fb25e52c387c0ad5e2131ac3b514b4d37a4619c3bd8dd@[::]:30303</span><br><span class="line">INFO [08-03|19:46:14] IPC endpoint opened                      url=/home/amas/.ethereum/geth.ipc</span><br><span class="line">Welcome to the Geth JavaScript console!</span><br><span class="line"></span><br><span class="line">instance: Geth/v1.8.2-stable-b8b9f7f4/linux-amd64/go1.10</span><br><span class="line"> modules: admin:1.0 debug:1.0 eth:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txpool:1.0 web3:1.0</span><br><span class="line"></span><br><span class="line">&gt;</span><br><span class="line"></span><br><span class="line">$ tree ~/.ethereum</span><br><span class="line">/home/amas/.ethereum</span><br><span class="line">├── geth</span><br><span class="line">│   ├── chaindata</span><br><span class="line">│   │   ├── 000001.log</span><br><span class="line">│   │   ├── CURRENT</span><br><span class="line">│   │   ├── LOCK</span><br><span class="line">│   │   ├── LOG</span><br><span class="line">│   │   └── MANIFEST-000000</span><br><span class="line">│   ├── LOCK</span><br><span class="line">│   ├── nodekey</span><br><span class="line">│   ├── nodes</span><br><span class="line">│   │   ├── 000001.log</span><br><span class="line">│   │   ├── CURRENT</span><br><span class="line">│   │   ├── LOCK</span><br><span class="line">│   │   ├── LOG</span><br><span class="line">│   │   └── MANIFEST-000000</span><br><span class="line">│   └── transactions.rlp</span><br><span class="line">├── geth.ipc</span><br><span class="line">└── keystore</span><br></pre></td></tr></table></figure>
+<h3><span id="geth-attach">geth attach</span></h3><h4><span id="admin-nodeinfo">admin.nodeInfo</span></h4><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  enode: "enode://61c5ad55c2d77cffb8da106be4eb1050cef8b913f189ea885c116c6d17fde6f7c475de5a29cd4485585fb25e52c387c0ad5e2131ac3b514b4d37a4619c3bd8dd@[::]:30303",</span><br><span class="line">  id: "61c5ad55c2d77cffb8da106be4eb1050cef8b913f189ea885c116c6d17fde6f7c475de5a29cd4485585fb25e52c387c0ad5e2131ac3b514b4d37a4619c3bd8dd",</span><br><span class="line">  ip: "::",</span><br><span class="line">  listenAddr: "[::]:30303",</span><br><span class="line">  name: "Geth/v1.8.2-stable-b8b9f7f4/linux-amd64/go1.10",</span><br><span class="line">  ports: &#123;</span><br><span class="line">    discovery: 30303,</span><br><span class="line">    listener: 30303</span><br><span class="line">  &#125;,</span><br><span class="line">  protocols: &#123;</span><br><span class="line">    eth: &#123;</span><br><span class="line">      config: &#123;</span><br><span class="line">        byzantiumBlock: 4370000,</span><br><span class="line">        chainId: 1,</span><br><span class="line">        daoForkBlock: 1920000,</span><br><span class="line">        daoForkSupport: true,</span><br><span class="line">        eip150Block: 2463000,</span><br><span class="line">        eip150Hash: "0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0",</span><br><span class="line">        eip155Block: 2675000,</span><br><span class="line">        eip158Block: 2675000,</span><br><span class="line">        ethash: &#123;&#125;,</span><br><span class="line">        homesteadBlock: 1150000</span><br><span class="line">      &#125;,</span><br><span class="line">      difficulty: 17179869184,</span><br><span class="line">      genesis: "0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3",</span><br><span class="line">      head: "0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3",</span><br><span class="line">      network: 1</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4><span id="admin-peers">admin.peers</span></h4><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line">[&#123;</span><br><span class="line">    caps: ["eth/62", "eth/63"],</span><br><span class="line">    id: "05b12b8ef42e1e066468ccd5cd0a32da442cc83289c9f07cfc10c7e8a554af6adc686ac7218d84d1b250325d4add9ccb4a690cde0d42ad62f97adc2185d8624b",</span><br><span class="line">    name: "Geth/v0.1.1-akroma-5fa3ee8c/linux-amd64/go1.10.1",</span><br><span class="line">    network: &#123;</span><br><span class="line">      inbound: false,</span><br><span class="line">      localAddress: "10.60.113.123:44490",</span><br><span class="line">      remoteAddress: "45.77.90.228:30303",</span><br><span class="line">      static: false,</span><br><span class="line">      trusted: false</span><br><span class="line">    &#125;,</span><br><span class="line">    protocols: &#123;</span><br><span class="line">      eth: "handshake"</span><br><span class="line">    &#125;</span><br><span class="line">&#125;, &#123;</span><br><span class="line">    caps: ["eth/62", "eth/63"],</span><br><span class="line">    id: "29215d0950d7f1807e831b55c8497821edcff228e49bb5321251caa3a7a43e1aec915c7467155827a14f35bd13332dd50b6ed0d7655c44cf8b7ce48e27248596",</span><br><span class="line">    name: "Geth/v1.8.10-stable-eae63c51/linux-amd64/go1.10",</span><br><span class="line">    network: &#123;</span><br><span class="line">      inbound: false,</span><br><span class="line">      localAddress: "10.60.113.123:58974",</span><br><span class="line">      remoteAddress: "47.91.209.156:30303",</span><br><span class="line">      static: false,</span><br><span class="line">      trusted: false</span><br><span class="line">    &#125;,</span><br><span class="line">    protocols: &#123;</span><br><span class="line">      eth: &#123;</span><br><span class="line">        difficulty: 5.765374924733686e+21,</span><br><span class="line">        head: "0x96f8f9bbffea3de2f5156b2e0974f48d40c5a4200efc8a0744ff98d326b26c8f",</span><br><span class="line">        version: 63</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;, &#123;</span><br><span class="line">    caps: ["eth/62", "eth/63"],</span><br><span class="line">    id: "42d4febd3ed46f39bc33da80822f0b681b6dba4ff23f20c48b5682556e0a1e5bffc50af88fc68b92ae7e8a1a4d59d7e731ea2aa461a09aa3b40d48263eb42708",</span><br><span class="line">    name: "Geth/v1.8.6-stable-12683fec/linux-amd64/go1.10",</span><br><span class="line">    network: &#123;</span><br><span class="line">      inbound: false,</span><br><span class="line">      localAddress: "10.60.113.123:46734",</span><br><span class="line">      remoteAddress: "128.199.45.106:30303",</span><br><span class="line">      static: false,</span><br><span class="line">      trusted: false</span><br><span class="line">    &#125;,</span><br><span class="line">    protocols: &#123;</span><br><span class="line">      eth: &#123;</span><br><span class="line">        difficulty: 5.765274976706829e+21,</span><br><span class="line">        head: "0x22127969ec067298ac10b42d536e3958dd6d43af3789eae2d0881bffeb2ce8e7",</span><br><span class="line">        version: 63</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;, &#123;</span><br><span class="line">    caps: ["eth/62", "eth/63", "par/1", "par/2", "par/3", "pip/1"],</span><br><span class="line">    id: "97b6ef4f927a0fc7b4d08251dc594cd1a5518a02ab0682f071e28a39ed80813c7b263788f29241a77683ba8f155d148982b556aef9511882789fd9e825647a53",</span><br><span class="line">    name: "Parity/v1.11.8-stable-c754a02-20180725/x86_64-linux-gnu/rustc1.27.2",</span><br><span class="line">    network: &#123;</span><br><span class="line">      inbound: false,</span><br><span class="line">      localAddress: "10.60.113.123:39624",</span><br><span class="line">      remoteAddress: "185.64.116.14:30303",</span><br><span class="line">      static: false,</span><br><span class="line">      trusted: false</span><br><span class="line">    &#125;,</span><br><span class="line">    protocols: &#123;</span><br><span class="line">      eth: &#123;</span><br><span class="line">        difficulty: 5.765285321878454e+21,</span><br><span class="line">        head: "0xf23856426327ec303444800ed785d0bd6c5402d435f5bcd3ae44196e4c5d037d",</span><br><span class="line">        version: 63</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;]</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&gt; admin.datadir</span><br><span class="line">&quot;/home/amas/.ethereum&quot;</span><br><span class="line">&gt; net.listening</span><br><span class="line">true</span><br><span class="line">&gt; net.version</span><br><span class="line">&quot;1&quot;</span><br><span class="line">&gt; net.peerCount</span><br><span class="line">4</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 执行js命令</span></span><br><span class="line">$ geth --verbosity 0 attach --<span class="built_in">exec</span> <span class="string">'admin.peers'</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># attach</span></span><br><span class="line">$ geth attach ipc:/some/path</span><br><span class="line">$ geth attach rpc:http://host:8545</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行js代码</span></span><br><span class="line">$ geth --verbosity 0  js &lt;(<span class="built_in">echo</span> <span class="string">'console.log("hello eth")'</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 启动一个孤立节点</span></span><br><span class="line">$ geth --maxpeers 0 --nodiscover --networdid 3301 </span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行RPC服务</span></span><br><span class="line">$ geth --rpc=<span class="literal">true</span> --rpcport 8000 --rpccorsdomain <span class="string">'"*"'</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 挖矿</span></span><br><span class="line">$ geth --mine --minerthreads 4 --datadir /usr/<span class="built_in">local</span>/share/ethereum/30303 --port 30303</span><br><span class="line">$ geth --mine --minerthreads 4 --datadir /usr/<span class="built_in">local</span>/share/ethereum/30304 --port 30304</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置bootnode</span></span><br><span class="line">$ geth --bootnodes <span class="string">"enode://pubkey1@ip1:port1 enode://pubkey2@ip2:port2 enode://pubkey3@ip3:port3"</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 检测节点的连接, net.listening=true且peerCount大于0</span></span><br><span class="line"><span class="comment"># 通常有两种情况会造成链接失败</span></span><br><span class="line"><span class="comment">#  1. 系统时钟有误差(ntpdate -s time.nist.gov),12s的误差即可造成0peers</span></span><br><span class="line"><span class="comment">#  2. 防火墙的设置禁掉了UDP，这时你只能手动添加peers了</span></span><br><span class="line">&gt; net.listening</span><br><span class="line"><span class="literal">true</span></span><br><span class="line">&gt; net.peerCount</span><br><span class="line">4</span><br><span class="line">&gt; admin.peers    // 获取peers详细信息</span><br><span class="line"></span><br><span class="line"><span class="comment"># 私有链，通过-—networkid可以设定私有链</span></span><br><span class="line">$ geth --networkid=1983 console</span><br><span class="line"><span class="comment"># 可以通过--genesis指定一个创世块的JSON文件</span></span><br><span class="line">$ geth --networkid=1983 --genesis 1983.json console</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment"># 建立新的账户</span></span><br><span class="line">$ geth account new    <span class="comment"># 或者调用: personal.newAccount</span></span><br><span class="line">$ geth account update <span class="comment"># 升级账户存储文件的格式</span></span><br><span class="line">$ geth cccount list   <span class="comment"># 查看所有账户: eth.accounts</span></span><br></pre></td></tr></table></figure>
+<h3><span id="zi-ding-yi-chuang-shi-kuai">自定义创世块</span></h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"alloc"</span>: &#123;</span><br><span class="line">    <span class="attr">"dbdbdb2cbd23b783741e8d7fcf51e459b497e4a6"</span>: &#123; </span><br><span class="line">        <span class="attr">"balance"</span>: <span class="string">"1606938044258990275541962092341162602522202993782792835301376"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">"e6716f9544a56c530d868e4bfbacb172315bdead"</span>: &#123;</span><br><span class="line">      <span class="attr">"balance"</span>: <span class="string">"1606938044258990275541962092341162602522202993782792835301376"</span></span><br><span class="line">    &#125;,</span><br><span class="line">    ...</span><br><span class="line">  &#125;,</span><br><span class="line">  "nonce": "0x000000000000002a",</span><br><span class="line">  "difficulty": "0x020000",</span><br><span class="line">  "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",</span><br><span class="line">  "coinbase": "0x0000000000000000000000000000000000000000",</span><br><span class="line">  "timestamp": "0x00",</span><br><span class="line">  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",</span><br><span class="line">  "extraData": "0x",</span><br><span class="line">  "gasLimit": "0x2fefd8"</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3><span id="she-ding-jing-tai-jie-dian">设定静态节点</span></h3><p><datadir>/static-nodes.json:<br><figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[</span><br><span class="line">  <span class="string">"enode://f4642fa65af50cfdea8fa7414a5def7bb7991478b768e296f5e4a54e8b995de102e0ceae2e826f293c481b5325f89be6d207b003382e18a8ecba66fbaf6416c0@33.4.2.1:30303"</span>,</span><br><span class="line">  <span class="string">"enode://pubkey@ip:port"</span></span><br><span class="line">]</span><br></pre></td></tr></table></figure></datadir></p>
+<h2><span id="abigen">abigen</span></h2><h2><span id="bootnode">bootnode</span></h2><h2><span id="evm">evm</span></h2><h2><span id="gethrpctest">gethrpctest</span></h2><h2><span id="rlpdump">rlpdump</span></h2><h2><span id="swarm">swarm</span></h2><h2><span id="puppeth">puppeth</span></h2>
+  </div>
+</article>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Inici</a></li>
+         
+          <li><a href="/about/">Qui som</a></li>
+         
+          <li><a href="/archives/">Articles</a></li>
+         
+          <li><a href="/projects_url">Projectes</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">玩转以太坊客户端</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.</span> <span class="toc-text">geth</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.1.</span> <span class="toc-text">geth console</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.2.</span> <span class="toc-text">geth attach</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.2.1.</span> <span class="toc-text">admin.nodeInfo</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.2.2.</span> <span class="toc-text">admin.peers</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.3.</span> <span class="toc-text">自定义创世块</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">1.1.4.</span> <span class="toc-text">设定静态节点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.2.</span> <span class="toc-text">abigen</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.3.</span> <span class="toc-text">bootnode</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.4.</span> <span class="toc-text">evm</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.5.</span> <span class="toc-text">gethrpctest</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.6.</span> <span class="toc-text">rlpdump</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.7.</span> <span class="toc-text">swarm</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.8.</span> <span class="toc-text">puppeth</span></a></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://yoursite.com/2018/08/03/eth-play-eth-node/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&text=玩转以太坊客户端"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&is_video=false&description=玩转以太坊客户端"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=玩转以太坊客户端&body=Check out this article: http://yoursite.com/2018/08/03/eth-play-eth-node/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&title=玩转以太坊客户端"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://yoursite.com/2018/08/03/eth-play-eth-node/&name=玩转以太坊客户端&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menú</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Compartir</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Cap amunt</a>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 amas
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Inici</a></li>
+         
+          <li><a href="/about/">Qui som</a></li>
+         
+          <li><a href="/archives/">Articles</a></li>
+         
+          <li><a href="/projects_url">Projectes</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Disqus Comments -->
+
+
