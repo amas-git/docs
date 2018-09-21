@@ -6,17 +6,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="HandheldFriendly" content="True">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <meta name="description" content="Completion Widget 补全系统 Context 如何查看Context? Context的结构 completer complete all_matches approximate   match Special Contexts 使用用_comps查找补全函数   Tag Style 补全插件(Completion Widget) 配置补全系统 系统自带的补全函数在哪?">
+    <meta name="description" content="Completion Widget 补全系统 Context 如何查看Context? Context的结构 completer complete all_matches approximate   match Special Contexts 使用用_comps查找补全函数   Tag Style 补全插件(Completion Widget) 编写补全脚本 Hello World 补全">
 <meta property="og:type" content="article">
 <meta property="og:title" content="ZSH补全系统">
 <meta property="og:url" content="http://yoursite.com/2018/09/19/zsh-completion-system/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="Completion Widget 补全系统 Context 如何查看Context? Context的结构 completer complete all_matches approximate   match Special Contexts 使用用_comps查找补全函数   Tag Style 补全插件(Completion Widget) 配置补全系统 系统自带的补全函数在哪?">
+<meta property="og:description" content="Completion Widget 补全系统 Context 如何查看Context? Context的结构 completer complete all_matches approximate   match Special Contexts 使用用_comps查找补全函数   Tag Style 补全插件(Completion Widget) 编写补全脚本 Hello World 补全">
 <meta property="og:locale" content="zh-cn">
-<meta property="og:updated_time" content="2018-09-20T09:45:49.855Z">
+<meta property="og:updated_time" content="2018-09-21T07:51:30.739Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ZSH补全系统">
-<meta name="twitter:description" content="Completion Widget 补全系统 Context 如何查看Context? Context的结构 completer complete all_matches approximate   match Special Contexts 使用用_comps查找补全函数   Tag Style 补全插件(Completion Widget) 配置补全系统 系统自带的补全函数在哪?">
+<meta name="twitter:description" content="Completion Widget 补全系统 Context 如何查看Context? Context的结构 completer complete all_matches approximate   match Special Contexts 使用用_comps查找补全函数   Tag Style 补全插件(Completion Widget) 编写补全脚本 Hello World 补全">
     
     
         
@@ -100,7 +100,7 @@
 
     </div>
     <div id="toc">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Completion Widget</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">补全系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.</span> <span class="toc-text">Context</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.1.</span> <span class="toc-text">如何查看Context?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.2.</span> <span class="toc-text">Context的结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.</span> <span class="toc-text">completer</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.1.</span> <span class="toc-text">complete</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.2.</span> <span class="toc-text">all_matches</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.3.</span> <span class="toc-text">approximate</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.4.</span> <span class="toc-text">match</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.5.</span> <span class="toc-text">Special Contexts</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.6.</span> <span class="toc-text">使用用_comps查找补全函数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.2.</span> <span class="toc-text">Tag</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.3.</span> <span class="toc-text">Style</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.4.</span> <span class="toc-text">补全插件(Completion Widget)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.</span> <span class="toc-text">配置补全系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.6.</span> <span class="toc-text">系统自带的补全函数在哪?</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">参考</span></a>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Completion Widget</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">补全系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.</span> <span class="toc-text">Context</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.1.</span> <span class="toc-text">如何查看Context?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.2.</span> <span class="toc-text">Context的结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.</span> <span class="toc-text">completer</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.1.</span> <span class="toc-text">complete</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.2.</span> <span class="toc-text">all_matches</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.3.</span> <span class="toc-text">approximate</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.4.</span> <span class="toc-text">match</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.5.</span> <span class="toc-text">Special Contexts</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.6.</span> <span class="toc-text">使用用_comps查找补全函数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.2.</span> <span class="toc-text">Tag</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.3.</span> <span class="toc-text">Style</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.4.</span> <span class="toc-text">补全插件(Completion Widget)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.</span> <span class="toc-text">编写补全脚本</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.1.</span> <span class="toc-text">Hello World</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.2.</span> <span class="toc-text">补全系统使用的变量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.3.</span> <span class="toc-text">_arguments</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.6.</span> <span class="toc-text">配置补全系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.7.</span> <span class="toc-text">系统自带的补全函数在哪?</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">参考</span></a>
     </div>
   </span>
 </div>
@@ -157,6 +157,12 @@
 <li><a href="#tag">Tag</a></li>
 <li><a href="#style">Style</a></li>
 <li><a href="#bu-quan-cha-jian-completion-widget">补全插件(Completion Widget)</a></li>
+<li><a href="#bian-xie-bu-quan-jiao-ben">编写补全脚本</a><ul>
+<li><a href="#hello-world">Hello World</a></li>
+<li><a href="#bu-quan-xi-tong-shi-yong-de-bian-liang">补全系统使用的变量</a></li>
+<li><a href="#arguments">_arguments</a></li>
+</ul>
+</li>
 <li><a href="#pei-zhi-bu-quan-xi-tong">配置补全系统</a></li>
 <li><a href="#xi-tong-zi-dai-de-bu-quan-han-shu-zai-na">系统自带的补全函数在哪?</a></li>
 </ul>
@@ -361,8 +367,66 @@
 <li>list-choices</li>
 <li>delete-char-or-list</li>
 </ul>
+<h3><span id="bian-xie-bu-quan-jiao-ben">编写补全脚本</span></h3><h4><span id="hello-world">Hello World</span></h4><figure class="highlight zsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 启动一个干净的zsh</span></span><br><span class="line">$ zsh.baby</span><br><span class="line"></span><br><span class="line"><span class="comment"># 初始化补全系统</span></span><br><span class="line">$ <span class="built_in">autoload</span> -Uz compinit</span><br><span class="line"></span><br><span class="line"><span class="comment"># 定义一个补全函数, 按照约定如果你针对foo命令编写的补全函数的名字应该是_foo</span></span><br><span class="line">$ <span class="function"><span class="title">_foo</span></span>() &#123; _message <span class="string">"HELLO <span class="variable">$USER</span>"</span> &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 把_foo这个补全函数加入到补全系统中</span></span><br><span class="line">$ compdef _foo foo</span><br><span class="line"></span><br><span class="line"><span class="comment"># </span></span><br><span class="line">$ foo <span class="comment">#按下TAB</span></span><br><span class="line">HELLO amas</span><br></pre></td></tr></table></figure>
+<h4><span id="bu-quan-xi-tong-shi-yong-de-bian-liang">补全系统使用的变量</span></h4><ul>
+<li>curcontext</li>
+<li>word</li>
+<li>CURRENT</li>
+<li>IPREFIX</li>
+<li>ISUFFIX</li>
+<li>PREFIX<h4><span id="arguments">_arguments</span></h4><blockquote>
+<p>OPTSPEC</p>
+</blockquote>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>optspec</th>
+<th>功能</th>
+<th>范例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-optname</td>
+<td>-o</td>
+<td>-o [arg] </td>
+</tr>
+<tr>
+<td>-optname-</td>
+<td>-o-</td>
+<td>-o[arg]             </td>
+</tr>
+<tr>
+<td>-optname+</td>
+<td>-o+</td>
+<td>-o [arg] 或 -o[arg]</td>
+</tr>
+<tr>
+<td>-optname=</td>
+<td>-o=</td>
+<td>-o [arg] 或 -o=[arg]</td>
+</tr>
+<tr>
+<td>-optname=-</td>
+<td>-o=-</td>
+<td>-o=[arg]</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>OPTSPEC[DESC]</p>
+<ul>
+<li>补全系统的verbose设置为true的时候, 会显示DESC, 用来描述参数的功能</li>
+</ul>
+<p>OPTARG</p>
+</blockquote>
+<p>|  :message:action |<br>| ::message:action |<br>| :<em>pattern:message:action<br>| :</em>pattern::message:action<br>| :*pattern:::message:action</p>
 <h3><span id="pei-zhi-bu-quan-xi-tong">配置补全系统</span></h3><h3><span id="xi-tong-zi-dai-de-bu-quan-han-shu-zai-na">系统自带的补全函数在哪?</span></h3><h1><span id="can-kao">参考</span></h1><ul>
 <li><a href="http://zsh.sourceforge.net/Doc/Release/Completion-System.html" target="_blank" rel="noopener">http://zsh.sourceforge.net/Doc/Release/Completion-System.html</a></li>
+<li><a href="http://zsh.sourceforge.net/Doc/Release/Completion-Widgets.html" target="_blank" rel="noopener">http://zsh.sourceforge.net/Doc/Release/Completion-Widgets.html</a></li>
+<li>whence -v function-name : 查看函数的加载路径</li>
 </ul>
 
   </div>
@@ -390,7 +454,7 @@
     </div>
 
     <div id="toc-footer" style="display: none">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Completion Widget</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">补全系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.</span> <span class="toc-text">Context</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.1.</span> <span class="toc-text">如何查看Context?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.2.</span> <span class="toc-text">Context的结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.</span> <span class="toc-text">completer</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.1.</span> <span class="toc-text">complete</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.2.</span> <span class="toc-text">all_matches</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.3.</span> <span class="toc-text">approximate</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.4.</span> <span class="toc-text">match</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.5.</span> <span class="toc-text">Special Contexts</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.6.</span> <span class="toc-text">使用用_comps查找补全函数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.2.</span> <span class="toc-text">Tag</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.3.</span> <span class="toc-text">Style</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.4.</span> <span class="toc-text">补全插件(Completion Widget)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.</span> <span class="toc-text">配置补全系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.6.</span> <span class="toc-text">系统自带的补全函数在哪?</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">参考</span></a>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">1.</span> <span class="toc-text">Completion Widget</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#undefined"><span class="toc-number">2.</span> <span class="toc-text">补全系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.</span> <span class="toc-text">Context</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.1.</span> <span class="toc-text">如何查看Context?</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.2.</span> <span class="toc-text">Context的结构</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.</span> <span class="toc-text">completer</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.1.</span> <span class="toc-text">complete</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.2.</span> <span class="toc-text">all_matches</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.3.3.</span> <span class="toc-text">approximate</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.4.</span> <span class="toc-text">match</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.5.</span> <span class="toc-text">Special Contexts</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.1.6.</span> <span class="toc-text">使用用_comps查找补全函数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.2.</span> <span class="toc-text">Tag</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.3.</span> <span class="toc-text">Style</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.4.</span> <span class="toc-text">补全插件(Completion Widget)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.</span> <span class="toc-text">编写补全脚本</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.1.</span> <span class="toc-text">Hello World</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.2.</span> <span class="toc-text">补全系统使用的变量</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#undefined"><span class="toc-number">2.5.3.</span> <span class="toc-text">_arguments</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.6.</span> <span class="toc-text">配置补全系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#undefined"><span class="toc-number">2.7.</span> <span class="toc-text">系统自带的补全函数在哪?</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#undefined"><span class="toc-number"></span> <span class="toc-text">参考</span></a>
     </div>
 
     <div id="share-footer" style="display: none">

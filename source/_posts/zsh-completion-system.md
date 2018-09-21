@@ -264,8 +264,58 @@ Style用说明以什么样的方式完成补全.
  * list-choices
  * delete-char-or-list
 
+### 编写补全脚本
+
+#### Hello World
+```zsh
+# 启动一个干净的zsh
+$ zsh.baby
+
+# 初始化补全系统
+$ autoload -Uz compinit
+
+# 定义一个补全函数, 按照约定如果你针对foo命令编写的补全函数的名字应该是_foo
+$ _foo() { _message "HELLO $USER" }
+
+# 把_foo这个补全函数加入到补全系统中
+$ compdef _foo foo
+
+# 
+$ foo #按下TAB
+HELLO amas
+```
+#### 补全系统使用的变量
+ - curcontext
+ - word
+ - CURRENT
+ - IPREFIX
+ - ISUFFIX
+ - PREFIX
+#### _arguments
+> OPTSPEC
+
+| optspec | 功能 |  范例   |
+|---------|-----|-----|
+| -optname   |  -o   |  -o [arg] 
+| -optname-  |  -o-  |  -o[arg]             
+| -optname+  |  -o+  |  -o [arg] 或 -o[arg]
+| -optname=  |  -o=  |  -o [arg] 或 -o=[arg]
+| -optname=- |  -o=- |  -o=[arg]
+
+> OPTSPEC[DESC]
+ - 补全系统的verbose设置为true的时候, 会显示DESC, 用来描述参数的功能
+
+> OPTARG
+
+|  :message:action |
+| ::message:action |
+| :*pattern:message:action
+| :*pattern::message:action
+| :*pattern:::message:action
 ### 配置补全系统
 ### 系统自带的补全函数在哪?
  
 # 参考
  - http://zsh.sourceforge.net/Doc/Release/Completion-System.html
+ - http://zsh.sourceforge.net/Doc/Release/Completion-Widgets.html
+ - whence -v function-name : 查看函数的加载路径
