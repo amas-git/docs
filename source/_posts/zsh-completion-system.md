@@ -12,7 +12,7 @@ Context是一个字符串, 用来标识用户输入光标正在什么位置. 所
 
 
 #### 如何查看Context?
-``` 
+``` zsh
 _complete_help这个函数可以帮助我们打印Context. 这个函数其实是一个ZleWidget, 你直接像正常命令一样输入它是不会得到
 有用的结果的. 使用ZleWidget有两种方法.
  1. ALT+x 然后输入ZleWidget的名字
@@ -24,10 +24,10 @@ $ bindkey | grep _complete_help
 "^Xh" _complete_help
 
 ^就是CTRL, 这个意思就是你要先按下CTRL-x, 然后再按下h
-``` 
+```
 
 
-``` 
+``` zsh
 # 先输入ls空格, 然后按CTRL-x h
 $ ls  
 tags in context :completion::complete:ls::
@@ -37,7 +37,7 @@ tags in context :completion::complete:ls:argument-rest:
 ```
 
 这一串字符串就是输入ls后的Context
-```
+```zsh
 context :completion::complete:ls::
 context :completion::complete:ls:argument-rest:
 ```
@@ -50,18 +50,18 @@ context :completion::complete:ls:argument-rest:
  - command 或 special_context
  - argument
  - tag
- 
+
 #### completer
 每当系统需要在当前上下文处理补全的时候, 都会调用_main_complete, _main_complete会找到合适的completer处理这次补全. 
 可以指定多个completer依次处理, 直到完成补全或者全部失败.
- 
+
  - 每个completer对应一个函数, 在completer名字前面加上下划线就是函数的名字
  - 一个上下文之下可以指定多个completer, 按照顺序依次调用completer函数, 若返回0则表示补全完成.否则继续调用后面的completer
  - 可以使用zstyle指定在什么样的上下文之下使用哪些completer
- 
 
 
-``` 
+
+``` zsh
 # 对所有的补全使用complete和correct两种补全
 $ zstyle ':completion:*' completer _complete _correct
 
@@ -86,7 +86,7 @@ completer有一下几种:
 approximate-1这样的状态, 就表示approximate在尝试一次修正.
 
 这个补全的代价是非常高的, 但是可以通过max-error限制尝试的次数:
-``` 
+``` zsh
 $ zstyle ':completion:*:approximate:*' max-errors 1 numeric
 ```
 
@@ -110,7 +110,7 @@ $ zstyle ':completion:*:approximate:*' max-errors 1 numeric
  - precommand
  - prefix
  - user_expand
- 
+
 #### Special Contexts
  * -array-value- : The right hand side of an array-assignment (‘name=(...)’)
  * -brace-parameter- :The name of a parameter expansion within braces (‘${...}’)
@@ -126,11 +126,11 @@ $ zstyle ':completion:*:approximate:*' max-errors 1 numeric
  * -subscript- : The contents of a parameter subscript.
  * -tilde- : 输入~之后
  * -value- : name=value之后
- 
+
 #### 使用用_comps查找补全函数
 当我们输入一条命令的时候, 补全系统会根据当前的上下文去调用指定的补全函数. 那么怎么查看呢?
 
-``` 
+``` zsh
 # 查看ls的补全函数
 $ print $_comps[ls]
 _ls
@@ -206,7 +206,7 @@ Tag用来标识补全的对象是什么.
      - time-zones: 时区
      - ports: 端口号
      - paths: 
- 
+
  - X相关
      - displays: XWndows
      - colormapids: XWindows的colormap中的color ID
@@ -218,7 +218,7 @@ Tag用来标识补全的对象是什么.
      - modifiers: 
      - visuals
      - windows
- 
+
  - 其他
      - bookmarks:
      - email-plugin
@@ -238,7 +238,7 @@ Tag用来标识补全的对象是什么.
      - variant
      - tags
 
- 
+
 ### Style
 Style用说明以什么样的方式完成补全.
 
@@ -275,14 +275,17 @@ $ zsh.baby
 $ autoload -Uz compinit
 
 # 定义一个补全函数, 按照约定如果你针对foo命令编写的补全函数的名字应该是_foo
-$ _foo() { _message "HELLO $USER" }
+$ _foo() { _message "HELLO WORLD" }
 
 # 把_foo这个补全函数加入到补全系统中
 $ compdef _foo foo
 
-# 
+# 再试一下
 $ foo #按下TAB
-HELLO amas
+HELLO WORLD
+
+$ _foo() { _arguments -h -v }
+$
 ```
 #### 补全系统使用的变量
  - curcontext
@@ -314,7 +317,7 @@ HELLO amas
 | :*pattern:::message:action
 ### 配置补全系统
 ### 系统自带的补全函数在哪?
- 
+
 # 参考
  - http://zsh.sourceforge.net/Doc/Release/Completion-System.html
  - http://zsh.sourceforge.net/Doc/Release/Completion-Widgets.html
