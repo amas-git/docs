@@ -4,8 +4,6 @@ date: 2018-03-27 11:05:09
 tags:
 version: 1.0
 ---
-<!-- toc -->
-# Zsh Parameter Expansion
  - Parameter即等同Variable
  - 当我们说${var}时,指的是变量var的值
 
@@ -61,7 +59,7 @@ $ print ${+map[undefined]}
 ### 设置默认值但不定义变量: ${var:-value}
  - 若var未被定义或${var}为空, 返回'value', 否则返回${var}。
  - 若var未定义，zsh也不会为你定义此变量
- 
+
 ```zsh
 $ echo ${var:-value}
 value
@@ -163,8 +161,9 @@ $ echo $var
 hola
 ```
 
-### 从文件中读取数据: $(<file) 
-### 从标准输入中读取数据: $(<&0)
+### 从文件中读取数据: $(< [file|&0] ) 
+我们也可以从外部文件读取数据. 特别的**&0**代表stdin
+
 ```zsh
 $ x=$(</etc/hostname)
 localhost
@@ -258,6 +257,51 @@ a 1 b 2 c 1 d 2
  - 下标从1开始, 而非0
  - 下标可以是负数, -1表示倒数第一个元素
 
+### 关联数组的key集: ${(k)map}
+
+### 关联数组的value列表: ${(v)map}
+
+### 关联数组的key/value:  ${(kv)map}
+
+展开关联数组(map)的key列表，这个不能与下标范围同时使用， 也就是你不能指定取某个范围内的key,
+
+```zsh
+$ typeset -A map
+$ map=(k1 v1 k2 v2)
+$ echo ${(k)map}
+k1 k2
+
+# 下标
+$ echo ${(k)map}[1] 
+zsh: no matches found: k2[1]
+```
+
+### 二次展开: ${(P)var}
+
+```zsh
+$ x=1
+$ y=x
+$ print $y
+x
+$ print ${(P)y}
+1
+
+# 关联数组
+$ typeset -A map
+$ map[a]=1
+$ map[b]=2
+$ map[c]=3
+$ m=map
+$ print ${(P)m}        #等价于 ${map}
+1 2 3
+$ print ${(Pkv)m}      #等价于 ${(kv)map}
+a 1 b 2 c 3
+$ print ${${(P)m}[a]}  #等价于 $map[a]
+1
+```
+
+## 
+
 
 ## 过滤
 ### ${array:#regex}
@@ -290,7 +334,7 @@ a c b e
  - ^^ : 关闭RC_EXPAND_PARAM选项
 
 当变量展开的时候, ${^spec}将会与前后的元素进行排列.  
- 
+
 ```zsh
 $ xs=({1..10})
 $ print a${^xs}
@@ -312,7 +356,10 @@ $ print ${^xs}${^ys}${^zs}
 1aX 1aY 1bX 1bY 2aX 2aY 2bX 2bY
 ```
 
+## 获取变量信息
+
 ### ${(#)var} 或 $#var
+
 返回列表长度，如果是var是String则返回String的长度。
 
 ```zsh
@@ -484,6 +531,37 @@ $ echo ${(O)xs}
 
 ```
 
+### ${(n)var}
+
+### ${(nO)var}
+
+### ${(no)var}
+
+### ${(ni)var}
+
+- 尽可能按照是十进制整数顺序展开
+- 在元素进行比较时，如果它们之间的第一个不同的字符不是数字，则按照字典顺序展开。
+
+```
+$ xs=(001 011 012 03)
+# 按照字典顺序03是最靠后的
+$ echo ${(o)xs}
+001 011 012 03
+
+# 按照数字顺序，03的位置发生了变化
+$ echo ${(on)xs}
+001 03 011 012
+
+```
+
+### ${(o)var}: 升序展开
+
+### ${(oi}var}: 大小写不敏感的升序展开
+
+### ${(O)var}: 降序展开
+
+Sort the resulting words in descending order; 'O' without 'a', 'i' or 'n' sorts in reverse lexical order. May be combined with 'a', 'i' or 'n' to reverse the order of sorting.
+
 
 
 ## 分割与合并
@@ -528,7 +606,7 @@ $ echo $#xs
 3
 
 # 空元素被滤掉了
-$ echo ${(F)xs}
+$ echo ${(f)xs}
 1
 2
 3
@@ -564,11 +642,13 @@ bad
 ### '\0'作为分隔符: ${(0)var}
  - 等价于: '${(ps:\0:)var}', 使用'\0'作为分隔符。
 
-
 ### ${(s:string:)var}
+
+### ${(ps:string:)var}
+
 使用`string`分割字符串。
- 
-```
+
+```zsh
 $ x="a b c"
 $ print -l ${(s: :)x}
 a
@@ -627,68 +707,7 @@ $ print -l $xs
 5
 ```
 
-### ${(k)map} : 关联数组的key集
-### ${(v)map} : 关联数组的value列表
-### ${(kv)map}: 关联数组的key/value列表
-展开关联数组(map)的key列表，这个不能与下标范围同时使用， 也就是你不能指定取某个范围内的key,
 
-```zsh
-$ typeset -A map
-$ map=(k1 v1 k2 v2)
-$ echo ${(k)map}
-k1 k2
-
-# 下标
-$ echo ${(k)map}[1] 
-zsh: no matches found: k2[1]
-```
-
-
-### ${(n)var}
-### ${(nO)var}
-### ${(no)var}
-### ${(ni)var}
- - 尽可能按照是十进制整数顺序展开
- - 在元素进行比较时，如果它们之间的第一个不同的字符不是数字，则按照字典顺序展开。
-```
-$ xs=(001 011 012 03)
-# 按照字典顺序03是最靠后的
-$ echo ${(o)xs}
-001 011 012 03
-
-# 按照数字顺序，03的位置发生了变化
-$ echo ${(on)xs}
-001 03 011 012
-```
-
-### ${(o)var}: 升序展开
-### ${(oi}var}: 大小写不敏感的升序展开
-### ${(O)var}: 降序展开
-
-Sort the resulting words in descending order; 'O' without 'a', 'i' or 'n' sorts in reverse lexical order. May be combined with 'a', 'i' or 'n' to reverse the order of sorting.
-
-## 二次展开: ${(P)var}
-```zsh
-$ x=1
-$ y=x
-$ print $y
-x
-$ print ${(P)y}
-1
-
-# 关联数组
-$ typeset -A map
-$ map[a]=1
-$ map[b]=2
-$ map[c]=3
-$ m=map
-$ print ${(P)m}        #等价于 ${map}
-1 2 3
-$ print ${(Pkv)m}      #等价于 ${(kv)map}
-a 1 b 2 c 3
-$ print ${${(P)m}[a]}  #等价于 $map[a]
-1
-```
 
 ## 引号问题
 ### ${(q)var}
@@ -758,7 +777,7 @@ The argument may be repeated to toggle the behaviour; its effect only lasts to t
  - l : 左留白
  - r : 右留白
  - N : 显示宽度,单位是字符数,如果变量的内容超过N则会发生截断
- 
+
 ```
 $ x="123456"
 $ print "'${(l:10:)x}'"
