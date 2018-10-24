@@ -132,20 +132,19 @@ $ docker ps -lq
 
 ### docker inspect
 
-```
-docker inspect --format {{<json-path>}} [container-id|container-name]
-
+```bash
+# docker inspect --format {{<json-path>}} [container-id|container-name]
 
 $ docker run -it -h amas.org
 $ docker inspect  --format {{.Config.Hostname}} youthful_wilson
 amas.org
-
-
 ```
 
 
 
 ### docker diff
+
+进入容器后, 可以通过diff命令查看镜像发生的变化, 你可以清楚的看到每一步操作对文件系统的改变.
 
 ```
 $ docker run -it -h hello --name hello base/archlinux                                  ~
@@ -219,16 +218,16 @@ hello zsh
 
 ### docker rmi
 
+删除镜像
+
 ### docker save
 
-保存一个镜像
+保存一个镜像, 保存好的镜像可以拷贝到其他的机器上再通过**docker load**命令加载进去
 
-```
+```bash
 $ docker save -o image.tgz name:tag
 $ docker load image.tgz
 ```
-
-
 
 ### docker tag
 
@@ -249,6 +248,7 @@ $ docker load image.tgz
 ## 容器
 
 - 基于AUFS, 最多127层
+- 每一条ADD, COPY, RUN命令都会增加一层
 - 状态:
   - created: 新创建未运行过
   - restarting
@@ -401,7 +401,7 @@ $ docker run test/cowsay
 
 玩玩redis:
 
-```
+```bash
 # 获取redis
 $ docker pull redis
 
@@ -411,7 +411,6 @@ $ docker run -it --name myredis -d redis
 # --link <running-container>:<current-container>
 $ docker run --rm -it --link myredis:rediss redis /bin/bash
 root@a05fd98b73dc:/data# redis-cli -h redis -p 6379
-
 ```
 
 
@@ -468,11 +467,15 @@ RUN
 
 LABEL
 
-#### EXPORSE host-port container-port
+#### EXPORSE port [port/protocol..]
+
+```
+EXPOSE <port> [<port>/<protocol>...]
+```
 
 用来设置容器暴露的端口
 
-```
+```bash
 # Host机上的8000端口会推到容器的80端口上
 $ docker run --name web1 -p 8000:80 nginx
 $ docker port web1
@@ -677,7 +680,15 @@ Docker’s clustering solution. Swarm can group together several Docker hosts, a
 >
 > 比如: ports : container-port:host-port 等价的命令行参数则是 p host-port:container-port
 >
-> 当一个参数用来描述host与container的映射关系时，命令行参数总是host在前，而Dockerfile和docker-compose总是container在前
+> 当一个参数用来描述host与container的映射关系时，命令行参数总是host在前，而Dockerfile和docker-compose总是container在前. 
+>
+> 那么为什么会这样设计呢?
+>
+> 问题在于, docker命令是在宿主机使用的, 所以把宿主机的信息放在前面便于使用, 举个例子, 比如我想在80端口
+>
+> 上提供服务, 那么在启动的时候只要加上-p 80就可以了, 而EXPOSE命令则更加关注的是容器本身, 所以如果容器
+>
+> 内部提供的端口是8888, 只要加上EXPOSE [8888]j就可以了. 
 
 ```yaml
 version: '3'
