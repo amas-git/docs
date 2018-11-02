@@ -705,7 +705,7 @@ services:
 
 ### Machine 
 
-Docker Machine installs and configures Docker hosts on local or remote resour‐ces. Machine also configures the Docker client, making it easy to swap between environments. See Chapter 9 for an example. 
+Docker Machine installs and configures Docker hosts on local or remote resources. Machine also configures the Docker client, making it easy to swap between environments. See Chapter 9 for an example. 
 
 ### Kitematic 
 
@@ -796,7 +796,9 @@ However, sometimes you really do need to run multiple processes in a single con�
 For more information on using supervisord inside containers, see this Docker article.
 ```
 
+### Kubernetes
 
+- http://kubernetes.io/docs/getting-started-guides/
 
 ### 参考
 

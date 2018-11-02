@@ -74,6 +74,14 @@ A comprehensive roadmap is in development, but the first goal is to have the ini
 
 - https://nchain.com/en/blog/bitcoin-sv-launch/)
 
+
+
+
+
+https://nimiq.com/
+
+
+
 ## DCR: Decred
 
 - https://www.decred.org/
