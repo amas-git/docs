@@ -703,9 +703,85 @@ services:
 
 ​	- https://docs.docker.com/compose/
 
-### Machine 
+### Docker Machine 
+
+Docker Machine用来辅助快速在各种机器上部署Docker环境.
+
+在Windows和Mac上使用Docker
+
+![Docker Machine on Mac and Windows](https://docs.docker.com/machine/img/machine-mac-win.png)
+
+
+
+安装配置管理远程机器上的Docker
+
+![Docker Machine for provisioning multiple systems](https://docs.docker.com/machine/img/provision-use-case.png)
+
+
+
+> 通常我们说起Docker都是指Docker Engine
+>
+> Docker Machine 是用来帮助我们在各种机器上快速安装/管理Docker Engine的
+
+
+
+#### 安装
+
+#### 在本地建立一个Docker Machine
+
+```zsh
+# 使用virtualbox作为虚拟化引擎
+# 执行下面命令之前需要安装virtualbox
+# 实际上docke-machine在虚拟机上安装了一个linux: https://github.com/boot2docker/boot2docker
+$ docker-machine  --debug create --driver virtualbox default
+...
+$
+
+# 删除
+$ docker-machine rm default
+```
+
+
+
+>Error creating machine: Error in driver during machine creation: This computer doesn't have VT-X/AMD-v enabled. Enabling it in the BIOS is mandatory
+>
+>碰到这种问题说明CPU的虚拟化特性没有打开,  怎么看你的CPU是不是支持虚拟化技术呢?
+>
+>#### Intel CPU:
+>$ cat /proc/cpuinfo | grep --color vmx
+>
+>$ lscpu也可以
+>
+>Virtualization:      VT-x
+>
+>#### AMD CPU:
+>$ cat /proc/cpuinfo | grep --color svm
 
 Docker Machine installs and configures Docker hosts on local or remote resour‐ces. Machine also configures the Docker client, making it easy to swap between environments. See Chapter 9 for an example. 
+
+```
+    - `docker-machine config`
+    - `docker-machine env`
+    - `docker-machine inspect`
+    - `docker-machine ip`
+    - `docker-machine kill`
+    - `docker-machine provision`
+    - `docker-machine regenerate-certs`
+    - `docker-machine restart`
+    - `docker-machine ssh`
+    - `docker-machine start`
+    - `docker-machine status`
+    - `docker-machine stop`
+    - `docker-machine upgrade`
+    - `docker-machine url`
+    
+    # docker本身就是虚拟机, 所以你也可以用本地的docker来驱动
+    $ create --driver none --url=tcp://50.134.234.20:2376 custombox
+    $ docker-machine create --driver digitalocean --digitalocean-access-token xxxxx docker-sandbox
+    $ docker-machine create --driver amazonec2 --amazonec2-access-key AKI******* --amazonec2-secret-key 8T93C*******  aws-sandbox
+```
+
+- 目前支持的云平台: https://docs.docker.com/machine/drivers/
 
 ### Kitematic 
 
@@ -799,6 +875,6 @@ For more information on using supervisord inside containers, see this Docker art
 
 
 ### 参考
-
+- https://www.cyberciti.biz/faq/linux-xen-vmware-kvm-intel-vt-amd-v-support/
 - [Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
 - monolithic architecture: 一种把所有系统都放在一起的架构方式，来源于建筑

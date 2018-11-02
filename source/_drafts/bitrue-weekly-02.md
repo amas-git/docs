@@ -71,8 +71,11 @@ A comprehensive roadmap is in development, but the first goal is to have the ini
 - [USDC稳定币](https://www.circle.com/cn/USDC)
 - [VNT](http://www.vntchain.io/)
 - VNT在CMC上并无介绍
-
 - https://nchain.com/en/blog/bitcoin-sv-launch/)
+
+
+
+
 
 ## DCR: Decred
 
@@ -141,6 +144,5 @@ X11有两个优点:
 2. 有一定的抗ASICs性, 但也不是做不出来.
 
 好了, 明白X11之后你可以去写白皮书了, 发明一个X666算法应该不难.
-
 
 
