@@ -856,6 +856,34 @@ $ docker-machine ssh default
 >#### AMD CPU:
 >$ cat /proc/cpuinfo | grep --color svm
 
+#### 如何使用SSH登录容器?
+
+方法一:
+
+```zsh
+$ docker-machine ssh default
+```
+
+
+
+方法二:
+
+```zsh
+$ VBoxManage list vms
+$ VBoxManage showvminfo f3c75c0a-0ea1-4a91-b775-70ad1d111278 | grep ssh
+NIC 1 Rule(0):   name = ssh, protocol = tcp, host ip = 127.0.0.1, host port = 40275, guest ip = , guest port = 22
+# 用户名: docker
+#     密码: tcuser 
+$ ssh docker@localhost -p 40275
+docker@localhost's password:tcuser
+```
+
+
+
+
+
+
+
 Docker Machine installs and configures Docker hosts on local or remote resources. Machine also configures the Docker client, making it easy to swap between environments. See Chapter 9 for an example. 
 
 ```
@@ -882,6 +910,57 @@ Docker Machine installs and configures Docker hosts on local or remote resources
 
 - 目前支持的云平台: https://docs.docker.com/machine/drivers/
 
+
+
+#### 在远程主机上部署Docker
+
+首先你要确保三件事情:
+
+- 远程主机打开ssh, 设置免密码登录(ssh-copy-id)
+- 设置登录用户可以免密码sudo
+- 检查防火墙, 确保2376端口可以访问
+
+```zsh
+$ sudo echo "${USER}  ALL=(ALL)       NOPASSWD:ALL" >> /etc/sudoer
+```
+
+```zsh
+# 测试2376端口没有打开是这样的
+$ nc -vz 10.60.81.232  2376 
+10.60.81.232 2376 (docker-s): No route to host
+
+# 在远程主机上打开2376端口
+10.60.81.232$ sudo firewall-cmd --zone=public --add-port=2376/tcp
+
+$ nc -vz 10.60.81.232  2376
+10.60.81.232 2376 (docker-s) open
+```
+
+
+
+做完以上工作, 我们就可以执行下面的命令部署DockerEngine了. 
+
+```zsh
+$ docker-machine create \
+	--driver generic \
+	--generic-ip-address=10.60.81.232 \
+	--generic-ssh-key ~/.ssh/id_rsa  \
+	--generic-ssh-user=worker \
+	d232
+..
+$  docker-machine ls 
+NAME        ACTIVE   DRIVER       STATE     URL                         SWARM   DOCKER        ERRORS
+ir232       -        generic      Running   tcp://10.60.81.232:2376             v18.06.1-ce 
+```
+
+#### 如何操作远程主机上的Docker?
+
+```
+
+```
+
+
+
 ### Kitematic 
 
 Kitematic is a Mac OS and Windows GUI for running and managing Docker containers. 
@@ -896,7 +975,7 @@ Kitematic is a Mac OS and Windows GUI for running and managing Docker containers
 
 ### Local Registry
 
-```
+```zsh
 $ docker run -d -p 5000:5000 registry:2
 $ docker tag amouat/identidock:0.1 localhost:5000/identidock:0.1
 $ docker push localhost:5000/identidock:0.1
@@ -941,6 +1020,50 @@ In general, I would advise against this approach. It’s better just to pick a n
 
 ### 作弊手册
 
+
+
+防火墙:
+
+```zsh
+# centos 检测防火墙是否开启
+$ sudo firewall-cmd --state
+# 查看当前使用的zone, zone就是防火墙抽象出来的分组
+$ firewall-cmd --get-active-zones
+public
+  interfaces: eth0
+trusted
+  interfaces: docker0
+$ firewall-cmd --get-zones
+block dmz drop external home internal public trusted work
+
+# 现在我们想暴露一个端口改怎么办?
+# 查看当前系统有哪些端口暴露
+$ sudo firewall-cmd --zone=public --list-services
+ssh dhcpv6-client
+$ sudo firewall-cmd --zone=public --permanent --list-services
+
+# 查看一下有哪些服务可以暴露
+$ firewall-cmd --get-services 
+... https
+$ sudo cat /usr/lib/firewalld/https.xml
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <short>Secure WWW (HTTPS)</short>
+  <description>HTTPS is ... </description>
+  <port protocol="tcp" port="443"/>
+</service>
+
+# 测试一下打开http端口
+$ firewall-cmd --zone=public --add-service=http
+# 如果OK, 你需要永久保存一下这个配置
+$ firewall-cmd --zone=public --permanent --add-service=http
+
+# 当然有时候你需要打开的端口并没有对应的xml文件, 这时候可以
+$ sudo firewall-cmd --zone=public --add-port=2376/tcp
+```
+
+
+
 ```
 apt-get update
 apt-get install -y <package>
@@ -975,7 +1098,10 @@ For more information on using supervisord inside containers, see this Docker art
 
 - http://kubernetes.io/docs/getting-started-guides/
 
+
 ### 参考
 - https://www.cyberciti.biz/faq/linux-xen-vmware-kvm-intel-vt-amd-v-support/
 - [Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
 - monolithic architecture: 一种把所有系统都放在一起的架构方式，来源于建筑
+
+- 防火墙: https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-centos-7
