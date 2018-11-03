@@ -5,6 +5,9 @@
 ## Hello World
 
 ```bash
+# 可以将当前用户加入到docker组中，省去很多sudo
+$ useradd -aG docker $USER
+
 $ docker run base/archlinux echo hello
 hello
 
@@ -174,6 +177,15 @@ $ docker logs
 ### docker port
 
 ### docker top
+
+### docker stats container-id
+查看容器的系统资源使用情况
+
+```zsh
+# 获取全部容器的资源使用情况
+$ docker stats $(docker inspect -f {{.Name}} $(docker ps -q))
+```
+
 
 
 
@@ -533,6 +545,10 @@ SHELL
 
 
 
+### Docker容器的生命周期
+
+![image-20181103002229626](/Users/amas/Library/Application Support/typora-user-images/image-20181103002229626.png)
+
 ## 日常使用
 
 > The advantage of containers, DevOps, microservices, and continuous delivery essentially comes down to the idea of a fast feedback loop. By iterating quicker, we can
@@ -561,7 +577,75 @@ RUN pip3 uninstall pep8 ; pip3 install pep8 ; pip3 install --upgrade pep8
 
 
 
-### 实战二
+### 实战二: ELK Stack
+
+Elasticsearch : 搜索引擎
+
+Logstash : 收集处理日志
+
+Kibna: Elasticsearch的前端
+
+1. 如何将Docker的日志发送给Logstash? 使用Logspout
+
+
+
+![image-20181103001825545](/Users/amas/Library/Application Support/typora-user-images/image-20181103001825545.png)
+
+```yaml
+# docker-compose.yml file
+version: '3.7'
+
+services:
+  es:
+    labels:
+      com.example.service: "es"
+      com.example.description: "For searching and indexing data"
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.4.2
+    container_name: E1
+    volumes:
+      - ./esdata:/usr/share/elasticsearch/data/
+    ports:
+      - "9200:9200"
+
+  logstash:
+    labels:
+      com.example.service: "logstash"
+      com.example.description: "For logging data"
+    image: logstash
+    container_name: L1
+    volumes:
+      - ./:/logstash_dir
+    command: logstash -f /logstash_dir/logstash.conf
+    depends_on:
+      - es
+    ports:
+      - "5959:5959"
+
+  kibana:
+    labels:
+      com.example.service: "kibana"
+      com.example.description: "Data visualisation and for log aggregation"
+    image: docker.elastic.co/kibana/kibana:6.4.2
+    container_name: K1
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_URL=http://es:9200
+    depends_on:
+      - es
+```
+
+```
+esdata         # es数据目录        
+logstash.conf  # logsdash配置文件 
+logstash_dir   # logsdash目录 
+main.yml       # docker
+$ docker-compose -f main.yml up
+```
+
+
+
+
 
 
 
@@ -734,12 +818,27 @@ Docker Machine用来辅助快速在各种机器上部署Docker环境.
 # 执行下面命令之前需要安装virtualbox
 # 实际上docke-machine在虚拟机上安装了一个linux: https://github.com/boot2docker/boot2docker
 $ docker-machine  --debug create --driver virtualbox default
+# 等价于
+$ docker-machine create default
 ...
-$
+$ docker-machine ls
 
 # 删除
 $ docker-machine rm default
+
+
 ```
+
+
+
+
+
+```
+# 使用ssh登陆容器
+$ docker-machine ssh default
+```
+
+
 
 
 
