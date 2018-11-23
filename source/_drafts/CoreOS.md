@@ -543,23 +543,23 @@ google已经全面使用容器十多年了. google内部的系统叫做Borg. 可
 
 ### Kubernetes的组件
 
-#### Master
+#### Master: Kube的大脑
 
 - etcd cluster
 - API Service
 - Controller Manager
 - Scheduler
 
-#### Node
+#### Node: Kube集群中用来运行Pod的机器
 
 集群worker, 可以是VM也可以是bare-metal server, Node由Master来管理. 每个Node上至少运行两个服务:
 
 - Kubelet
 - Proxy
 
-#### Pod
+#### Pod: 最小的部署单元
 
-- 一组运行app的容器
+- Pod下面可以运行一个或多个容器
 - 相同的pod智能运行一次. 如果死了, RC就启动一个新的
 - 每个pod都有自己的IP
 - 每次RC从模板启动的pod都会分配不同的IP
@@ -653,9 +653,9 @@ service/hello-minikube exposed
 
 
 
+#### kubectl explain pods|svc|
 
-
-## Creating a single-node cluster with Minikube
+## 使用Minikube在单机上使用Kube
 
 ```zsh
 $ minikube start
@@ -685,6 +685,7 @@ Kubernetes master is running at https://192.168.99.101:8443
 CoreDNS is running at https://192.168.99.101:8443/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
 
 To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+# 主义这里的master: https://192.168.99.101:8443
 
 $ kubectl get nodes
 NAME       STATUS   ROLES    AGE   VERSION
@@ -693,8 +694,124 @@ minikube   Ready    master   6h    v1.10.0
 # 登录到minikube里
 $ minikube ssh
 
+$ kubectl run echo --image=gcr.io/google_containers/echoserver:1.4 --port=8080                                             
+deployment.apps/echo created
 
+$ kubectl get pods 
+NAME                              READY   STATUS              RESTARTS   AGE
+echo-5c7b447f8c-tgsfd             0/1     ContainerCreating   0          59s
+hello-minikube-7c77b68cff-sn4cw   1/1     Running             1          1h
+
+$ kubectl expose deployment echo --type=NodePort
+service/echo exposed
+$ minikube ip
+192.168.99.101
+
+
+$ kubectl get service echo
+NAME   TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+echo   NodePort   10.105.182.79   <none>        8080:30358/TCP   1m
+
+$ curl http://192.168.99.101:30358
+CLIENT VALUES:
+client_address=172.17.0.1
+command=GET
+real path=/
+query=nil
+request_version=1.1
+request_uri=http://192.168.99.101:8080/
+
+SERVER VALUES:
+server_version=nginx: 1.10.0 - lua: 10001
+
+HEADERS RECEIVED:
+accept=*/*
+host=192.168.99.101:30358
+user-agent=curl/7.62.0
+BODY:
+-no body in request-%
 ```
+
+
+
+### 使用kube dashboard
+
+```zsh
+# 首先看下kube-system下面都有哪些pod
+$ kubectl -n kube-system get pod 
+NAME                                    READY   STATUS    RESTARTS   AGE
+coredns-c4cffd6dc-j5ggx                 1/1     Running   2          13d
+etcd-minikube                           1/1     Running   0          18m
+kube-addon-manager-minikube             1/1     Running   3          13d
+kube-apiserver-minikube                 1/1     Running   0          18m
+kube-controller-manager-minikube        1/1     Running   0          18m
+kube-dns-86f4d74b45-qvl9z               3/3     Running   10         13d
+kube-proxy-pj9l9                        1/1     Running   0          17m
+kube-scheduler-minikube                 1/1     Running   0          18m
+kubernetes-dashboard-6f4cfc5d87-ffx7g   1/1     Running   6          13d
+storage-provisioner                     1/1     Running   6          13d
+
+$ kubectl -n kube-system get service 
+NAME                   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)         AGE
+kube-dns               ClusterIP   10.96.0.10     <none>        53/UDP,53/TCP   13d
+kubernetes-dashboard   ClusterIP   10.104.168.9   <none>        80/TCP          13d
+```
+
+> 注意: kubernetes-dashboard-* 这一行, 它的状态是Running
+
+
+
+接下来就可以通过master的ip和port访问dashboard了:
+
+ - https://192.168.99.101:8443/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/
+
+
+
+你应该会看到下面的信息:
+
+```json
+{
+  "kind": "Status",
+  "apiVersion": "v1",
+  "metadata": {
+    
+  },
+  "status": "Failure",
+  "message": "services \"https:kubernetes-dashboard:\" is forbidden: User \"system:anonymous\" cannot get services/proxy in the namespace \"kube-system\"",
+  "reason": "Forbidden",
+  "details": {
+    "name": "https:kubernetes-dashboard:",
+    "kind": "services"
+  },
+  "code": 403
+}
+```
+
+
+
+有两种方法可以解决这个问题,
+
+方案1:
+
+ -  使用minikube proxy建立一个代理
+ -  然后使用chrome设置这个代理
+
+```zsh
+$ minikube proxy
+Starting to serve on 127.0.0.1:8001
+
+$ chromium --proxy-server=127.0.0.1:8001  
+```
+
+> 打开浏览器从这个地址访问:  http://localhost:8001/api/v1/namespaces/kube-system/services/kubernetes-dashboard/proxy/#!/cronjob?namespace=default
+
+此方案比较简单, 但是不适合在生产环境中工作
+
+
+
+
+
+
 
 
 
@@ -703,3 +820,6 @@ $ minikube ssh
 ## Creating clusters in the cloud
 
 ## Creating bare-metal clusters from scratch
+
+
+
