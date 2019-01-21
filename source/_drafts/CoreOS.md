@@ -809,6 +809,78 @@ $ chromium --proxy-server=127.0.0.1:8001
 
 
 
+### 创建一个pod
+
+pod-nginx.yml:
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web
+spec:
+  containers:
+      - name: nginx-01
+        image: nginx
+        ports:
+          - containerPort: 80
+```
+
+
+
+```zsh
+$ kubectl create -f pod-nginx.yml
+$ kubectl describe pods/web
+Name:         web
+Namespace:    default
+Node:         minikube/10.0.2.15
+Start Time:   Fri, 23 Nov 2018 22:16:07 +0800
+Labels:       <none>
+Annotations:  <none>
+Status:       Running
+IP:           172.17.0.8
+Containers:
+  nginx-01:
+    Container ID:   docker://9c9ff976736c0da86184383069898acdb2915b9ec95172208bb30b4be58cc695
+    Image:          nginx
+    Image ID:       docker-pullable://nginx@sha256:31b8e90a349d1fce7621f5a5a08e4fc519b634f7d3feb09d53fac9b12aa4d991
+    Port:           80/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Fri, 23 Nov 2018 22:16:27 +0800
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-h246d (ro)
+Conditions:
+  Type           Status
+  Initialized    True 
+  Ready          True 
+  PodScheduled   True 
+Volumes:
+  default-token-h246d:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-h246d
+    Optional:    false
+QoS Class:       BestEffort
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type    Reason                 Age    From               Message
+  ----    ------                 ----   ----               -------
+  Normal  Scheduled              8m3s   default-scheduler  Successfully assigned web to minikube
+  Normal  SuccessfulMountVolume  8m3s   kubelet, minikube  MountVolume.SetUp succeeded for volume "default-token-h246d"
+  Normal  Pulling                8m2s   kubelet, minikube  pulling image "nginx"
+  Normal  Pulled                 7m43s  kubelet, minikube  Successfully pulled image "nginx"
+  Normal  Created                7m43s  kubelet, minikube  Created container
+  Normal  Started                7m43s  kubelet, minikube  Started container
+
+# 进入容器
+$ kubectl exec -it web -- bash
+```
+
 
 
 
