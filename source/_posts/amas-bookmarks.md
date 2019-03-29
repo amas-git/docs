@@ -9,6 +9,14 @@ tags:
 一些陈年旧事
 # 加工工具
  * 德国： PROXXON 
+
+# 电子书下载
+ - http://www.allitebooks.com/
+ - http://mebook.cc/
+ - https://bookset.me/
+ - http://www.ireadweek.com/
+ - http://www.allitebooks.in/
+
 # 计算机
  * http://www.erlang.org/
  * http://www.haskell.org/ghc/
@@ -18,6 +26,7 @@ tags:
  * http://cedet.sourceforge.net/
 # Scribes 编辑器
  * http://scribes.sourceforge.net/
+
 # 在线编辑
  * Code Search: http://www.codefetch.com/
  * CSS: http://www.styleneat.com/index.php
