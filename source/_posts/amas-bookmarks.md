@@ -16,6 +16,8 @@ tags:
  - https://bookset.me/
  - http://www.ireadweek.com/
  - http://www.allitebooks.in/
+ - https://www.jiumodiary.com/
+ - https://b-ok.cc/
 
 # 计算机
  * http://www.erlang.org/

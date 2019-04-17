@@ -142,4 +142,5 @@ d3是一个数据化可视框架, 具体到某一特定领域, 可能开发效�
 - https://github.com/mbostock/d3/wiki
 - https://github.com/mbostock/d3
 - https://groups.google.com/forum/?fromgroups#!forum/d3-js
-- http://www.jeromecukier.net/2011/08/11/d3-scales-and-color/
+- http://www.jeromecukier.net/2011/08/11/d3-scales-and-color/e
+- 
