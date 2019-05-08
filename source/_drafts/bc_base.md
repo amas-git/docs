@@ -281,6 +281,72 @@ console.log(Zm107.permutation(164n));
 
 
 
+## SEC Format
+
+为了便于使用和计算, 有人提出了SEC格式, 其实就是如何表示椭圆曲线上的坐标. 首先我们来看非压缩格式:
+
+> 0x04 <x><y> (总计65字节)
+
+有必要同时保存x和 y么?
+
+我们知道椭圆曲线上任意一点x可能对应两个y, 有没有可能只记录x, 那么给定x, 我们就可以计算出y, 或者p-y
+
+最多只有这两种取值.
+
+那么我们如何表达是哪个呢? 我们知道p是质数, 必然是奇数, 如果y是奇数, p-y就是偶数, 如果y是偶数那么p-y就是奇数. 于是:
+
+>0x02: 偶数y
+>
+>0x03: 奇数y
+>
+><x>
+
+于是我们可以只记录x坐标, 节省出一个坐标的空间(32bytes).
+
+
+
+## DER Signatures (Distinguished Encoding Rules)
+
+还记得我们计算出来的签名(r,s)么? 
+
+
+
+## 为什么使用Base58?
+
+因为Base64中的一些字符看起来很像,比如0和o, I和l等等, 为了增强可读性
+
+> Base58 = 10个数字 + 26个小写英文字母 + 26个大写英文字母 - 大写O - 数字0 - 大写I - 小写l
+
+
+
+### ripemd160 hash
+
+
+
+## 比特币地址如何组成
+
+> 1. a = SEC(P)
+> 2. Hash160(X) = RIPENMD160(SHA256(X))
+> 3. b = Hash160(a)
+> 4. c = [0x00 | 0x06] + b
+> 5. checksum = Hash256(c)[0,4]  # 4bytes的checksum
+> 6. address = Base58(c+checksum)
+
+
+
+## WIF Format (Wallet Import Format)
+
+对于256bit的私钥我们并不需要经常传输, 但有时会做私钥迁移.为此设计了WIF格式.
+
+
+
+
+
+>1. prefix = [0x80 | 0xef] # 主网 | 测试网
+>2. a = prefix + bigendian(k) + [0x01] 如果使用SEC格式的的公钥添加0x01后缀
+>3. checksum = SHA256(a)[0,4]
+>4. WIF = Base58(b + checksum)
+
 ## 参考
 
 - https://www.youtube.com/watch?v=XmygBPb7DPM
