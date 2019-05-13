@@ -131,9 +131,9 @@ Frederik Vercauteren ESAT/COSIC - K.U. Leuven ECRYPT Summer School 2008 Disc
 >
 > $k = (sm - digist)/r$
 >
-> $kr = sm - digest​$
+> $kr = sm - digest$
 >
-> $s = (kr + digest)/m​$
+> $s = (kr + digest)/m$
 
 m: 保密, 但对应的R点是公开的
 
@@ -182,7 +182,7 @@ s: 公开, 代表了r,k,m,digest之间的关系, 因为r,digest是公开的,  �
 
 
 ## secp256k1
-> $y^2=x^3+7​$
+> $y^2=x^3+7$
 
 这个曲线长这样: https://www.wolframalpha.com/input/?i=y%5E2+%3D+x%5E3+%2B+7
 
@@ -661,3 +661,4 @@ $ ./bitcoin-tool \
 - https://en.bitcoin.it/wiki/Address
 - 地址生成工具: https://gobittest.appspot.com/Address
 - Base58: https://learnmeabitcoin.com/glossary/base58 
+- https://www.johannes-bauer.com/compsci/ecc/
