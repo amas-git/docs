@@ -206,7 +206,7 @@ https://www.youtube.com/watch?v=D_kMadCtKp8
 
 
 
-## 费马小定理
+## 费马小定理和伪质数
 
 > 当p是质数时有:
 >
@@ -217,6 +217,10 @@ https://www.youtube.com/watch?v=D_kMadCtKp8
 可用于优化Z~p~有限域上的指数运算
 
 > $198^{750} = 198^{750\%(19-1)} = 198^{12} (mod\ 19)$
+
+> 虽然具有所有质数都满足费马小定理, 但是有一些合数也满足, 这种数又叫做伪质数,最小的伪质数是341
+
+
 
 
 
@@ -561,19 +565,7 @@ $ cat public_key.sec | wc -c
 
 # 解决了椭圆曲线的问题, 我们可以正式开搞
 # https://en.bitcoin.it/wiki/Address
-# 1. 计算SHA256(PublicKey)
-$ sha256sum public_key.sec 
-f376a6732f1d5d433301183fd03a4f09a1d65bb4059530dab7ea1b8c2f455475  public_key.sec
-
-# 2. ripemd160
-# 注意: echo -n禁止加换行字符, 否则算出来的hash就不对了
-$ echo -n f376a6732f1d5d433301183fd03a4f09a1d65bb4059530dab7ea1b8c2f455475  | openssl rmd160 
-(stdin)= 9f2d1416d8169cb356cfa6bdda2e626b88bab1d2
-
-# 3. 
-
-
-# 压缩格式的地址
+# 采用非压缩格式的SEC生成地址
 # 1. sha256
 $ sha256sum  public_key_uncompressed.sec
 f376a6732f1d5d433301183fd03a4f09a1d65bb4059530dab7ea1b8c2f455475  public_key_uncompressed.sec
@@ -585,7 +577,6 @@ $ echo -n f376a6732f1d5d433301183fd03a4f09a1d65bb4059530dab7ea1b8c2f455475 | xxd
 # 0x00 be01a788e9ff48b514095bad08e86957e7a7f3bd
 $ echo - n 00be01a788e9ff48b514095bad08e86957e7a7f3bd | xxd -r -p | openssl sha256
 (stdin)= ad23aea0ea8b7355b60def91859b41e992d032d5969d37a640a5f14e55b38688
-
 
 ```
 ```
@@ -603,7 +594,7 @@ $ echo - n 00be01a788e9ff48b514095bad08e86957e7a7f3bd | xxd -r -p | openssl sha2
 
 我们用bitcoin-tool验证一下计算过程是不是正确:
 
-```
+```bash
 $ bitcoin-tool --input-type private-key  --input-format raw  --input-file r --public-key-compression uncompressed  --network bitcoin --output-type all 
 address.hex:00be01a788e9ff48b514095bad08e86957e7a7f3bd
 address.base58:13eXsokAbxaQ4eisEgjzYm7DfUZxp
@@ -651,108 +642,6 @@ private-key.base58check:2mAQeum7h8fUpp6XPqPftTuf7EcQ8moV3U42KkoEUesF2XKi6e
  269c 8a43 f829 e097 c349 2858 7978 d0af
  b5ae 0a41 be22 2f4a ad0f 4073 e639 d432
  b316 17a6 92c4 b46a
-```
-
-
-
-
-
-
-
-```
-## 代码
-
-​```js
-const F = function (p) {
-  return o = {
-    add(x, y) {
-      return (x + y) % p;
-    },
-
-    mui(x, y) {
-      return (x * y) % p;
-    },
-
-    // 检测运算是否封闭
-    isClosed() {
-
-    },
-
-    // x/y = x*y^(p-2) (mod p)
-    div(x, y) {
-      //return o.mui(x, y**(p-2n));
-      return o.mui(x, o.pow(y, (p-2n)));
-    },
-
-    pow(x, n) {
-      // 可以优化
-      n = (n % (p - 1n));
-      // -----------
-      return (x**n) % p;
-    }
-  };
-};
-
-const Z = function(g, p) {
-  return o = {
-    permutation(max) {
-      let rs = [];
-      for(i=1n; i<max; ++i) {
-        let r = (g**i) % p;
-        rs.push(r);
-      }
-      return rs;
-    }
-  };
-};
-
-
-// 费马小定理
-// p是质数
-// a**(p-1) = 1 (mod p)
-console.log((10**(3-1)  % 3));
-console.log((66666666666666666666666n**(3n-1n)  % 3n)); // a 不能是p的倍数
-console.log((66666666666666666666661n**(3n-1n)  % 3n)); // a 不能是p的倍数
-console.log((10**(7-1)  % 7));
-console.log((10**(13-1) % 13));
-console.log((8**(13-1) % 13));
-console.log((2**(13-1) % 13));
-
-// x/y = x * (1/y) = x * ((y**(p-1) / y)) = x * (y**(p-2))
-
-// 如果y是p的倍数
-// x/y = x/p = x/0  // 这个是没有意义的
-
-
-const F19 = F(19n);
-console.log(F19.mui(3n,7n));  // 2
-console.log(F19.div(2n,7n));  // 3
-console.log(F19.mui(3n,7n));  // 2
-
-console.log(F19.mui(4n, 5n)); // 1
-console.log(F19.div(1n, 5n)); // 4
-
-
-console.log(F19.mui(10n, 13n)); // 16
-
-// y % 19 = 0
-console.log(F19.div(16n, 19n)); // 0?
-
-console.log(F19.pow(2n,13n));
-console.log(F19.pow(2n,19n*13n));
-console.log(F19.pow(2n,19n*19n*13n));
-
-// Computational Diffie-Hellman Problem
-// a = g**x , b= g**y, c = g**(xy)
-// CDH(g,a,b) -> c ?
-
-
-const Z5 = Z(5n, 277n);
-
-//console.log(Z5.permutation(64n));
-
-const Zm107 = Z(5n, 2n**107n - 1n);
-console.log(Zm107.permutation(164n));
 ```
 
 
@@ -817,8 +706,32 @@ XRP = rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz
 Flickr = 123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ
 ```
 
+```zsh
+#!/bin/zsh
+local dict=123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz
+local i=$(<&0)
+local output
+local zero
+
+for z in ${(@s::)i}; do
+    (( z > 0 )) && break
+    zero+=1
+done
+
+while true; do
+    r=$(echo "$i%58" | bc)
+    i=$(echo "$i/58" | bc)
+    output+=$dict[r+1]
+    (( i <= 0 )) && break
+done
+
+# padding zero + rest
+print $zero$(echo -n ${output} | rev)
 ```
-#!
+
+```zsh
+$ echo 9999 | base58
+3yQ
 ```
 
 
