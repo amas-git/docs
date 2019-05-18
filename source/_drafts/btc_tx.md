@@ -131,3 +131,125 @@ Locktime主要是为了应对高频交易,  取值是整整数. 是一种延迟�
 
 
 ## Script
+
+OP CODE:
+
+|              |      |      |
+| ------------ | ---- | ---- |
+| OP_DUP       | 0x76 |      |
+| OP_CHECKSIG  |      |      |
+| OP_0         | 0x00 |      |
+| OP_1         | 0x51 |      |
+| OP_16        | 0x60 |      |
+| OP_ADD       | 0x93 |      |
+| OP_HASH160   | 0xa9 |      |
+| OP_CHECKSIG  | 0xac |      |
+| OP_PUSHDATA1 |      |      |
+| OP_PUSHDATA2 |      |      |
+| OP_PUSHDATA4 |      |      |
+|              |      |      |
+
+标准脚本
+
+|        |                            |      |
+| ------ | -------------------------- | ---- |
+| p2pk   | pay to pubkey              |      |
+| p2pkh  | pay to pubkey hash         |      |
+| p2sh   | pay to script hash         |      |
+| p2wpkh | pay to witness pubkey hash |      |
+| p2wsh  | pay to witness-script hash |      |
+|        |                            |      |
+|        |                            |      |
+|        |                            |      |
+
+完成一个支付, 首先要有两个东西
+
+1. UTXOs里的ScriptPubkey, 这个证明了UTXOs是谁的
+2. 当前交易里的ScriptSig
+
+## p2pk
+
+早期交易中大量使用的脚本.也叫p2pk UTXOs, 
+
+p2pk ScriptPubKey:
+
+```
+xx  - 公钥长度
+... - 公钥
+ac  - OP_CHECKSIG 
+```
+
+
+
+p2pk ScriptSig (解锁脚本):
+
+```
+xx  - 签名长度
+... - 签名
+```
+
+
+
+
+
+p2pk ScriptSig和p2pk ScriptPubKey拼在一起:
+
+script:
+
+```
+-----------------------------[ p2pk ScriptSig    ]
+xx  - 签名长度
+... - 签名
+-----------------------------[ p2pk ScriptPubKey ]
+xx  - 公钥长度
+... - 公钥
+ac  - OP_CHECKSIG 
+```
+
+
+
+执行结果: 
+
+- 1: 合法
+- 0: 非法
+
+> p2pk的问题
+>
+> 1. 公钥太长了, SEC格式的公钥或33或65 bytes, 为了传输用hex编码, 结果最长要66或130个字符
+> 2. p2pk用于Ip-to-Ip的支付, 机器之间无所谓长短
+> 3. 导致UTXO set变大
+> 4. pubkey暴露在外, 万一那天ECDSA被破解了, 那么这些p2pk的UTXO就都可以被偷走了
+
+
+
+为了解决以上问题, 产生了p2pkh
+
+## p2pkh
+
+>p2pkh的优点
+>
+>1. 地址更短
+>2. 不再暴露公钥, 安全性更好
+
+p2pkh ScriptPubKey:
+
+```
+76  - OP_DUP
+a9  - OP_HASH160
+xx  - Hash长度
+... - Hash
+88  - OP_EQUALVERIFY
+ac  - OP_CHECKSIG
+```
+
+
+
+p2pkh ScriptSig
+
+```
+xx  - 签名长度 
+... - 签名(DER格式)
+xx  - 公钥长度
+... - 公钥
+```
+
