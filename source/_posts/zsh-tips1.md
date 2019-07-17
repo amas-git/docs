@@ -603,4 +603,4 @@ Feel free to leave a comment if you’d like to share a tip.
 
 © 2015 Nacho Caballero
 
-[RSS](http://feeds.feedburner.com/TheReasonIAmHere) • [Twitter](https://twitter.com/nachocaballero) • [About](http://reasoniamhere.com/about.html)
+[RSS](http://feeds.feedburner.com/TheReasonIAmHere) • [Twitter](https://twitter.com/nachocaballero) • [About](http://reasoniamhere.com/about.html)``
