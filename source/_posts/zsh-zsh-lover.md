@@ -52,11 +52,11 @@ parse_options()
 parse_options $*
 ```
 
-# EXAMPLES ==
+# EXAMPLES
 
 Available subsections are Aliases, Completion, Unsorted/Misc examples, (Recursive) Globbing - Examples, Modifiers usage, Redirection-Examples, ZMV-Examples and Module-Examples.
 
-# ALIASES ==
+# ALIASES
 Suffix aliases are supported in zsh since version 4.2.0. Some examples:
 ```
 alias -s tex=vim
@@ -214,7 +214,7 @@ $ echo $[${RANDOM}%11+10]
 $ echo "${(j::)${(@Oa)${(s::):-hello}}}"
 ```
 
-```
+```zsh
 # Get the names of all files that *don't* match a pattern *anywhere* on the
 # file (and without ``-L'' because its GNUish)
   $ print -rl -- *(.^e{'grep -q pattern $REPLY'})
