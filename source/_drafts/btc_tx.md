@@ -32,7 +32,7 @@ variable-length field
 Input中包含的字段:
   - Previous transaction ID
   - Previous transaction index
-  - ScriptSig: 签名脚本
+  - ScriptSig
   - Sequence: Replace-By-Fee (RBF) and OP_CHECKSEQUENCEVERIFY
 
 
@@ -206,12 +206,23 @@ xx  - 公钥长度
 ac  - OP_CHECKSIG 
 ```
 
+执行过程:
+```
+#-----------------------------------| 1.初始状态 
+SCRIPT       STACK
+signature
+pubkey
+OP_CHECKSIG
+#-----------------------------------| 2.参数进栈   
+SCRIPT       STACK
+OP_CHECKSIG
+             signature
+             pubkey
+#-----------------------------------| 3.执行OP_CHECKSIG            
+SCRIPT       STACK
+             0或1                        
+```
 
-
-执行结果: 
-
-- 1: 合法
-- 0: 非法
 
 > p2pk的问题
 >
@@ -229,7 +240,7 @@ ac  - OP_CHECKSIG
 >p2pkh的优点
 >
 >1. 地址更短
->2. 不再暴露公钥, 安全性更好
+>2. 不再长期暴露公钥, 安全性更好(注意: p2pkh把公钥移动到ScriptSig中)
 
 p2pkh ScriptPubKey:
 
@@ -253,3 +264,264 @@ xx  - 公钥长度
 ... - 公钥
 ```
 
+
+
+我们来看下脚本是怎么执行的:
+
+```
+#-----------------------------------| 1.初始状态 
+SCRIPT           STACK
+signature
+pubkey
+OP_DUP
+OP_HASH160
+hash
+OP_EQUALVERIFY
+OP_CHECKSIG
+#-----------------------------------| 2.参数进栈   
+SCRIPT           STACK
+OP_DUP
+OP_HASH160
+hash
+OP_EQUALVERIFY
+OP_CHECKSIG
+                 signature
+                 pubkey
+#-----------------------------------| 3.执行OP_DUP         
+SCRIPT           STACK
+OP_HASH160
+hash
+OP_EQUALVERIFY
+OP_CHECKSIG
+                 signature
+                 signature
+                 pubkey   
+#-----------------------------------| 4.执行OP_HASH160         
+SCRIPT           STACK
+hash
+OP_EQUALVERIFY
+OP_CHECKSIG
+                 hash'
+                 signature
+                 pubkey       
+#-----------------------------------| 5.执行OP_HASH160         
+SCRIPT           STACK
+OP_EQUALVERIFY
+OP_CHECKSIG      hash
+                 hash'
+                 signature
+                 pubkey   
+#-----------------------------------| 6.OP_EQUALVERIFY      
+SCRIPT           STACK
+OP_CHECKSIG     
+                 signature
+                 pubkey 
+#-----------------------------------| 6.OP_EQUALVERIFY      
+SCRIPT           STACK
+                 0或1
+```
+
+
+
+> 注意: ,如果input中的ScriptSig可以让指定的output中的ScriptPubKey计算结果为1, 就好象钥匙打开了锁一样, 这个过程也叫做unlock. 
+
+
+
+了解了签名脚本, 你就可以实现一个自己的签名脚本,当这个脚本执行成功就可以解锁比特币出来.
+
+## 交易的创建和验证
+
+![](/src/amas/docs/source/_drafts/assets/2019-05-20-135006_583x196_scrot.png)
+
+有三方面:
+
+1. inputs里面的utxos是不是有效的
+2. inputs比特币 >= outputs比特币
+3. ScriptSig可以解锁ScriptPubKey
+
+>inputs >= outputs, 且inputs > 0
+>
+>### The Value Overflow Incident
+>Back in 2010, there was a transaction that created 184 billion new
+>bitcoins. This was due to the fact that in C++, the amount field is a
+>signed integer and not an unsigned integer. That is, the value could
+>be negative!
+>The clever transaction passed all the checks, including the one for
+>not creating new bitcoins, but only because the output amounts
+>overflowed past the maximum number. 2 64 is ~1.84 × 10 19 satoshis,
+>which is 184 billion bitcoins. The fee was negative by enough that
+>the C++ code was tricked into believing that the fee was actually
+>positive by 0.1 BTC!
+>The vulnerability is detailed in CVE-2010-5139 and was patched
+>via a soft fork in Bitcoin Core 0.3.11. The transaction and the extra
+>bitcoins it created were invalidated retroactively by a block reor‐
+>ganization, which is another way of saying that the block including
+>the value overflow transaction and all the blocks built on top of it
+>were replaced
+
+
+
+## 创建交易
+
+三要素
+
+1. 钱从哪来
+2. 钱到哪去
+3. 你需要多快的交易速度(给多少手续费)
+
+> ## 为什么重复使用地址是不安全的?
+>
+> 迄今为止,比特币的资产安全根本上是由DLP问题求解难度保证的.
+>
+> 1. p2pk的资产安全性全靠ECDSA
+> 2. p2pkh依靠ECDSA和SHA256+RMP160
+>
+> p2pkh
+>
+> 尽管与p2pk相比不会把公钥保存到区块里(outputs的ScriptPubKey中), 但是当发起一笔交易的时候, 仍然需要暴露公钥, 所以重复使用一个地址, 就增加了暴露的机会, 这使得SHA256+RMP160不再有用.
+>
+> ## 怎么做?
+>
+> 支付的时候使用一个地址, 剩下的钱招零到新地址里. 这样就只需要暴露一次公钥, 而且最好这个地址不要再使用, 没有攻击者会对一个没钱的地址感兴趣.
+>
+> ## 如何计算手续费?
+>
+> 交易字节数 x 单价
+>
+> 注意: Segwit中有点不同
+>
+> ## 如何估计单价?
+>
+> 1. 根据历史成交
+> 2. 根据当前mempool中的出价
+> 3. 固定手续费
+
+## p2sh
+
+>  p2pk和p2pkh是单签名交易, 每个input只需要用同一个私钥签名即可.
+>
+>  p2sh是一个多签名交易,
+
+>Satoshi probably didn’t test multisig, as it has an off-by-one error (see
+>OP_CHECKMULTISIG Off-by-One Bug). The bug has had to stay in the protocol
+>because fixing it would require a hard fork.
+
+
+
+> Schnorr签名可能未来会替代 ECDSA, 其对多签名具有更好的支持. 相同点是二者本质安全都靠DLP.
+
+
+
+## 什么是M-of-N Multisig, Multisig Output
+
+m-of-n多签名, 其实还有一个条件m <=n, m就是minimum, 有n个签名, 至少需要用m个签名通过才能解锁比特别. 
+
+现实生活中有非常多的支付场景需要m-of-n多签名. 
+
+|      |       |
+| ---- | ---- |
+|    1-of-2  | 夫妻两人的共同账户, 任意一人的签名都支付           |
+|    2-of-2  | 夫妻的大额共同存款, 需要两个人的签名才可以支付            |
+|    2-of-3  | 三个合伙人拥有的共同基金, 需要至少两个人的签名才能支付            |
+
+https://bitcoin.org/en/developer-examples#offline-signing
+
+多签名脚本:
+
+
+
+### 什么是Bare Multisig?
+
+## BIP0016:RedeemScript
+
+
+
+## 交易的延展性:Transaction Malleability
+
+延展性是个装逼十足的说法,其实就是可变性.
+
+
+
+交易延展性指的是指改变交易ID而不改变交易的含义.
+
+交易的ID具有可变性, 这听起来有点不可思议, 但的确如此. 因为在计算交易ID的时候, 
+
+是从交易体计算而来的,  绝大多数交易体中的字段都是不能随便更改的, 需要验证签名, 但是有一个例外, 每一个input单色ScriptSig可以不经过签名校验就更改. 这样就带来一个问题,如果有人修改了ScriptSig, 那么交易ID也随之改变. 这个有什么用呢? 首先如果修改了ScriptSig, 这肯定是不能解锁ouput的. 如果基于这个修改过的交易再构建出一串交易, 这一堆交易也都是最终不会进入到区块链的. 它的真正影响在于对支付通道的影响, 比如闪电网络, 有自己的侧链,如果同一个交易ID变来变去就会比较危险了. 另一方面, 虽然这种可变的交易最终不会确认, 但是我们可以制造大量这样的交易链, 然后以此DoS比特币网络.
+
+
+
+
+
+我们怎么消灭可变性?
+
+解决方案要兼容老的版本, 采用增加一个witness的字段来存储ScriptSig
+
+### BIP0143: Segwit是什么?
+
+> 隔离见证就是将签名信息保存到新的字段里, 为了兼容老客户端, 需要搞一个软分叉, 这个软分叉从477,120.开始.
+
+
+
+> ### 解决什么问题?
+>
+> 1. 解决了交易ID不可变
+> 2. 闪电网络的基础
+
+Segwit多了三个字段
+
+- marker
+
+- flag
+
+- witness
+  - signature
+
+一部分矿工, 绝大多是中国矿工在软分叉的时候发生了分期, 后来成为了BCH.
+
+### Bech32, defined in BIP0173
+
+## p2sh-p2wpkh
+
+p2wpkh虽然挺好,但是是一种新的支付脚本, 老钱包不支持,咋整? 工程师来解决, 将
+
+p2wpkh搞到p2sh里
+
+p2sh-p2wpkh地址是一个正常的p2sh地址, RedeemScript是[OP_0, <20 bytes hash>]
+
+
+
+
+
+
+
+### Contributing
+
+```
+
+```
+
+A large part of the Bitcoin ethic is contributing back to the community. The main way
+you can do that is through open source projects. There are almost too many to list,
+but here’s a sample:
+Bitcoin Core
+The reference client
+Libbitcoin
+An alternate implementation of Bitcoin in C++
+btcd
+A Golang-based implementation of Bitcoin
+Bcoin
+A JavaScript-based implementation of Bitcoin, maintained by purse.io
+248
+|
+Chapter 14: Advanced Topics and Next Stepspycoin
+A Python library for Bitcoin
+BitcoinJ
+A Java library for Bitcoin
+BitcoinJS
+A JavaScript library for Bitcoin
+BTCPay
+A Bitcoin payment processing engine written in C#
+
+```
+
+```
