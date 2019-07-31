@@ -38,3 +38,32 @@ const r = seval('2000+a === 100 || (1 === 1)', {a:400, x:999});
 (function() {
   console.log(Function);
 })();
+
+
+class Rule {
+  constructor(id) {
+    this.id = id;
+  }
+  test(expr) {
+    let c = eval(expr);
+    let r = {
+      DO(action) {
+        if (c && action) {
+          eval(action)
+        }
+        return r;
+      },
+      orElse(action) {
+        if (!c && action) {
+          eval(action);
+        }
+        return r;
+      }
+    }
+    return r;
+  }
+}
+
+let xx = 1;
+new Rule('is_even').test('xx % 2 ===  0').DO(`console.log('YES')`).orElse(`console.log('NO')`);
+
