@@ -629,6 +629,22 @@ SEE: http://go-proverbs.github.io/
 
 ### 并发编程
 
+goroutine
+
+```
+go some_function
+```
+
+
+
+channels
+
+> goroutine之间可以通过channels通讯
+
+
+
+
+
 ### 内存管理
 
 ### 极速编译
