@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
+	"math/rand"
 	"sort"
 	"time"
 )
@@ -27,6 +29,87 @@ func main() {
 	put("hello", "word")
 	mapTest()
 	structTest()
+	//randTest()
+	funcTest()
+	//letsgo()
+	chanTest()
+	//panic("I'm dead")
+}
+func randTest() {
+	for i := 0; i < 100; i++ {
+		fmt.Println(randn(1, 200))
+	}
+}
+
+func randn(min, max int) int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(max - min)
+}
+
+func chanTest() {
+	//timeout = time.After(5)
+
+	c := make(chan string)
+
+	fn := func(id int, c chan string) {
+		n := randn(200, 2000)
+		time.Sleep(time.Millisecond * time.Duration(n))
+		fmt.Printf("TASK %d DONE (%d)\n", id, n)
+		c <- "[" + string(id) + "]"
+	}
+
+	works := []int{1, 2, 3, 4, 5}
+	for _, v := range works {
+		go fn(v, c)
+	}
+
+	timeout := time.After(time.Second * 1)
+	for _ = range works {
+		select {
+		case r := <-c:
+			fmt.Printf("FINISHED: %s \n", r)
+		case <-timeout:
+			fmt.Printf("TIMOUT EXIT")
+			return
+		}
+	}
+
+}
+
+func letsgo() {
+	fn := func() {
+		for n := 0; n < 10; n++ {
+			fmt.Println(time.Now().Format(time.RFC850))
+			time.Sleep(time.Millisecond * 500)
+		}
+	}
+	go fn()
+	fmt.Println("letsgo over")
+	time.Sleep(time.Second * 8)
+}
+
+func funcTest() {
+	fn := func(x int) {
+		fmt.Printf("=== [%v] ===\n", x)
+	}
+
+	for _, v := range map[string]int{"a": 1, "b": 2} {
+		fn(v)
+	}
+
+	sum := func(a int, b int) int {
+		return a + b
+	}(1, 2)
+	fmt.Println(sum)
+}
+
+type person struct {
+	Name string `json:"name"`
+	Age  int    `json:"age"`
+}
+
+func (p person) print() {
+	fmt.Printf("[NAME:%8s | AGE: %2d]\n", p.Name, p.Age)
 }
 
 func structTest() {
@@ -39,6 +122,87 @@ func structTest() {
 	point.y = 2
 
 	fmt.Printf("%v\n", point)
+
+	type box struct {
+		width  int
+		height int
+	}
+	var a box
+	a.width = 1
+	a.height = 2
+
+	b := box{11, 12}
+
+	c := box{height: 1}
+
+	fmt.Println(a, b, c)
+
+	students := []person{
+		{"zhou", 11},
+		{"bob", 12},
+		{"amas", 13},
+	}
+	bytes, err := json.Marshal(students)
+	fmt.Println(bytes, err)
+	fmt.Println(string(bytes)) // FIXME: NOT WORK???
+
+	amas := person{"amas", 110}
+	amas.print()
+
+	double := func(p person) {
+		p.Age *= 2
+		p.print()
+	}
+
+	double(amas)
+	amas.print()
+
+	func(p *person) {
+		p.Age *= 3
+		p.print()
+	}(&amas)
+	amas.print()
+
+	ab := AB{A{"amas"}, B{19}}
+	fmt.Println(ab)
+	ab.FA()
+	ab.A.FA()
+	ab.B.FB()
+	ab.FB()
+
+	var one Say = A{"one"}
+	iSay, ok := one.(Say)
+	if ok {
+		fmt.Println(iSay.say())
+	}
+}
+
+type Say interface {
+	say() string
+}
+
+type AB struct {
+	A
+	B
+}
+
+type A struct {
+	name string
+}
+
+type B struct {
+	age int
+}
+
+func (a A) say() string {
+	return "hahaha"
+}
+
+func (a A) FA() {
+	fmt.Printf("FA name %v\n", a.name)
+}
+func (b B) FB() {
+	fmt.Printf("FB age %v\n", b.age)
 }
 
 func mapTest() {
