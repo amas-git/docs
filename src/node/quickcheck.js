@@ -38,3 +38,5 @@ const r = seval('2000+a === 100 || (1 === 1)', {a:400, x:999});
 (function() {
   console.log(Function);
 })();
+
+console.log(vm.runInNewContext('`${a}+1`', {a:1}));
