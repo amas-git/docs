@@ -2,6 +2,16 @@
 
 # Docker
 
+## 安装
+
+在linux上安装后会建立一个docker组， 为了方便可以将当前用户加入到docker组里:
+
+```
+$ sudo usermod -a -G dockder <user-name>
+```
+
+
+
 ## Hello World
 
 ```bash
@@ -1032,7 +1042,7 @@ CMD ["/cmd.sh"]
 ```
 
 ```
-Running Multiple Process in a Container
+tRunning Multiple Process in a Container
 The majority of containers only run a single process. Where multiple processes are needed, it’s best to run multiple containers and link them together, as we have done in this example.
 However, sometimes you really do need to run multiple processes in a single con‐ tainer. In these cases, it’s best to use a process manager such as supervisord or runit to handle starting and monitoring the processes. It is possible to write a simple script to start your processes, but be aware that you will then be responsible for cleaning up the processes and forwarding any signals.
 For more information on using supervisord inside containers, see this Docker article.
