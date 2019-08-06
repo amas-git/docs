@@ -643,7 +643,11 @@ channels
 
 
 
+#### 锁: sync.Mutex
 
+#### CSP: Communicating Sequential Processes
+
+CSP的概念诞生于1978年，简单来说，就是把输入和输出作为程序设计语言的内置功能
 
 ### 内存管理
 
@@ -657,7 +661,82 @@ go内置了API和工具用于测试代码的覆盖率，性能测试等等。
 
 
 
+### 并发模型
+
+## sync
+
+- Cond: 主要用来阻塞coroutine, 等待其他coroutine发来信号之后再WatiPass
+
+  ```go
+  // 忙等
+  for something() == false {
+  	time.Sleep(time.Second)
+  }
+  
+  // Cond等, 等待的corutine调用c.Signal()
+  var c sync.NewCond(&sync.Mutex{})
+  c.L.Lock()
+  if something() == false {
+  	c.Wait()
+  }
+  
+  c.L.Unlock()
+  ```
+
+  
+
+- Mutex
+
+  - Lock()制造临界区
+  - UnLock()退出临界区
+
+- Once
+
+  - Do(func), 无论在多少个corotine中调用once.Do(), 其中的函数只被执行一次
+
+- Map: 并发安全的Map
+
+- WaitGroup: 安全计数器
+
+  - Wait(): 阻塞当前coroutine
+  - Add(n): 加n
+  - Done(): 减1， 为0时WaitPass
+
+- Pool: 用于创建并发安全对象池
+
+- RWMutex: 区分读写操作的Mutex, 写的时候读
+
+
+
+## Channels
+
+> sync中所有的功能都可以概括为控制内存访问顺序，Channels的目的也是如此
+
+Channels背后的概念是CSP, 并不是只有Go采用CSP, Erlang
+
+### 定义channels
+
+channels有三种类型, 这说法不够严谨，但方便记忆
+
+	- chan :  双向可收发
+	- chan <-: 只写
+	- <- chan: 只读
+
+```go
+c := make(chan, int)
+
+var c chan int
+var writeOnly chan <- int
+var readOnly <-chan  int
+```
+
+
+
+
+
 ## 参考
 
+- go 1.4.3是最后一版用C实现的go, 此后go用go语言实现， 这个很好的解释了先有鸡还是现有蛋的问题
 - https://medium.com/rungo/the-anatomy-of-functions-in-go-de56c050fe11
+- 本机Go的源码安装位置: `$ echo $(go env GOROOT)/src`
 

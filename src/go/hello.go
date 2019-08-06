@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"math/rand"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -34,7 +35,70 @@ func main() {
 	//letsgo()
 	chanTest()
 	//panic("I'm dead")
+	testWaitGroup()
+	testOnce()
+	simapleNumberStream(5)
+	//deadLock()
 }
+
+func deadLock() {
+	c := make(chan int)
+
+	fmt.Println(<-c) // dead lock
+}
+
+func simapleNumberStream(max int) {
+	c := make(chan int)
+
+	go func() {
+		defer close(c) // 确保channel使用完毕之后关掉
+		for i := 0; i < max; i++ {
+			c <- i
+			time.Sleep(time.Second)
+		}
+	}()
+
+	go func() {
+		for x := range c {
+			fmt.Printf(" - %d\n", x)
+		}
+	}()
+
+	for x := range c {
+		fmt.Printf(" * %d\n", x)
+	}
+}
+
+func testOnce() {
+	once := sync.Once{}
+	sum := 0
+	inc := func() {
+		sum++
+	}
+
+	go (func() {
+		once.Do(inc)
+	})()
+	once.Do(inc)
+	once.Do(inc)
+	once.Do(inc)
+	once.Do(inc)
+
+	fmt.Println("sum: ", sum)
+}
+
+func testWaitGroup() {
+	var wg sync.WaitGroup
+	for _, salutation := range []string{"hello", "greetings", "good day"} {
+		wg.Add(1)
+		go func(s string) {
+			defer wg.Done()
+			fmt.Println(s)
+		}(salutation)
+	}
+	wg.Wait()
+}
+
 func randTest() {
 	for i := 0; i < 100; i++ {
 		fmt.Println(randn(1, 200))
