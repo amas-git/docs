@@ -186,11 +186,31 @@ for n := 0; n < 100; n++ {
 
 
 
+### 表达式
+
+	- 不支持 --i， ++i
+	- i++， i--不能作为表达式
+
+### 简单语句
+
+```go
+x := 1   //短声明
+x += 1  //
+f()  // 函数调用
+<- c // channels receive
+i++, i--
+-> c // channels send
+```
+
+其他的都是非简单语句， 简单语句可以用在for/if后面
+
+
+
 ### 函数
 
 ### 接口
 
-### 
+
 
 ### 循环和迭代
 
@@ -226,6 +246,34 @@ for i,c := range s {
 #### switch/case
 
 > case默认不穿透，要想穿透需要用fallthrough
+
+#### if/else
+
+```go
+if n--; n > 0 {
+
+} else {
+
+}
+```
+
+
+
+#### for/range
+
+#### type/switch
+
+#### select/case/default
+
+```
+switch n := rand.Intn(100); n % 7 {
+	case 1:
+	case 2
+	default:
+}
+```
+
+
 
 ### 类型系统
 
@@ -452,6 +500,30 @@ Used together, composition and interfaces make a very powerful design tool.
 
 
 
+### 基础类型
+
+	- string
+	- bool
+	- int8(byte)
+	- uint(byte)
+	- int16
+	- uint16
+	- int32(rune)
+	- uint32
+	- int64
+	- uint64
+	- int
+	- uint
+ - uintptr
+   	- 指针类型不能进行算数运算
+   	- 指针类型不能转换为其他类型的指针
+	- float32
+	- float64
+	- complex64
+	- complex128
+
+
+
 ### 类型转换
 
 ```
@@ -506,11 +578,18 @@ function double(a , b int) (m, n int) {
 
 ### defer
 
-```
+gp函数在调用reture后进入exiting phase
 
 ```
 
+```
 
+内置函数
+
+	- print
+	- println
+	- real
+	- imag
 
 ### 匿名函数
 
@@ -539,6 +618,21 @@ func() {
 首字母大写 = public
 首字母小写 = private
 ```
+
+
+可以存在多个init函数, 最终会被合并在一起执行
+
+```go
+func init() {
+
+}
+```
+
+init函数的调用顺序是:
+
+	- 先执行依赖包里的init
+	- 再执行当前包里的init
+	- 所有的init都执行完毕，再调用main
 
 
 
@@ -627,13 +721,53 @@ SEE: http://go-proverbs.github.io/
 
 错误也是数据， 正常去处理就好了
 
+### 包管理
+
+- package $name
+
+- main 函数必须定义到main包里
+
+- 多个go文件可以存放在同一目录下，属于同一个包
+- vendor作为特殊目录， 和go.mod文件所在的目录共享同一个名字
+- module
+  - GO111MODULE环境变量为on
+  - go.mod文件
+  - build时可以通过`-mod=vedor`来打包vendor目录下的代码
+- go不支持循环import
+
+```go
+import $importname $import_path
+import format "fmt"
+```
+
+
+
+### dot import
+
+```go
+import . "fmt"
+
+Println("Let's go") 
+```
+
+
+
 ### 并发编程
 
-goroutine
+#### goroutine
 
 ```
 go some_function
 ```
+
+ - 状态:
+   	- running
+   	- blocking
+	- 任意时间最多有不超过runtime.NumCPU个goroutine同时执行
+ - M-P-G模型: https://docs.google.com/document/d/1TTj4T2JO42uD5ID9e89oa0sLKhJYD0Y_kqxDv3I3XMw/edit
+   	- M : OS Thread
+   	- P: logical/virtual processors, 可以他哦难过runtime.GOMAXPROCS(-1)来查看这个数， Go1.5以后这个就等于runtime.NumCPU(), 对于重IO业务，可以把这个调大
+   	- G: goroutine
 
 
 

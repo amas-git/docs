@@ -5,12 +5,19 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
+	"runtime"
 	"sort"
 	"sync"
 	"time"
+	"unsafe"
 )
 
 const PI = 3.14
+
+func init() {
+	fmt.Println("PI=", PI)
+	fmt.Println("GOMAXPROCS=", runtime.GOMAXPROCS(-1))
+}
 
 func main() {
 	fmt.Println("let's go", add(100, 2009))
@@ -39,6 +46,78 @@ func main() {
 	testOnce()
 	simapleNumberStream(5)
 	//deadLock()
+	constTest()
+	nouse()
+	overflow()
+	testDefer()
+	fmt.Println("The result is", testDeferChangeResultVar())
+	testSizeof()
+}
+
+type Age int
+
+func testSizeof() {
+	fmt.Println("int", unsafe.Sizeof(int(1)))           // 8
+	fmt.Println("rune", unsafe.Sizeof(rune(1)))         // 4
+	fmt.Println("rune", unsafe.Sizeof(int8(1)))         // 1
+	fmt.Println("byte", unsafe.Sizeof(byte(1)))         // 1
+	fmt.Println("map", unsafe.Sizeof(map[string]int{})) // 8
+}
+
+func testDeferChangeResultVar() (n int) {
+	defer func() {
+		n = 111
+	}()
+	return 1
+}
+
+func testDefer() {
+	defer fmt.Println("DEFER 2")
+	defer fmt.Println("DEFER 1")
+}
+
+func overflow() {
+	// a := 1 << 64 // ERRORS
+	print("buildin")
+}
+
+const HELLO_WORLD = "hello world"
+
+func init() {
+	fmt.Println(HELLO_WORLD)
+}
+
+func nouse() {
+	a := 1
+	b := 2
+	_, _ = a, b // fixed not ussed issue
+}
+
+func constTest() {
+	const (
+		A int = 1
+		B
+		C
+
+		D int = iota
+		E int = iota
+		F int = iota
+		G int = 199
+		H int = iota
+	)
+
+	const (
+		N0 int = iota
+		N1
+		N2
+		N3
+		N4
+		N5
+	)
+
+	fmt.Println("constTest/1", A, B, C)
+	fmt.Println("constTest/2", D, E, F, G, H)
+	fmt.Println("constTest/3", N0, N1, N2, N3, N4, N5)
 }
 
 func deadLock() {
