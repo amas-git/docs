@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
+	"reflect"
 	"runtime"
 	"sort"
 	"sync"
@@ -52,6 +53,30 @@ func main() {
 	testDefer()
 	fmt.Println("The result is", testDeferChangeResultVar())
 	testSizeof()
+	loopTrick()
+	reflectTest()
+}
+
+func reflectTest() {
+	type Person struct {
+		Name string `default:amas`
+		Age  int    `default:1`
+	}
+
+	amas := Person{
+		Name: "amas",
+		Age:  199,
+	}
+	field, ok := reflect.TypeOf(Person).Elem().FieldByName("Name")
+	if ok {
+		fmt.Println(string(field.Tag))
+	}
+}
+
+func loopTrick() {
+	for i := range [5][]int{} {
+		fmt.Printf("> %d\n", i)
+	}
 }
 
 type Age int
