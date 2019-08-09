@@ -516,7 +516,7 @@ Used together, composition and interfaces make a very powerful design tool.
 	- uint
  - uintptr
    	- 指针类型不能进行算数运算
-   	- 指针类型不能转换为其他类型的指针
+      	- 指针类型不能转换为其他类型的指针
 	- float32
 	- float64
 	- complex64
@@ -723,6 +723,35 @@ SEE: http://go-proverbs.github.io/
 
 ### 包管理
 
+源码组织:
+
+```
+project
+    ├── bin
+    ├── main.go
+    ├── pkg
+    └── src
+```
+
+
+
+#### 包管理工具
+
+- go get
+
+- glide: https://glide.readthedocs.io/en/latest/getting-started/
+
+  - ```bash
+    $ go get github.com/Masterminds/glide 
+    $ go install github.com/Masterminds/glide 
+    ```
+
+    
+
+- go dep
+
+#### 定义自己的模块
+
 - package $name
 
 - main 函数必须定义到main包里
@@ -752,36 +781,11 @@ Println("Let's go")
 
 
 
-### 并发编程
-
-#### goroutine
-
-```
-go some_function
-```
-
- - 状态:
-   	- running
-   	- blocking
-	- 任意时间最多有不超过runtime.NumCPU个goroutine同时执行
- - M-P-G模型: https://docs.google.com/document/d/1TTj4T2JO42uD5ID9e89oa0sLKhJYD0Y_kqxDv3I3XMw/edit
-   	- M : OS Thread
-   	- P: logical/virtual processors, 可以他哦难过runtime.GOMAXPROCS(-1)来查看这个数， Go1.5以后这个就等于runtime.NumCPU(), 对于重IO业务，可以把这个调大
-   	- G: goroutine
-
-
-
-channels
-
-> goroutine之间可以通过channels通讯
-
 
 
 #### 锁: sync.Mutex
 
-#### CSP: Communicating Sequential Processes
 
-CSP的概念诞生于1978年，简单来说，就是把输入和输出作为程序设计语言的内置功能
 
 ### 内存管理
 
@@ -796,6 +800,31 @@ go内置了API和工具用于测试代码的覆盖率，性能测试等等。
 
 
 ### 并发模型
+
+#### goroutine
+
+```
+go some_function
+```
+
+- 状态:
+  - running
+    - blocking
+  - 任意时间最多有不超过runtime.NumCPU个goroutine同时执行
+- M-P-G模型: https://docs.google.com/document/d/1TTj4T2JO42uD5ID9e89oa0sLKhJYD0Y_kqxDv3I3XMw/edit
+  - M : OS Thread
+  - P:  实际上G到M的执行是由P来控制的， P中有一个runqueue保存G, 此外还有调度器来分配时间片
+    - runtime.GOMAXPROCS(-1)来查看P的数量，Go1.5以后这个就等于runtime.NumCPU(),
+    - 对于重IO业务，可以把这个调大
+  - G: goroutine
+
+> TODO:
+>
+> 当P=1时，如果panic了，会不会导致阻塞？
+
+
+
+
 
 ## sync
 
@@ -844,9 +873,13 @@ go内置了API和工具用于测试代码的覆盖率，性能测试等等。
 
 ## Channels
 
+CSP: Communicating Sequential Processes CSP的概念诞生于1978年，简单来说，就是把输入和输出作为程序设计语言的内置功能
+
+
+
 > sync中所有的功能都可以概括为控制内存访问顺序，Channels的目的也是如此
 
-Channels背后的概念是CSP, 并不是只有Go采用CSP, Erlang
+Channels背后的概念是CSP, 并不是只有Go采用CSP, Erlang也是
 
 ### 定义channels
 
