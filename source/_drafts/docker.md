@@ -2,6 +2,16 @@
 
 # Docker
 
+## 安装
+
+在linux上安装后会建立一个docker组， 为了方便可以将当前用户加入到docker组里:
+
+```
+$ sudo usermod -a -G dockder <user-name>
+```
+
+
+
 ## Hello World
 
 ```bash
@@ -1020,6 +1030,49 @@ In general, I would advise against this approach. It’s better just to pick a n
 
 ### 作弊手册
 
+建立mkdoc
+
+```bash
+#!/bin/bash
+#git@gitbj.cmcm.com:CMFinance/docbase.git
+repo=$1
+host=$(dirname $repo  | cut -d: -f1)
+home=$(basename $repo | cut -d. -f1)
+
+echo repo=$repo
+echo host=$host
+echo "home=${home}"
+echo "source=${home}/.docbase"
+
+ssh -o StrictHostKeyChecking=no $host
+git clone $repo
+
+source $home/.docbase
+echo doc=$doc
+cd $home/$doc
+source .docbase
+mkdocs serve -a 0.0.0.0:8000
+```
+
+
+
+```dockerfile
+FROM ubuntu:16.04 
+ENV workdir=/data
+RUN apt-get update  -y \
+    && apt-get install -y python python-pip \
+    && apt-get install -y git \
+    && apt-get install -y netcat \
+    && pip install mkdocs  \
+    && pip install mkdocs-material \
+    && mkdir -p ${workdir} \
+    && mkdir /root/.ssh
+
+ADD ssh/* /root/.ssh/
+ADD start /usr/bin/
+WORKDIR ${workdir}
+```
+
 
 
 防火墙:
@@ -1088,7 +1141,7 @@ CMD ["/cmd.sh"]
 ```
 
 ```
-Running Multiple Process in a Container
+tRunning Multiple Process in a Container
 The majority of containers only run a single process. Where multiple processes are needed, it’s best to run multiple containers and link them together, as we have done in this example.
 However, sometimes you really do need to run multiple processes in a single con‐ tainer. In these cases, it’s best to use a process manager such as supervisord or runit to handle starting and monitoring the processes. It is possible to write a simple script to start your processes, but be aware that you will then be responsible for cleaning up the processes and forwarding any signals.
 For more information on using supervisord inside containers, see this Docker article.
@@ -1105,3 +1158,5 @@ For more information on using supervisord inside containers, see this Docker art
 - monolithic architecture: 一种把所有系统都放在一起的架构方式，来源于建筑
 
 - 防火墙: https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-using-firewalld-on-centos-7
+
+- https://docs.docker.com/samples/library/mongo/ 

@@ -4,13 +4,13 @@ tags:
 ---
 <!-- toc -->
 # Bindings 和 Definitions
-# Bindings:  <identifier> `=` <expression>
+## Bindings:  <identifier> `=` <expression>
 这是Bindings:
 ```hs
 ten = 1 + 2 + 3 + 4
 ```
 为表达式指定标识名的过程就是定义
-# Local Bindings : `let` <definitions> `in` <expression>
+## Local Bindings : `let` <definitions> `in` <expression>
 在let中定义的绑定只在in中有效.
 ```hs
 > let m = 2
@@ -22,12 +22,12 @@ ten = 1 + 2 + 3 + 4
 2
 ```
 let..in..本身也是<expression>, 它的值就是 `in` 表达式的值.
-# Local Bindings for Definitions : <identifier> =  <expression> where 
+## Local Bindings for Definitions : <identifier> =  <expression> where 
 在定义中也可以使用`where`来产生LocalBinding. 
 ```div class=note
 # 注意:
 where-clause只能出现在定义中，它不是一个表达式, 不能单独作为表达式来使用.
-```hs
+​```hs
 > x+1 where x = 1 (错误)
 ```
 ```
@@ -37,14 +37,14 @@ where-clause只能出现在定义中，它不是一个表达式, 不能单独作
 [[TOC]]
 Cabal是HaskellPlateform的一部分.
 # install 
-```sh
+​```sh
 $ sudo pacman -S cabal-install 
 ```
 源码:
 ```
 https://github.com/haskell/cabal/
 ```
-# Cabal在哪里？
+## Cabal在哪里？
 安装后，cabal会建立自己的目录，*Nix下: `~/.cabal`
 ```sh
 $ tree -L 1 .cabal 
@@ -369,7 +369,7 @@ $ runhaskell logger.hs
 logger.hs: thread blocked indefinitely in an MVar operation
 ```
  * "logger.hs: thread blocked indefinitely in an MVar operation" , 看来有个线程一直被阻塞, 而无法退出了
- 
+
 # GraphReduction
 # 参考
  * http://en.wikipedia.org/wiki/Graph_reduction
@@ -1558,6 +1558,7 @@ True
 ```
 # takeWhile :: (a -> Bool) -> [a] -> [a]
 ```hs
+
 ```
 # dropWhile :: (a -> Bool) -> [a] -> [a]
 # (.) :: (b -> c) -> (a -> b) -> a -> c 
@@ -1645,12 +1646,12 @@ regarded as being the computing equivalent of a Nobel prize.
  * [http://www.haskell.org/ The Haskell Wiki]: 各种手册，论文
  * [http://www.haskell.org/haskellwiki/Haskell_in_5_steps Haskell in 5 Steps]
  * [http://book.realworldhaskell.org/read/installing-ghc-and-haskell-libraries.html 如何安装GHC和Haskell库]
- 
+
 # 编辑器与GHCI
 # EMACS + haskell-mode
   * C-c C-l: 对整个文件内容求值 
 # VIM + GHCI
-    
+
 # GHCi
 如果你还打算使用GHCi,
  * [http://www.haskell.org/ghc/docs/latest/html/users_guide/interactive-evaluation.html 如何使用GHCi]
@@ -1691,12 +1692,12 @@ let a = 5
 所以目前你应该已经找到自己的位子了，现在我可以说说Haskell和其它编程语言的不同之处:
  * 语法不同
  * 求值顺序是non-intuitive的。Haskell是惰性求值(call-by-need)，有个不错的参考: [http://mitpress.mit.edu/sicp/
-  SCIP 3.5章](如果你愿意学点儿Scheme的话)
+    SCIP 3.5章](如果你愿意学点儿Scheme的话)
  * 在其它绝大多数语言中一个变量的类型只不过是定义了它是如何在机器中表示的。在Haskell中类型更加一般，可以包含FunctionSignature,Emumeration,Tuple,List或者其它类型.
  * 类型表示不太相同。
  * Haskell中的Typeclasses有点儿像Java中的接口，或者CommonLisp的GenericMethodSpecifications.有很多不错的参考我们待会儿给出，包括[LearnYouAHeskellhttp://learnyouahaskell.com/chapters]
  * Haskell是纯函数的。这使得debug工作大量减少，但是你也不得不在书写简单的I/O和状态上下点儿工夫
- 
+
 # 一些Haskell代码中的常见模式
 在继续深入之前，很有必要来了解一些有用的概念.
  * [http://en.wikipedia.org/wiki/Higher-order_function Higher-Order function]
@@ -1726,7 +1727,7 @@ let a = 5
  * [http://acm.wustl.edu/functional/simonsvideos.php Simon Peyton-Jones's Videos]
 # IRC
  * #haskell on irc.freenode.net
- 
+
 # 循序渐进学习Haskell
 这些步骤没有严格意义上的先后顺序。每个人学习语言的方式有所不同，所以你得自己找到适合的教程或是书籍。下面这些是推荐顺序。
 # 语法
@@ -1735,7 +1736,7 @@ let a = 5
  * [http://learnyouahaskell.com/chapters] (1-2章) 或者 [http://book.realworldhaskell.org/read/] (1-7章). (熟悉 [http://hackage.haskell.org/packages/archive/base/4.0.0.0/doc/html/Prelude.html Prelude]函数)
  * [http://acm.wustl.edu/functional/hs-breads.php Breadcrumbs RPN以上的部分]
  * [http://www.haskell.org/haskellwiki/H-99:_Ninety-Nine_Haskell_Problems  H99] 99个Haskell问题，同一个问题的解决方法不只一种，挑战一下。试试不同的Higher-Order函数。
- 
+
 # 惰性求值
 ```
 Laziness isn't that tricky of a concept, but it can lead to some pretty strange (and beautiful) things so make sure you have a good grasp of it. If you read any book or full-language tutorial it's guaranteed to talk about laziness, but for the lazy (hah!) the following resources offer concise introductory explanations of Haskell's laziness (in order of depth):
@@ -2012,9 +2013,9 @@ import Char
 import List
 import Test.QuickCheck
 import Text.Printf
- 
+
 main  = mapM_ ((s,a) -> printf "%-25s: " s >> a) tests
- 
+
 instance Arbitrary Char where
     arbitrary     = choose (' ', '
 8')
@@ -2024,7 +2025,7 @@ $ cat >> Tests.hs
 -- reversing twice a finite list, is the same as identity
 prop_reversereverse s = (reverse . reverse) s == id s
     where _ = s :: [Int]
- 
+
 -- and add this to the tests list
 tests  = [("reverse.reverse/id", test prop_reversereverse)]
 We can now run this test, and have QuickCheck generate the test data:
@@ -2034,7 +2035,7 @@ Let's add a test for the 'haqify' function:
 -- Dropping the "Haq! " string is the same as identity
 prop_haq s = drop (length "Haq! ") (haqify s) == id s
     where haqify s = "Haq! " ++ s
- 
+
 tests  = [("reverse.reverse/id", test prop_reversereverse)
         ,("drop.haq/id",        test prop_haq)]
 and let's test that:
@@ -2147,7 +2148,7 @@ Cabal files for libraries list the publically visible modules, and have no execu
    Maintainer:          dons@cse.unsw.edu.au
    Build-Type:          Simple
    Cabal-Version:       >=1.2
-   
+
    Library
      Build-Depends:     base >= 3 && < 5
      Exposed-modules:   Data.LTree
@@ -2195,10 +2196,10 @@ Please choose a license:
  * 7) BSD3
    8) BSD4
    9) MIT
-  10) PublicDomain
-  11) AllRightsReserved
-  12) OtherLicense
-  13) Other (specify)
+    10) PublicDomain
+    11) AllRightsReserved
+    12) OtherLicense
+    13) Other (specify)
 Your choice [default "BSD3"]? 
 Author name? Henry Laxen
 Maintainer email? nadine.and.henry@pobox.com
@@ -2214,15 +2215,15 @@ Project category:
    7) Distribution
    8) Game
    9) Graphics
-  10) Language
-  11) Math
-  12) Network
-  13) Sound
-  14) System
-  15) Testing
-  16) Text
-  17) Web
-  18) Other (specify)
+    10) Language
+    11) Math
+    12) Network
+    13) Sound
+    14) System
+    15) Testing
+    16) Text
+    17) Web
+    18) Other (specify)
 Your choice? 3
 What does the package build:
    1) Library
@@ -2385,6 +2386,7 @@ Prelude> let mixedList=[0, "hello"]
     In the expression: [0, "hello"]
     In an equation for `mixedList': mixedList = [0, "hello"]
 ```
+
 ```
 ```
 #!sh
@@ -2629,6 +2631,7 @@ foldl (-) 5 [1,2,3,4]
 > foldl (-) 5 [1,2,3,4]
 > 
 ```
+
 ```
 #!graphviz.dot
 digraph G {
@@ -2659,6 +2662,7 @@ Prelude> [1,2] ++ [3,4]
 Prelude> "hello" ++ " " ++ "world!"
 "hello world!"
 ```
+
 ```
 Prelude> fst (5, "hello")
 5
@@ -2667,7 +2671,7 @@ Prelude> snd (5, "hello")
 ```
 [[TOC]]
 # zip xs (tail xs)
-```hs
+​```hs
 > let xs = [1..9]
 > zip xs (tail xs)
 [(1,2),(2,3),(3,4),(4,5),(5,6),(6,7),(7,8),(8,9)]
@@ -3472,7 +3476,7 @@ encrypt n e = B.unlines                                 --  1
             . map (B.pack . show . power e n . code)   --  2
             . chunk (size n)                           --  3
 ```
- 
+
  1. Divide the input into chunks. Each chunk is encrypted separately; this has nothing to do with  parallelism.
  2. Encrypt each chunk.
  3. Concatenate the result as a sequence of lines.
@@ -3555,7 +3559,7 @@ This is rarely a problem in practice; if the Strategy evaluates more than the pr
 [[TOC]]
 # Parallelism
 # The Eval Monad, rpar, and rseq
-```hs
+​```hs
 data Eval a
 instance Monad Eval
 runEval :: Eval a -> a
@@ -3750,7 +3754,7 @@ randomRs和下面提到的randoms都是纯函数, 这就意味着, 给定同一�
 某个类型可以由randoms/randomRs函数生成随机序列, 必须实现[Haskell/TypeClass/Random]中定义的两个方法:
  * randomR :: `RandomGen g => (a, a) -> g -> (a, g))`
  * random (通常情况下: random g = randomR (minBound, maxBound) g)
- 
+
 由于random中使用了类型的上界和下界, 所以新类型也必须是[Haskell/TypeClass/Bound]的实例.
 draw_coin.hs:
 ```hs
@@ -3810,6 +3814,7 @@ length' (x:xs) = len xs + 1
 ```
 `length'` 的LastCall是`+`，而非其本身，所以会不断消耗模式匹配的栈空间. 
 ```hs
+
 ```
 实际上这些情况根本不会发生。。。。
 # 参考
@@ -3997,7 +4002,7 @@ area (Rectangle x1 y1 x2 y2) = (abs (x1 - x2)) * (abs (y1 - y2))
 ```
 ```div class=note
 其中:
-```hs
+​```hs
 area (Rectangle x1 y1 x2 y2) = (abs (x1 - x2)) * (abs (y1 - y2))
 ```
 可以使用`$`函数来少些几个括号:
@@ -4013,7 +4018,7 @@ infixr 0 $
  2. 其次`function $ argument`等价于`function expr`, 如果expr是一个值, 这种写法没有任何方便之处,但是当expr是一个表达式, $就有些作用了, 因为它的优先级最低, 所以优先计算expr, 然后再作为参数传递给function, 于是避免显示指定优先级`function (expr)`. 最终你少写两个括号.
 ```
 因为类型构造器本质上就是函数, 所以我们可以交给Higher-Order函数处理:
-```hs
+​```hs
 > map (Rectangle 0 0 1) [1..5]
 [Rectangle 0.0 0.0 1.0 1.0,Rectangle 0.0 0.0 1.0 2.0,Rectangle 0.0 0.0 1.0 3.0,Rectangle 0.0 0.0 1.0 4.0,Rectangle 0.0 0.0 1.0 5.0]
 ```
