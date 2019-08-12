@@ -1,13 +1,19 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 	"math/rand"
+	"os"
 	"reflect"
 	"runtime"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -55,6 +61,96 @@ func main() {
 	testSizeof()
 	loopTrick()
 	reflectTest()
+	cat("/etc/passwd")
+	scanTest("/etc/passwd")
+	testBuffer()
+	testGob()
+}
+
+func testGob() {
+	type Phone struct {
+		Tag    string `json:"tag"`
+		Number string `json:"number"`
+	}
+
+	type Contact struct {
+		Name   string  `json:"name"`
+		Phones []Phone `json:"phones"`
+	}
+
+	contacts := []Contact{
+		Contact{
+			Name: "amas",
+			Phones: []Phone{
+				Phone{
+					Tag:    "HOME",
+					Number: "18876541230",
+				},
+			},
+		},
+		Contact{
+			Name: "doudou",
+			Phones: []Phone{
+				{
+					Tag:    "SCHOOL",
+					Number: "04714565312",
+				},
+				{
+					Tag:    "OFFICE",
+					Number: "04714565312",
+				},
+			},
+		},
+	}
+
+	file, err := os.Create("/tmp/contacts.dat")
+	if err != nil {
+		return
+	}
+
+	encoder := gob.NewEncoder(file)
+	if err := encoder.Encode(contacts); err != nil {
+		return
+	}
+
+	json := json.NewEncoder(os.Stdout)
+	json.Encode(contacts)
+}
+
+func testBuffer() {
+	buffer := bytes.Buffer{}
+	buffer.WriteString("hello")
+	buffer.WriteString(" ")
+	buffer.WriteString("world")
+	buffer.WriteTo(os.Stdout)
+}
+
+func scanTest(path string) {
+	file, err := os.OpenFile(path, os.O_RDONLY, 0666)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		xs := strings.Split(scanner.Text(), ":")
+		fmt.Fprintf(os.Stdout, "USER: %v\n", xs[0])
+	}
+}
+
+func cat(path string) {
+	if file, ok := os.OpenFile(path, os.O_RDONLY, 0666); ok == nil {
+		defer file.Close()
+		n, err := io.Copy(os.Stdout, file)
+		if err != nil {
+			fmt.Printf("READ %d byte, ERROR : %v\n", n, err)
+		}
+	} else {
+		fmt.Printf("File Not Existed : %v\n", path)
+	}
 }
 
 func reflectTest() {
@@ -63,11 +159,11 @@ func reflectTest() {
 		Age  int    `default:1`
 	}
 
-	amas := Person{
+	amas := &Person{
 		Name: "amas",
 		Age:  199,
 	}
-	field, ok := reflect.TypeOf(Person).Elem().FieldByName("Name")
+	field, ok := reflect.TypeOf(amas).Elem().FieldByName("Name")
 	if ok {
 		fmt.Println(string(field.Tag))
 	}
