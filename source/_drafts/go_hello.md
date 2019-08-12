@@ -500,6 +500,14 @@ Used together, composition and interfaces make a very powerful design tool.
 
 
 
+### make和new
+
+- make(T, args)为go内置类型分配内存，比如map,slice, channel , 不会返回空， 因为这些内置类型都需要各自的初始化工作
+
+- new(T)为类型T分配一个地址，返回值是指针(*T)
+
+  
+
 ### 基础类型
 
 	- string
@@ -897,7 +905,11 @@ var writeOnly chan <- int
 var readOnly <-chan  int
 ```
 
+channels按照buffer的不同，也可分为三种
 
+	- Unbuffered
+	- Buffered
+	- Unidirectional(单向`88)
 
 
 
