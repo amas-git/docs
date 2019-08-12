@@ -158,6 +158,24 @@ One True Brace Style:
 
 ### BASIC
 
+### 常量
+
+```go
+const PI := 3.1415
+
+const (
+	OK       = 200       // iota = 0
+	CREATED  = OK + iota // iota = 1
+	ACCEPTED             // iota = 2
+	NOAUTH               // iota = 3
+
+	REDIRECT = 300             // iota = 4
+	MC       = REDIRECT + iota // iota = 5
+)
+```
+
+
+
 ### 变量
 
 ```
@@ -288,7 +306,7 @@ uint[8|32|64]
 
 ```
 
-Type Alias
+
 
 ```go
 type byte uint8
@@ -314,7 +332,28 @@ n.SetString("9999999999999999", 10);
 
 #### nil
 
-### Structure
+### 定义新的类型: type
+
+> type name literal
+
+如:
+
+```go
+type Age int
+type Months map[striing]int
+
+type Color byte
+type Box struct {
+    width, height, depth float64
+    color Color
+}
+```
+
+
+
+
+
+### struct
 
 ```go
 var point struct {
@@ -333,15 +372,23 @@ type box struct {
     height int
 }
 
+// 初始化
+b := box{11, 12}
+c := box{height: 1}
+
+
+// 赋值
 var a box
 a.width = 1
 a.height = 2
+```
 
-b := box{11, 12}
 
-c := box{height: 1}
 
-fmt.Println(a, b, c)
+匿名struct:
+
+```go
+p := struct{name string; age int}{"amas", 18}
 ```
 
 
@@ -427,6 +474,8 @@ func NewPerson(name string, age int) Person {
 > composition 与 inheritance是不同的概念
 >
 > 组合比继承具有更好的可重用性
+>
+> 组合之后子struct的所有公开函数都可以被父struct直接使用， 只要名字不冲突子struct,子子struct的方法都可以不必理会
 
 ```go
 type AB struct {
@@ -463,23 +512,9 @@ ab.age  // 19
 >
 > 组合的时候可能会出现Name Collisions, 这时候你需要在顶层实现这个方法
 
-判断是否实现了接口i.(Type)
-
-```go
-type Say {
-		say() string
-}
-
-var one Say = A{"one"}
-  iSay, ok := one.(Say)
-  if ok {
-  fmt.Println(iSay.say())
-}
-```
 
 
-
-#### interface
+### interface
 
 ```go
 var t interface {
@@ -498,7 +533,25 @@ Used together, composition and interfaces make a very powerful design tool.
 
 > interface{}叫做空接口， 所有的类型都包含空接口，因此空接口可以指向任何类型的数据
 
+判断是否实现了接口element.(Type)
 
+> go中并没有接口实现声明，这样做的好处是接口函数的声明和实现可以不依赖于interface的存在， 我觉得是一种自底向上的过程，更加符自然，从具体到抽象，使得具体可以先于抽象
+
+```go
+type Say {
+		say() string
+}
+
+var one Say = A{"one"}
+iSay, ok := one.(Say)
+  if ok {
+  fmt.Println(iSay.say())
+}
+```
+
+
+
+#### 
 
 ### make和new
 
@@ -646,7 +699,20 @@ init函数的调用顺序是:
 
 ### 方法Methods
 
-> Method是和特定类型绑定的函数， 类似于js的bind, 方法可以与一个对象绑定
+> 当你把一个函数绑定到某个类型上的时候， 这种函数叫methods
+
+```
+func (reciver Type) func_name(input) result 
+```
+
+
+
+### Black hole funcs
+
+```go
+func _() {}
+func _() {}
+```
 
 
 
@@ -772,28 +838,30 @@ project
   - build时可以通过`-mod=vedor`来打包vendor目录下的代码
 - go不支持循环import
 
-```go
-import $importname $import_path
-import format "fmt"
-```
+### import
 
-
-
-### dot import
+> import $importname $import_path
+> import . $import_path
+> import _ $import_path
 
 ```go
-import . "fmt"
+import "fmt"
+import （
+	“fmt”
+	"io"
+）
 
-Println("Let's go") 
+import . "fmt" // 可直接调用fmt中的函数而无需加上fmt
+import _ "fmt" // 引用fmt包并调用包中的init方法
 ```
 
+### Reflect
 
+反射就是一种能够检测程序本身结构的能力， 反射通常是通过类型系统来实现的。为此我们先要了解Go的类型系统。
 
+- https://blog.golang.org/laws-of-reflection
 
-
-#### 锁: sync.Mutex
-
-
+- Go是静态类型系统(Static Typed), 任何一个变量只能有一个固定类型，在编译的时候就已经确定
 
 ### 内存管理
 
@@ -804,6 +872,34 @@ Println("Let's go")
 go内置了API和工具用于测试代码的覆盖率，性能测试等等。
 
 ### 内置文档
+
+### 异常处理
+
+go没有try/catch
+
+1. 将错误当作程序的正常返回，区别处理
+2. panic会打断程序的执行，进入到panic状态， 比如数组越界等
+3. 也可以调用panic函数进入到panic状态中
+4. 提供panic/recoveri机制
+   1. 当在函数F调用panic后, F不再执行， 但是F的defer函数仍然会执行
+   2. 如果想拦截住panic, 可以在defer函数中调用recover()
+
+```go
+panic("ERROR")
+
+
+func testPanic() {
+	f := func() {
+		panic("I'm panic")
+	}
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("catch panic: ", err)
+		}
+	}() // 只能在函数return后进行recover
+	f()
+}
+```
 
 
 
@@ -918,4 +1014,5 @@ channels按照buffer的不同，也可分为三种
 - go 1.4.3是最后一版用C实现的go, 此后go用go语言实现， 这个很好的解释了先有鸡还是现有蛋的问题
 - https://medium.com/rungo/the-anatomy-of-functions-in-go-de56c050fe11
 - 本机Go的源码安装位置: `$ echo $(go env GOROOT)/src`
+- https://blog.learngoprogramming.com/go-functions-overview-anonymous-closures-higher-order-deferred-concurrent-6799008dde7b
 

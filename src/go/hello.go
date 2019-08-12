@@ -47,8 +47,7 @@ func main() {
 	//randTest()
 	funcTest()
 	//letsgo()
-	chanTest()
-	//panic("I'm dead")
+	//chanTest()
 	testWaitGroup()
 	testOnce()
 	simapleNumberStream(5)
@@ -65,6 +64,145 @@ func main() {
 	scanTest("/etc/passwd")
 	testBuffer()
 	testGob()
+	testGoto()
+	fmt.Println(sum(1, 2, 5, 6, 7, 8, 99))
+	testPointer()
+	fmt.Println(OK, CREATED, ACCEPTED, NOAUTH, MC)
+	testPanic()
+	testStructCompose()
+	testInterface()
+}
+
+func testInterface() {
+	c1 := C1{"c1"}
+	// c2 := C2{"c2"}
+
+	// TODO:没搞定
+	c1.Hello()
+
+	TYPE_OF(c1)
+	TYPE_OF(12)
+}
+
+func TYPE_OF(elem interface{}) {
+	switch value := elem.(type) {
+	default:
+		fmt.Println(elem, "IS", value)
+	}
+}
+
+type Hello interface {
+	Hello()
+}
+
+type C1 struct {
+	name string
+}
+
+func (c1 *C1) Hello() {
+	fmt.Println("HELLO")
+}
+
+func (c1 *C1) Print() {
+	fmt.Println("C2", "name=", c1.name)
+}
+
+func (c1 *C1) C1Print() {
+	fmt.Println("C1P", "name=", c1.name)
+}
+
+type C2 struct {
+	name string
+}
+
+func (c2 *C2) Print() {
+	fmt.Println("C2", "name=", c2.name)
+}
+
+func (c2 *C2) C2Print() {
+	fmt.Println("C2P", "name=", c2.name)
+}
+
+type P struct {
+	name string
+	C1
+	C2
+}
+
+func (p *P) Print() {
+	fmt.Println("P2", "name=", p.name)
+}
+
+func testStructCompose() {
+	p := P{
+		"p",
+		C1{"c1"},
+		C2{"c2"},
+	}
+
+	fmt.Println("struct compose: ", p)
+	fmt.Println("struct compose: name=", p.name)
+	p.C1Print()
+	p.C2Print()
+	p.C1.Print()
+	p.C2.Print()
+	p.Print()
+}
+
+func testPanic() {
+	f := func(n int) {
+		//panic("I'm panic")
+		xs := [3]int{}
+		xs[n] = 1
+	}
+	defer func() {
+		fmt.Println("defer will still run after panic")
+	}()
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("catch panic: ", err)
+		}
+	}()
+	f(3)
+}
+
+const (
+	OK       = 200       // iota = 0
+	CREATED  = OK + iota // iota = 1
+	ACCEPTED             // iota = 2
+	NOAUTH               // iota = 3
+
+	REDIRECT = 300             // iota = 4
+	MC       = REDIRECT + iota // iota = 5
+)
+
+func testPointer() {
+	addone := func(n *int) {
+		(*n)++
+	}
+	i := 1
+	addone(&i)
+	addone(&i)
+	addone(&i)
+	addone(&i)
+	fmt.Println("addone", i)
+}
+
+func testGoto() {
+	i := 0
+LOOP:
+	i++
+	fmt.Print(i)
+	if i < 10 {
+		goto LOOP
+	}
+}
+
+func sum(args ...int) (r int) {
+	for _, i := range args {
+		r += i
+	}
+	return
 }
 
 func testGob() {
