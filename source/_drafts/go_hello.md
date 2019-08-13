@@ -549,9 +549,89 @@ iSay, ok := one.(Say)
 }
 ```
 
+> duck typing
+>
+> 如果它走起路来像鸭子，会嘎嘎的叫，那么他就是鸭子
+
+go的接口就是duck typing, 只要你有A接口的方法，那么你就是A接口类型， 跟你自身是什么类型没有关系
 
 
-#### 
+
+定义一个interface变量
+
+```go
+var r io.Reader
+tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+if err != nil {
+    return nil, err
+}
+r = tty
+```
+
+	 - r 背后对应(value, type)这样一个二元组，也就是(tty, *os.File), os.File的关联方法很多，但是r只能调用Read
+	 - value中包含了全部的类型信息, 因此r实际上也是可以引用到value本身的， 这样我们也可以将r转化为其他可用的接口类型，比如
+
+```go
+var w io.Writer  // tty中也实现了Writer接口
+w = r.(io.Write) // 看上去r是Reader接口变量，但是type assertion可以检测r引用的对象是不是有Writer接口
+```
+
+- w背后对应的是(tty, *io.File), 其实没有变化，这个就是静态类型系统
+
+> 接口变量就好像一个方法集合的视图，接口像是调用白名单一样
+
+更进一步, 这个你也就可以理解了
+
+```go
+var empty interface{}    // 空接口变量
+empty = w.(interface {}) // type assertion
+empty = w                // 但是我们知道空接口表示允许使用任何方法，所以type assertion可以省去
+```
+
+- empty背后还是(*tty, *ioFile)
+
+到这里，应该明白为什么可以把任何类型的变量赋给空接口类型变量了吧
+
+> 重点: 不管你把一个对象通过接口变量怎么折腾，背后仍然保留的是那个对象， 接口就是这个对象的`调用视图`
+
+
+
+下面我们可以谈谈反射
+
+> 反射只是一种允许程序从(value, type)中获取信息的能力
+
+反射三定律
+
+	1. 从interface value到reflection object (Interface -> Value)
+ 	2. 从reflection object到interface value (Value -> Interface)
+ 	3. 若想修改reflection object, value必须是settable
+
+```go 
+// 1. 从interface value到reflect object
+x := 12
+reflect.TypeOf(x)  // int
+// Q: 这哪有interface的事？
+// A: TypeOf()的签名: TypeOf func(i interface{}) Type,
+//    - 1. 先new一个interface{}, 然后把x放到里面，这时候就可以作为参数传递给TypeOf了
+//    - 2. 
+reflect.TypeOf(reflect.TypeOf(x)) // *reflect.rtype
+reflect.TypeOf(reflect.ValueOf(x)) // *reflect.Value
+
+// 2. 从refelect object到interface value
+// func (v Value) Interface() interface{}
+```
+
+底层类型Kind
+
+```
+type Age int
+reflect.TypeOf(1)              // int
+reflect.TypeOf(Age(1))         // main.Age
+reflect.TypeOf(1).Kind()       // int
+reflect.TypeOf(Age(1)).Kind()  // int
+```
+
+
 
 ### make和new
 
@@ -860,8 +940,10 @@ import _ "fmt" // 引用fmt包并调用包中的init方法
 反射就是一种能够检测程序本身结构的能力， 反射通常是通过类型系统来实现的。为此我们先要了解Go的类型系统。
 
 - https://blog.golang.org/laws-of-reflection
-
 - Go是静态类型系统(Static Typed), 任何一个变量只能有一个固定类型，在编译的时候就已经确定
+- type Age int提供了类型别名的功能，类型别名也是新类型， Age和int不是同一类型
+- 接口类型代表有限方法的集合
+- interface{}空接口表示，万物皆空，抽象的过程就是不断去掉个性保留共性，终极的共性就是空， 人们常说的go的接口是dynamically typed实际上是误导，实际上说的就是interface{}可以引用一切类型这件事，但是如果一个变量是空接口类型，那它就永远都是空接口类型，不可能是其他类型
 
 ### 内存管理
 
@@ -1015,4 +1097,6 @@ channels按照buffer的不同，也可分为三种
 - https://medium.com/rungo/the-anatomy-of-functions-in-go-de56c050fe11
 - 本机Go的源码安装位置: `$ echo $(go env GOROOT)/src`
 - https://blog.learngoprogramming.com/go-functions-overview-anonymous-closures-higher-order-deferred-concurrent-6799008dde7b
+- https://research.swtch.com/interfaces
+- http://luca.ntop.org/Teaching/Appunti/asn1.html
 

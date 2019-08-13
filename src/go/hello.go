@@ -71,6 +71,53 @@ func main() {
 	testPanic()
 	testStructCompose()
 	testInterface()
+	testSwap()
+	testInterfaceVariable()
+}
+
+func testInterfaceVariable() {
+	var r io.Reader
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+
+	}
+
+	r = tty
+
+	var w io.Writer
+	// w = r // Wrong!!! NOT THE SAME TYPE
+	w = r.(io.Writer) // good
+
+	var empty interface{}
+	empty = w.(interface{})
+	empty = w
+
+	fmt.Println(
+		empty,
+		reflect.TypeOf(1),                  // int
+		reflect.TypeOf(reflect.TypeOf(1)),  // reflect.rtype
+		reflect.TypeOf(reflect.ValueOf(1)), // reflect.Value
+		reflect.TypeOf(Age(1)),             // main.Age
+		reflect.ValueOf(Age(1)),            // 1
+		reflect.ValueOf(1).Kind(),          // int
+		reflect.TypeOf(1).Kind(),           // int
+		reflect.TypeOf(Age(1)).Kind(),      // int
+		reflect.ValueOf(Age(1)).Kind(),     // int
+		reflect.ValueOf(0.25).Interface(),
+	)
+}
+
+func testSwap() {
+	// swap := func(a interface{}, b interface{}) {
+	// 	tmp := a
+	// 	a = b
+	// 	b = tmp
+	// }
+
+	m, n := 1, 2
+
+	m, n = n, m
+	fmt.Println("m:", m, "n:", n)
 }
 
 func testInterface() {
@@ -423,6 +470,7 @@ func testOnce() {
 	once.Do(inc)
 
 	fmt.Println("sum: ", sum)
+
 }
 
 func testWaitGroup() {
