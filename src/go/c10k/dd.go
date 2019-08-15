@@ -1,6 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/hex"
+	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"time"
@@ -37,6 +41,26 @@ func MakeFile(path string, size int) (int, error) {
 	return size, nil
 }
 
+func (s *string) Hello() {
+
+}
+
+func ForeverRandom(length int64) {
+	random, err := os.OpenFile("/dev/urandom", os.O_RDONLY, 0655)
+	if err != nil {
+		return
+	}
+	defer random.Close()
+
+	buf := bytes.NewBuffer([]byte{})
+	for {
+		buf.Reset()
+		io.CopyN(buf, random, length)
+		fmt.Println(hex.EncodeToString(buf.Bytes()))
+	}
+}
+
 func main() {
-	MakeFile("/tmp/100k", 100*1024+19)
+	//MakeFile("/tmp/100k", 100*1024+19)
+	ForeverRandom(13)
 }
