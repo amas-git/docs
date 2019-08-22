@@ -459,6 +459,18 @@ func (p person) print() {
 > amas.print() // age: 330
 > ```
 
+
+
+> 注意: 是不是可以通过receiver来扩展内置类型呢？ 
+>
+> ```go
+> func (s *string) Hello() {
+>     // 编译器会告诉你: cannot define new methods on non-local type string
+> }
+> ```
+>
+> 什么是
+
 #### 构造函数
 
 GO里面没有构造函数，但是可以用一般函数代替构造函数， 按照约定这类函数用new或New开头
@@ -736,7 +748,7 @@ gp函数在调用reture后进入exiting phase
 
 - alias: anonymous function , function literal
 
-```
+```go
 fn := func (a int, b int) {
 	retirm a + b
 }
@@ -745,6 +757,26 @@ fn := func (a int, b int) {
 func() {
 
 }()
+```
+
+### 函数的polymorphism
+
+同名方法必须通过不同的接口来区分，同一个struct上不能有方法的重载
+
+```go
+type intInterface struct {
+}
+
+type stringInterface struct {
+}
+
+func (number intInterface) Add (a int, b int) int {
+	return a + b;
+}
+
+func (text stringInterface) Add (a string, b string) string {
+	return a + b
+}
 ```
 
 
@@ -1010,7 +1042,199 @@ go some_function
 
 
 
+### Go/CSP 和 Actor model的区别
+>  Go/CSP和Actor想解决的问题: 
+>
+> CPU不能更快了， 想要更高的效率需要让程序能够并发运行，能够充分利用多核CPU
 
+Actors: 
+
+ - 最小的运算单元
+
+ - 可以接受一些消息，然后做一些运算，每次只能处理一条消息
+
+ - 与对象其实类似，不同的是，Actors之间是不共享内存的，这样Actor内部的状态没法直接被另两一个Actors之间修改
+
+ - "one ant is not ant", 一个蚂蚁不能叫做蚂蚁，Actors也是一样的， 只有多个Actor存在相互配合才有意义
+
+ - Actors之间通信通过messagebox, 每个actor都有自己的地址可以接受消息
+
+ - message接收顺序是不确定的，每个消息将被尽最大可能(Best Effort)发送, 并且At Most Once
+
+ - Actor收到消息后可以做三件事情
+
+    - 创建更多的Actor (processing)
+
+    - 发消息给其他Actor （communication）
+
+    - 改变状态，决定如何处理下一条消息 (storage)
+
+      
+
+Actor Model : https://www.brianstorti.com/the-actor-model/
+
+在Erlang,Scala中消息的传递使用的是Actor Model, 和Go/CSP有一点点区别，Go/CSP中必须创建Channel,
+而Actor Model中Actor相互直接可以发消息, Actor模型中Channel可以认为是另外一个Actor
+
+### race detection
+
+```go
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
+var balance = 1000 // 总共的钱
+var taken = 0 // 拿走的钱
+
+// get money rnadom
+func getMoney(seq, x int) (r bool) {
+	defer func() {
+		fmt.Printf("[%02d] : %5v (%02d/%03d)\n", seq, r, x, balance)
+	}()
+
+	if balance-x < 0 {
+		r = false
+		return
+	}
+	balance -= x
+	r = true
+	taken += x
+	return
+}
+
+func main() {
+	//runtime.GOMAXPROCS(2)
+	rand.Seed(time.Now().UnixNano())
+
+	for i := 0; i < 100; i++ {
+		go getMoney(i, rand.Intn(25)) // 随机取钱
+	}
+	// 简单的等待2秒
+	time.Sleep(time.Second * 2)
+	fmt.Printf("FINAL BALANCE : %d TAKEN %d", balance, taken)
+}
+
+```
+
+go可以检测race condition
+```sh
+$ go run -race race.go
+
+[00] :  true (23/977)
+==================
+WARNING: DATA RACE
+Read at 0x0000005d7418 by goroutine 7:
+  main.getMoney()
+      /src/amas/docs/src/go/c10k/race.go:18 +0x81
+
+Previous write at 0x0000005d7418 by goroutine 6:
+  main.getMoney()
+      /src/amas/docs/src/go/c10k/race.go:22 +0xdb
+
+Goroutine 7 (running) created at:
+  main.main()
+      /src/amas/docs/src/go/c10k/race.go:33 +0x13c
+
+Goroutine 6 (finished) created at:
+  main.main()
+      /src/amas/docs/src/go/c10k/race.go:33 +0x13c
+==================
+...
+==================
+[01] :  true (12/963)
+...
+[99] : false (10/002)
+FINAL BALANCE : 2 TAKEN 986Found 3 data race(s)
+exit status 66
+
+# 拿走了986, 剩余2， 还有12不知道哪去了？ WHY?
+```
+
+现在我们使用sync.Mutex保护制造一个临界区，来避免race condition
+
+```go
+var mutex = new(sync.Mutex)
+
+func getMoney2(seq, x int) (r bool) {
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	defer func() {
+		fmt.Printf("[%02d] : %5v (%02d/%03d)\n", seq, r, x, balance)
+	}()
+
+	if balance-x < 0 {
+		r = false
+		return
+	}
+	balance -= x
+	r = true
+	taken += x
+}
+```
+
+```
+WARNING: DATA RACE
+Read at 0x00000060dc08 by main goroutine:
+  main.main()
+      /src/amas/docs/src/go/c10k/race.go:58 +0x191
+
+Previous write at 0x00000060dc08 by goroutine 28:
+  main.getMoney2()
+      /src/amas/docs/src/go/c10k/race.go:45 +0x17c
+
+Goroutine 28 (finished) created at:
+  main.main()
+      /src/amas/docs/src/go/c10k/race.go:54 +0x13c
+==================
+```
+
+> go的race检测是很靠谱的，我们使用Sleep等待这种方式也是有潜在问题的
+
+我们再改造一下，使用WaitGroup来替代Sleep
+
+```go
+var mutex = new(sync.Mutex)
+var wg sync.WaitGroup
+
+
+func getMoney2(seq, x int) (r bool) {
+  wg.Add(1)           // 增加等待
+	defer wg.Done()     // 标记完成
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	defer func() {
+		fmt.Printf("[%02d] : %5v (%02d/%03d)\n", seq, r, x, balance)
+	}()
+
+	if balance-x < 0 {
+		r = false
+		return
+	}
+	balance -= x
+	r = true
+	taken += x
+}
+
+func main() {
+	//runtime.GOMAXPROCS(2)
+	rand.Seed(time.Now().UnixNano())
+
+	for i := 0; i < 100; i++ {
+		go getMoney2(i, rand.Intn(25))
+	}
+
+	
+	wg.Wait() // 简单全部任务结束
+	fmt.Printf("FINAL BALANCE : %d TAKEN %d", balance, taken)
+}
+
+```
+
+> 再次用-race检测我们的程序， 这回不会有任何警告了
 
 ## sync
 
@@ -1088,6 +1312,37 @@ channels按照buffer的不同，也可分为三种
 	- Unbuffered
 	- Buffered
 	- Unidirectional(单向`88)
+
+### 超时处理
+
+```go
+import (
+	"fmt"
+	"math/rand"
+	"strconv"
+	"time"
+)
+
+func longTImeTask(ch chan string, max int) {
+	time.Sleep(time.Second * time.Duration(max))
+	ch <- strconv.Itoa(max)
+}
+
+func main() {
+	rand.Seed(time.Now().UnixNano())
+	ch := make(chan string)
+
+	go longTImeTask(ch, rand.Intn(6))
+	select {
+	case t := <-ch:
+		fmt.Printf("WORK DONE in %v\n", t)
+	case <-time.After(time.Second * time.Duration(3)): // 3秒超时
+		fmt.Print("TIMEOUT")
+		close(ch)
+	}
+}
+
+```
 
 
 
