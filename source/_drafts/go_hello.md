@@ -726,7 +726,7 @@ channels有三种类型, 这说法不够严谨，但方便记忆
 c := make(chan, int)
 
 var c chan int
-var writeOnly chan <- int
+var writeOnly chan<- int
 var readOnly <-chan  int
 ```
 
