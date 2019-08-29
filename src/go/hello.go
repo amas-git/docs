@@ -1,16 +1,30 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 	"math/rand"
+	"os"
+	"reflect"
+	"runtime"
 	"sort"
+	"strings"
 	"sync"
 	"time"
+	"unsafe"
 )
 
 const PI = 3.14
+
+func init() {
+	fmt.Println("PI=", PI)
+	fmt.Println("GOMAXPROCS=", runtime.GOMAXPROCS(-1))
+}
 
 func main() {
 	fmt.Println("let's go", add(100, 2009))
@@ -33,12 +47,383 @@ func main() {
 	//randTest()
 	funcTest()
 	//letsgo()
-	chanTest()
-	//panic("I'm dead")
+	//chanTest()
 	testWaitGroup()
 	testOnce()
 	simapleNumberStream(5)
 	//deadLock()
+	constTest()
+	nouse()
+	overflow()
+	testDefer()
+	fmt.Println("The result is", testDeferChangeResultVar())
+	testSizeof()
+	loopTrick()
+	reflectTest()
+	cat("/etc/passwd")
+	scanTest("/etc/passwd")
+	testBuffer()
+	testGob()
+	testGoto()
+	fmt.Println(sum(1, 2, 5, 6, 7, 8, 99))
+	testPointer()
+	fmt.Println(OK, CREATED, ACCEPTED, NOAUTH, MC)
+	testPanic()
+	testStructCompose()
+	testInterface()
+	testSwap()
+	testInterfaceVariable()
+}
+
+func testInterfaceVariable() {
+	var r io.Reader
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+
+	}
+
+	r = tty
+
+	var w io.Writer
+	// w = r // Wrong!!! NOT THE SAME TYPE
+	w = r.(io.Writer) // good
+
+	var empty interface{}
+	empty = w.(interface{})
+	empty = w
+
+	fmt.Println(
+		empty,
+		reflect.TypeOf(1),                  // int
+		reflect.TypeOf(reflect.TypeOf(1)),  // reflect.rtype
+		reflect.TypeOf(reflect.ValueOf(1)), // reflect.Value
+		reflect.TypeOf(Age(1)),             // main.Age
+		reflect.ValueOf(Age(1)),            // 1
+		reflect.ValueOf(1).Kind(),          // int
+		reflect.TypeOf(1).Kind(),           // int
+		reflect.TypeOf(Age(1)).Kind(),      // int
+		reflect.ValueOf(Age(1)).Kind(),     // int
+		reflect.ValueOf(0.25).Interface(),
+	)
+}
+
+func testSwap() {
+	// swap := func(a interface{}, b interface{}) {
+	// 	tmp := a
+	// 	a = b
+	// 	b = tmp
+	// }
+
+	m, n := 1, 2
+
+	m, n = n, m
+	fmt.Println("m:", m, "n:", n)
+}
+
+func testInterface() {
+	c1 := C1{"c1"}
+	// c2 := C2{"c2"}
+
+	// TODO:没搞定
+	c1.Hello()
+
+	TYPE_OF(c1)
+	TYPE_OF(12)
+}
+
+func TYPE_OF(elem interface{}) {
+	switch value := elem.(type) {
+	default:
+		fmt.Println(elem, "IS", value)
+	}
+}
+
+type Hello interface {
+	Hello()
+}
+
+type C1 struct {
+	name string
+}
+
+func (c1 *C1) Hello() {
+	fmt.Println("HELLO")
+}
+
+func (c1 *C1) Print() {
+	fmt.Println("C2", "name=", c1.name)
+}
+
+func (c1 *C1) C1Print() {
+	fmt.Println("C1P", "name=", c1.name)
+}
+
+type C2 struct {
+	name string
+}
+
+func (c2 *C2) Print() {
+	fmt.Println("C2", "name=", c2.name)
+}
+
+func (c2 *C2) C2Print() {
+	fmt.Println("C2P", "name=", c2.name)
+}
+
+type P struct {
+	name string
+	C1
+	C2
+}
+
+func (p *P) Print() {
+	fmt.Println("P2", "name=", p.name)
+}
+
+func testStructCompose() {
+	p := P{
+		"p",
+		C1{"c1"},
+		C2{"c2"},
+	}
+
+	fmt.Println("struct compose: ", p)
+	fmt.Println("struct compose: name=", p.name)
+	p.C1Print()
+	p.C2Print()
+	p.C1.Print()
+	p.C2.Print()
+	p.Print()
+}
+
+func testPanic() {
+	f := func(n int) {
+		//panic("I'm panic")
+		xs := [3]int{}
+		xs[n] = 1
+	}
+	defer func() {
+		fmt.Println("defer will still run after panic")
+	}()
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("catch panic: ", err)
+		}
+	}()
+	f(3)
+}
+
+const (
+	OK       = 200       // iota = 0
+	CREATED  = OK + iota // iota = 1
+	ACCEPTED             // iota = 2
+	NOAUTH               // iota = 3
+
+	REDIRECT = 300             // iota = 4
+	MC       = REDIRECT + iota // iota = 5
+)
+
+func testPointer() {
+	addone := func(n *int) {
+		(*n)++
+	}
+	i := 1
+	addone(&i)
+	addone(&i)
+	addone(&i)
+	addone(&i)
+	fmt.Println("addone", i)
+}
+
+func testGoto() {
+	i := 0
+LOOP:
+	i++
+	fmt.Print(i)
+	if i < 10 {
+		goto LOOP
+	}
+}
+
+func sum(args ...int) (r int) {
+	for _, i := range args {
+		r += i
+	}
+	return
+}
+
+func testGob() {
+	type Phone struct {
+		Tag    string `json:"tag"`
+		Number string `json:"number"`
+	}
+
+	type Contact struct {
+		Name   string  `json:"name"`
+		Phones []Phone `json:"phones"`
+	}
+
+	contacts := []Contact{
+		Contact{
+			Name: "amas",
+			Phones: []Phone{
+				Phone{
+					Tag:    "HOME",
+					Number: "18876541230",
+				},
+			},
+		},
+		Contact{
+			Name: "doudou",
+			Phones: []Phone{
+				{
+					Tag:    "SCHOOL",
+					Number: "04714565312",
+				},
+				{
+					Tag:    "OFFICE",
+					Number: "04714565312",
+				},
+			},
+		},
+	}
+
+	file, err := os.Create("/tmp/contacts.dat")
+	if err != nil {
+		return
+	}
+
+	encoder := gob.NewEncoder(file)
+	if err := encoder.Encode(contacts); err != nil {
+		return
+	}
+
+	json := json.NewEncoder(os.Stdout)
+	json.Encode(contacts)
+}
+
+func testBuffer() {
+	buffer := bytes.Buffer{}
+	buffer.WriteString("hello")
+	buffer.WriteString(" ")
+	buffer.WriteString("world")
+	buffer.WriteTo(os.Stdout)
+}
+
+func scanTest(path string) {
+	file, err := os.OpenFile(path, os.O_RDONLY, 0666)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+
+	for scanner.Scan() {
+		xs := strings.Split(scanner.Text(), ":")
+		fmt.Fprintf(os.Stdout, "USER: %v\n", xs[0])
+	}
+}
+
+func cat(path string) {
+	if file, ok := os.OpenFile(path, os.O_RDONLY, 0666); ok == nil {
+		defer file.Close()
+		n, err := io.Copy(os.Stdout, file)
+		if err != nil {
+			fmt.Printf("READ %d byte, ERROR : %v\n", n, err)
+		}
+	} else {
+		fmt.Printf("File Not Existed : %v\n", path)
+	}
+}
+
+func reflectTest() {
+	type Person struct {
+		Name string `default:amas`
+		Age  int    `default:1`
+	}
+
+	amas := &Person{
+		Name: "amas",
+		Age:  199,
+	}
+	field, ok := reflect.TypeOf(amas).Elem().FieldByName("Name")
+	if ok {
+		fmt.Println(string(field.Tag))
+	}
+}
+
+func loopTrick() {
+	for i := range [5][]int{} {
+		fmt.Printf("> %d\n", i)
+	}
+}
+
+type Age int
+
+func testSizeof() {
+	fmt.Println("int", unsafe.Sizeof(int(1)))           // 8
+	fmt.Println("rune", unsafe.Sizeof(rune(1)))         // 4
+	fmt.Println("rune", unsafe.Sizeof(int8(1)))         // 1
+	fmt.Println("byte", unsafe.Sizeof(byte(1)))         // 1
+	fmt.Println("map", unsafe.Sizeof(map[string]int{})) // 8
+}
+
+func testDeferChangeResultVar() (n int) {
+	defer func() {
+		n = 111
+	}()
+	return 1
+}
+
+func testDefer() {
+	defer fmt.Println("DEFER 2")
+	defer fmt.Println("DEFER 1")
+}
+
+func overflow() {
+	// a := 1 << 64 // ERRORS
+	print("buildin")
+}
+
+const HELLO_WORLD = "hello world"
+
+func init() {
+	fmt.Println(HELLO_WORLD)
+}
+
+func nouse() {
+	a := 1
+	b := 2
+	_, _ = a, b // fixed not ussed issue
+}
+
+func constTest() {
+	const (
+		A int = 1
+		B
+		C
+
+		D int = iota
+		E int = iota
+		F int = iota
+		G int = 199
+		H int = iota
+	)
+
+	const (
+		N0 int = iota
+		N1
+		N2
+		N3
+		N4
+		N5
+	)
+
+	fmt.Println("constTest/1", A, B, C)
+	fmt.Println("constTest/2", D, E, F, G, H)
+	fmt.Println("constTest/3", N0, N1, N2, N3, N4, N5)
 }
 
 func deadLock() {
@@ -85,6 +470,7 @@ func testOnce() {
 	once.Do(inc)
 
 	fmt.Println("sum: ", sum)
+
 }
 
 func testWaitGroup() {

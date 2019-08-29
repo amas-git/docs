@@ -39,9 +39,6 @@ const r = seval('2000+a === 100 || (1 === 1)', {a:400, x:999});
   console.log(Function);
 })();
 
-<<<<<<< HEAD
-console.log(vm.runInNewContext('`${a}+1`', {a:1}));
-=======
 
 class Rule {
   constructor(id) {
@@ -70,4 +67,8 @@ class Rule {
 let xx = 1;
 new Rule('is_even').test('xx % 2 ===  0').DO(`console.log('YES')`).orElse(`console.log('NO')`);
 
->>>>>>> ecdd2757dd0a73c45579416d7033e1a68d1d286c
+function add(a,b) {
+   return a + b;
+}
+
+console.log(add.toString())
