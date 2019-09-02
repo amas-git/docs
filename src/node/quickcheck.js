@@ -66,9 +66,3 @@ class Rule {
 
 let xx = 1;
 new Rule('is_even').test('xx % 2 ===  0').DO(`console.log('YES')`).orElse(`console.log('NO')`);
-
-function add(a,b) {
-   return a + b;
-}
-
-console.log(add.toString())

@@ -42,8 +42,8 @@ public class Dead {
 
     //SLEEP(2000);
     t1.interrupt(); t2.interrupt();
-    //JOIN(t1);
     JOIN(t1);
+    JOIN(t2);
   }
 
   public static void JOIN(Thread t) {
