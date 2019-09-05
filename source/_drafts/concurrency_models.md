@@ -209,7 +209,14 @@ Lambda基于几个已经存在的技术:
       	1. 始于google
       	2. Apache Hadoop是Google Map Reduce的开源实现
       	3. EMR: Amazon Elastic MapReduce
- 	2. 
+ 	2. Stream Processing
+      	1. Storm
+
+## 其他
+
+	- Tuple Space
+	- Grid Computing
+	- Reactive Programming
 
 
 
