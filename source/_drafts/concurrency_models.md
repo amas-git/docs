@@ -1,3 +1,7 @@
+![img](https://imagery.pragprog.com/products/340/pb7con.jpg?1381427917)
+
+
+
 # 并发计算模型
 
 > The world is concurrent
@@ -35,6 +39,12 @@
 ### Concurrent
 
 ## Threads + Locks
+
+```
+
+```
+
+
 
 - Mutual Exclusion: 计数问题
 
@@ -121,15 +131,22 @@
 
 ## Functional Programming
 
+- haskell
+- cloujure (lisp+jvm) 
+
 因为共享内存(Shared Mutable State)，所以需要锁来保护，假如内存不会被改变，那就不再需要锁。这使得函数变成语言具有天生的并发能力。
 
 
 
 > Referential Transparency: 是一种程序中表达式被等价表达式替换不会有任何影响的能力，本质上要求表达式是纯净的，没有任何外部IO,  在数学中所有的表达式都具备这样的性质，但是在计算机程序语言则不一定。
 
-## The Clojure Way : Separating Identity And State
-
 - STM: http://gcc.gnu.org/wiki/TransactionalMemory
+
+```c
+__transaction_atomic { if (a > b) b++; }
+```
+
+
 
 ## Actors
 
@@ -211,6 +228,10 @@ Lambda基于几个已经存在的技术:
       	3. EMR: Amazon Elastic MapReduce
  	2. Stream Processing
       	1. Storm
+      	2. Kafka
+      	3. RabbitMQ
+      	4. AMQ
+      	5. ZeroMQ
 
 ## 其他
 
