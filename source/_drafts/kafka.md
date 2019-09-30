@@ -85,6 +85,33 @@ loose coumpling会增强Pluggablility, 这在系统变得复杂的时候更好�
 - 本机节点不断建立checkpoint, 一旦重启至少可以回复到上一个checkpoint, 这就和游戏保存进度一个意思。
 - 最后，通过压缩topic保持存储最小化，降低备份成本
 
+### Streaming系统数据一致性问题
+
+一致性(Concurrency)可以分为:
+
+- Strong Concurrency
+- Eventual Concurrency
+- Intuitive Concurrency 
+
+
+
+The Single Writer Principle: https://mechanical-sympathy.blogspot.com/2011/09/single-writer-principle.html
+
+
+
+### 原子性和事务性
+
+kafka可以保证:
+
+1. 一个kafka Transaction中，消息要么全部都发送到指定的Topics, 要么一个都不发送
+2. 一个消息发给单个Topic, 即便系统出现内部错误，也会保证至多发送一次
+
+事物主要解决三个问题:
+
+1. 删除重复的消息， idempotent幂等问题
+   1. 比如，支付重试搞不好会
+2. 原子性的发送一组消息
+3. 存储消息发送消息为原子操作
 
 ## QA
 
@@ -121,4 +148,8 @@ loose coumpling会增强Pluggablility, 这在系统变得复杂的时候更好�
 - loose coupling / tight coupling
 - Google SLA: https://cloud.google.com/compute/sla
 - CQRS(Command and Query Responsibility Segregation)
+- **ACID** ([Atomicity](https://en.wikipedia.org/wiki/Atomicity_(database_systems)), [Consistency](https://en.wikipedia.org/wiki/Consistency_(database_systems)), [Isolation](https://en.wikipedia.org/wiki/Isolation_(database_systems)), [Durability](https://en.wikipedia.org/wiki/Durability_(database_systems)))
+- three-tier applications (client/server/database)
+- CAP theorem
+- a conflict-free replicated data type, or CRDT, 这种技术允许同时操作同一个数据，完成后合并
 
