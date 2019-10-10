@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -51,11 +52,11 @@ func getMoney2(seq, x int) (r bool) {
 var wg sync.WaitGroup
 
 func main() {
-	//runtime.GOMAXPROCS(2)
+	runtime.GOMAXPROCS(2)
 	rand.Seed(time.Now().UnixNano())
 
 	for i := 0; i < 100; i++ {
-		go getMoney2(i, rand.Intn(25))
+		go getMoney(i, rand.Intn(25))
 	}
 
 	// 简单的等待2秒
