@@ -514,7 +514,7 @@ func chanTest() {
 	}
 
 	timeout := time.After(time.Second * 1)
-	for _ = range works {
+	for range works {
 		select {
 		case r := <-c:
 			fmt.Printf("FINISHED: %s \n", r)

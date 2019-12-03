@@ -136,7 +136,7 @@ $ zstyle ':completion:*:cd:*' tag-order path-directories
  * -tilde- : 输入~之后
  * -value- : name=value之后
 
-#### 使用用_comps查找补全函数
+#### 使用_comps查找补全函数
 当我们输入一条命令的时候, 补全系统会根据当前的上下文去调用指定的补全函数. 那么怎么查看呢?
 
 ``` zsh
@@ -312,7 +312,7 @@ $ _foo() { _arguments --out:"output .log file":'_files "*.log"'}
 $ foo --out <TAB>
 1.log
 
-# 
+# 枚举
 $ _foo() { _arguments --age="[The age]":ages:"(18 19 20)" }
 $ foo --age=<TAB>
 18 19 20
