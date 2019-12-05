@@ -260,3 +260,5 @@ f(true);        // ok
 f({});          // ok
 f(null);        // error
 f(undefined);   // error
+print(+0 === -0);
+print(NaN === NaN);

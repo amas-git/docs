@@ -1,10 +1,13 @@
 {
     "name": "everness",
     "dependencies": {
+        "node": "13.1.0",
         "lodash": "4.17.15",
-        "@types/cheerio": "0.22.7"
+        "cheerio": "1.0.0-rc.3"
     },
     "devDependencies": {
-        "@types/node": "^12.12.14"
+        "@types/node": "^12.12.14",
+        "@types/cheerio": "0.22.7",
+        "@types/lodash": "4.14.149"
     }
 }
