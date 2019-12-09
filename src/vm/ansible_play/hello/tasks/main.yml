@@ -1,0 +1,44 @@
+---
+# tasks file for hello
+- name: 0x00 START TO LEANR ANSIBLE
+  debug:
+    msg: 
+      - "{{ lookup('env', 'USER') }} START"
+      - TO
+      - LEARN ANSIBLE
+
+- name: 0x01 CHECK TARGET MACHINE
+  debug:
+    msg:
+      - "HOST: {{ inventory_hostname }}"
+      - "ARCH: {{ ansible_architecture }}"
+      - " IPs: {{ ansible_all_ipv4_addresses }}"
+      - "  IP: {{ ansible_default_ipv4.address }}"
+      - "  PM: {{ ansible_pkg_mgr }}"
+      - "{{ module_setup  }}"
+
+#- name: 0x02 COPY hello.sh to ~/bin/
+
+#- 0x03 切换用户并执行命令
+- name: CHANGE USER TO root
+  become: yes
+  shell: "echo $USER"
+  register: output
+
+- name: PRINT RESULT (SHOULD BE 'root')
+  debug:
+    msg: "{{ output }}"
+
+- name: CHANGE USER TO www-data
+  become: yes
+  become_user: www-data
+  shell: "echo $USER"
+  register: output
+
+- name: PRINT RESULT (SHOULD BE 'www-data')
+  debug:
+    msg: "{{ output }}"
+
+- name: PRINT 'message'    
+  debug:
+    msg: "{{ message }}"    

@@ -168,6 +168,7 @@ $ docker info
 ```bash
 $ sudo swapoff -a  
 # 为了保证重启的时候也可以关闭swap, 需要检查/etc/fstab里面是否存在swap分区，有的话用sed干掉
+$ sudo sed -i '/ swap / s/^/#/' /etc/fstab
 ```
 
 
@@ -283,6 +284,23 @@ $ ipvsadm -C
 
 
 
+安装补全脚本:
+
+```bash
+# BASH
+$ sudo apt-get install bash-completion
+$ echo 'source /usr/share/bash-completion/bash_completion' >> ~/.bashrc
+$ echo 'alias k=kubectl' >>~/.bashrc
+$ echo 'complete -F __start_kubectl k' >>~/.bashrc
+$ kubectl completion bash > /tmp/kubect
+$ sudo cp /tmp/kubect /etc/bash_completion.d/
+$ . ~/.bashrc
+```
+
+
+
+
+
 目前支持的Network Add-on:
 
 - https://kubernetes.io/docs/concepts/cluster-administration/addons/
@@ -317,5 +335,12 @@ $ ipvsadm -C
 
 ```bash
 $ kubectl apply -f <add-on.yaml>
+```
+
+## 故障排除
+
+```bash
+# 如果重启机器发现k8s没有启动，可以看kubelet日志
+$ journalctl -xeu kubelet
 ```
 

@@ -1,0 +1,22 @@
+IMAGE_NAME = "bento/ubuntu-16.04"
+
+Vagrant.configure("2") do |config|
+    config.ssh.insert_key = false
+
+    config.vm.provider "virtualbox" do |v|
+        v.memory = 1024
+        v.cpus = 2
+    end
+      
+    config.vm.define "hello" do |master|
+        master.vm.box = IMAGE_NAME
+        master.vm.network "private_network", ip: "192.168.50.100"
+        master.vm.hostname = "hello"
+        master.vm.provision "ansible" do |ansible|
+            ansible.ask_vault_pass = true
+            ansible.playbook = "hello_roles.yml"
+            ansible.extra_vars = {
+            }
+        end
+    end
+end
