@@ -16,6 +16,9 @@
 >6. 通过ansible部署到Aws
 >7. 通过ansible部署到DigitalOcean
 >8. 通过ansible部署到阿里云
+>9. 使用minikube
+>10. 使用minishift
+>11. 使用iosti
 
 
 
@@ -268,6 +271,35 @@ $ kubectl get namespaces
 
 
 
+### Smoke Test
+
+一切就绪，我们来测试一下k8s是不是work
+
+```zsh
+$ kubectl create deployment nginx --image=nginx
+$ kubectl get pods -l app=nginx
+
+# 建立一个Pod
+$ POD_NAME=$(kubectl get pods -l app=nginx -o jsonpath="{.items[0].metadata.name}")
+$ kubectl port-forward $POD_NAME 8080:80
+$ curl --head http://127.0.0.1:8080
+$ kubectl exec -ti $POD_NAME -- nginx -v
+
+# 查看日志
+$ kubectl logs $POD_NAME
+
+# 运行一个service
+$ kubectl expose deployment nginx --port 80 --type NodePort
+$ NODE_PORT=$(kubectl get svc nginx --output=jsonpath='{range .spec.ports[0]}{.nodePort}')
+$ print $NODE_PORT
+$ 31071
+
+# 接下来我们可以在外部系统访问这个端口的http服务了
+$ curl http://192.168.50.10:31071
+```
+
+
+
 ```bash
 # 清除kubeadm所做的事情
 $ kubectl drain <node name> --delete-local-data --force --ignore-daemonsets
@@ -344,3 +376,20 @@ $ kubectl apply -f <add-on.yaml>
 $ journalctl -xeu kubelet
 ```
 
+## k8s的组成
+
+	- kubernetes
+	- containerd: 容器标准运行环境
+	- coredns: DNS server/forwarder
+	- cni: Container Network Interface
+	- etcd: 可靠的分布式kv存储
+
+## 生产环境选择
+
+- 红帽的openshift的最小化部署https://github.com/MiniShift/minishift
+- CoreOS的tectonic: https://coreos.com/tectonic/
+
+## 参考
+
+- https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/13-smoke-test.md
+- https://github.com/kelseyhightower/kubernetes-the-hard-way
