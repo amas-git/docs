@@ -2,6 +2,28 @@
 
 ## 安装
 
+### 使用minikube
+
+```bash
+$ pacman -S minikube
+# 或者从官方安装最新
+$ curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 && chmod +x minikube
+$ ./minkube start
+😄  minikube v1.6.1 on Arch 
+✨  Automatically selected the 'virtualbox' driver (alternates: [none])
+💿  Downloading VM boot image ...
+    > minikube-v1.6.0.iso.sha256: 65 B / 65 B [--------------] 100.00% ? p/s 0s
+    > minikube-v1.6.0.iso: 150.93 MiB / 150.93 MiB  100.00% 687.51 KiB p/s 3m45
+🔥  Creating virtualbox VM (CPUs=2, Memory=2000MB, Disk=20000MB) ...
+🐳  Preparing Kubernetes v1.17.0 on Docker '19.03.5' ...
+💾  Downloading kubelet v1.17.0
+💾  Downloading kubeadm v1.17.0
+🚜  Pulling images ...
+🚀  Launching Kubernetes ... 
+```
+
+
+
 ### 安装集群
 
 - https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
