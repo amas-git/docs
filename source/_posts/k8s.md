@@ -20,6 +20,321 @@ $ ./minkube start
 💾  Downloading kubeadm v1.17.0
 🚜  Pulling images ...
 🚀  Launching Kubernetes ... 
+
+# 查看集群的IP
+$ minkube ip
+192.168.99.101
+
+# 部署echo server
+$ kubectl create deployment hello --image=k8s.gcr.io/echoserver:1.10
+deployment.apps/hello created
+
+# 查看deployment
+$ kubectl get deployments hello -o yaml 
+```
+
+### Deployment
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: "2019-12-18T09:57:30Z"
+  generation: 1
+  labels:
+    app: hello
+  name: hello
+  namespace: default
+  resourceVersion: "80943"
+  selfLink: /apis/apps/v1/namespaces/default/deployments/hello
+  uid: abf0036c-b91f-4512-996c-3ec325005843
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: hello
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: hello
+    spec:
+      containers:
+      - image: k8s.gcr.io/echoserver:1.10
+        imagePullPolicy: IfNotPresent
+        name: echoserver
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2019-12-18T09:58:40Z"
+    lastUpdateTime: "2019-12-18T09:58:40Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2019-12-18T09:57:30Z"
+    lastUpdateTime: "2019-12-18T09:58:40Z"
+    message: ReplicaSet "hello-76dfd64498" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1
+```
+
+```zsh
+# 我们把Deployment通过Service暴露给外部
+$ kubectl expose deployment hello --type=NodePort --port=8080
+
+# 查看Service
+$ kubectl get svc
+NAME         TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+hello        NodePort       10.96.221.248   <none>        8080:30112/TCP   11m
+$ kubectl get svc hello -o yaml
+$ kubectl get endpoints hello -o yaml
+```
+
+### Service 
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: "2019-12-18T10:09:53Z"
+  labels:
+    app: hello
+  name: hello
+  namespace: default
+  resourceVersion: "82411"
+  selfLink: /api/v1/namespaces/default/services/hello
+  uid: 37bf6aee-6dbb-461b-9624-0ec88ca53153
+spec:
+  clusterIP: 10.96.221.248
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 30112
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: hello
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}
+```
+### Endpoint
+```yaml
+apiVersion: v1
+kind: Endpoints
+metadata:
+  annotations:
+    endpoints.kubernetes.io/last-change-trigger-time: "2019-12-18T10:09:53Z"
+  creationTimestamp: "2019-12-18T10:09:53Z"
+  labels:
+    app: hello
+  name: hello
+  namespace: default
+  resourceVersion: "82412"
+  selfLink: /api/v1/namespaces/default/endpoints/hello
+  uid: 91cced1d-7202-45a2-a229-3a4f77813e79
+subsets:
+- addresses:
+  - ip: 172.17.0.5
+    nodeName: minikube
+    targetRef:
+      kind: Pod
+      name: hello-76dfd64498-674z2
+      namespace: default
+      resourceVersion: "80941"
+      uid: f92988e8-3095-4a4d-a6e7-764cb6be2b14
+  ports:
+  - port: 8080
+    protocol: TCP
+```
+
+```zsh
+# 确保Deployment的Pod已经启动成功
+$ kubectl get pod 
+NAME                          READY   STATUS    RESTARTS   AGE
+hello-76dfd64498-674z2        1/1     Running   0          1m
+
+# 查看Pod
+$ kubectl get pod hello-76dfd64498-674z2 -o yaml
+```
+
+### Pod
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2019-12-18T09:57:30Z"
+  generateName: hello-76dfd64498-
+  labels:
+    app: hello
+    pod-template-hash: 76dfd64498
+  name: hello-76dfd64498-674z2
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: hello-76dfd64498
+    uid: 2fdb6791-dca8-4bd7-9108-a2668f408887
+  resourceVersion: "80941"
+  selfLink: /api/v1/namespaces/default/pods/hello-76dfd64498-674z2
+  uid: f92988e8-3095-4a4d-a6e7-764cb6be2b14
+spec:
+  containers:
+  - image: k8s.gcr.io/echoserver:1.10
+    imagePullPolicy: IfNotPresent
+    name: echoserver
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: default-token-vc276
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: minikube
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: default-token-vc276
+    secret:
+      defaultMode: 420
+      secretName: default-token-vc276
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2019-12-18T09:57:30Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2019-12-18T09:58:40Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2019-12-18T09:58:40Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2019-12-18T09:57:30Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://1d98eb60c3fdfe6459a3c0ad1ea63d8ac32128c611ce5cf30936e3e1c1cc7eae
+    image: k8s.gcr.io/echoserver:1.10
+    imageID: docker-pullable://k8s.gcr.io/echoserver@sha256:cb5c1bddd1b5665e1867a7fa1b5fa843a47ee433bbb75d4293888b71def53229
+    lastState: {}
+    name: echoserver
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2019-12-18T09:58:40Z"
+  hostIP: 192.168.99.101
+  phase: Running
+  podIP: 172.17.0.5
+  podIPs:
+  - ip: 172.17.0.5
+  qosClass: BestEffort
+  startTime: "2019-12-18T09:57:30Z"
+```
+
+```zsh
+#  万事具备，可以从外部访问服务了
+$ minikube service hello --url
+http://192.168.99.101:30112
+# 或者使用kubectl获得service的端口
+$ kubectl get service hello --output='jsonpath="{.spec.ports[0].nodePort}"'
+"30112"
+$ kubectl get service hello -o yaml | grep nodePort
+  - nodePort: 30112
+
+# 可以通过节点Port访问这个服务了
+$ curl http://192.168.99.101:30112
+
+Hostname: hello-76dfd64498-674z2
+
+Pod Information:
+        -no pod information available-
+
+Server values:
+        server_version=nginx: 1.13.3 - lua: 10008
+
+Request Information:
+        client_address=172.17.0.1
+        method=GET
+        real path=/
+        query=
+        request_version=1.1
+        request_scheme=http
+        request_uri=http://192.168.99.101:8080/
+
+Request Headers:
+        accept=*/*
+        host=192.168.99.101:30112
+        user-agent=curl/7.67.0
+
+Request Body:
+        -no body in request-
+```
+
+###  使用minikube的docker
+
+```zsh
+# 我们可以直接使用minkube的docker runtime, 这样就不用搞一个Registry了
+$ minikube docker-env
+export DOCKER_TLS_VERIFY="1"
+export DOCKER_HOST="tcp://192.168.99.101:2376"
+export DOCKER_CERT_PATH="/home/amas/.minikube/certs"
+# Run this command to configure your shell:
+# eval $(minikube docker-env)
+$ eval $(minikube docker-env)
+```
+
+minikube创建了一个叫minikube的kubectrl context, 当我们想操作其他集群后，需要切换context, 想要再用回minikube可以
+
+```zsh
+$ kubectl config use-context minikube
+# 或者明确设置kubectl的上下文
+$ kubectl get pods --context=minikube
 ```
 
 
