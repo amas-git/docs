@@ -1,0 +1,5 @@
+#!/bin/sh
+busybox echo "echo server started"
+busybox env
+busybox echo -n "[REV] : "
+busybox cat
