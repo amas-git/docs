@@ -1,4 +1,4 @@
-PLAY k8s
+PLAY MINIKUBE
 
 
 
@@ -115,4 +115,131 @@ hello
 > # 首先我们要修改一下simple-echo服务，让它返回主机信息
 > ```
 >
-> 
+> xecho:
+>
+> ```sh
+> #!/bin/sh
+> busybox echo "echo server started"
+> busybox env
+> busybox echo -n "[REV] : "
+> busybox cat
+> ```
+>
+> Dockerfile:
+>
+> ```sh
+> FROM busybox
+> EXPOSE 8888
+> COPY ./xecho /bin/xecho
+> CMD ["nc","-ll","-p","8888","-e","/bin/xecho"]
+> ```
+
+```bash
+$ kubectl create deployment xecho --image xecho:v1.0.0
+$ kubectl get all
+NAME                         READY   STATUS    RESTARTS   AGE
+pod/xecho-67c74f4587-bt9b6   1/1     Running   0          5s
+
+NAME                 TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+service/kubernetes   ClusterIP   10.96.0.1    <none>        443/TCP   3m59s
+
+NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/xecho   1/1     1            1           5s
+
+NAME                               DESIRED   CURRENT   READY   AGE
+replicaset.apps/xecho-67c74f4587   1         1         1       5s
+$ kubectl get services 
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
+kubernetes   ClusterIP   10.96.0.1     <none>        443/TCP          10m
+xecho        NodePort    10.96.49.52   <none>        8888:31401/TCP   36s
+
+# 扩容
+$  kubectl scale --replicas=3  deployment xecho
+deployment.apps/xecho scaled
+$  kubectl get pods -o wide
+NAME                     READY   STATUS    RESTARTS   AGE   IP           NODE       NOMINATED NODE   READINESS GATES
+xecho-67c74f4587-bt9b6   1/1     Running   0          31m   172.17.0.2   minikube   <none>           <none>
+xecho-67c74f4587-nrkzl   1/1     Running   0          20m   172.17.0.8   minikube   <none>           <none>
+xecho-67c74f4587-tf5gg   1/1     Running   0          20m   172.17.0.3   minikube   <none>           <none>
+
+
+$ kubectl describe services xecho
+Name:                     xecho
+Namespace:                default
+Labels:                   app=xecho
+Annotations:              <none>
+Selector:                 app=xecho
+Type:                     NodePort
+IP:                       10.96.49.52
+Port:                     <unset>  8888/TCP
+TargetPort:               8888/TCP
+NodePort:                 <unset>  31401/TCP
+Endpoints:                172.17.0.2:8888,172.17.0.3:8888,172.17.0.8:8888
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
+
+$ kubectl get endpoints xecho
+NAME         ENDPOINTS                                         AGE
+xecho        172.17.0.2:8888,172.17.0.3:8888,172.17.0.8:8888   13m
+$ kubectl get endpoints xecho -o yaml
+apiVersion: v1
+kind: Endpoints
+metadata:
+  annotations:
+    endpoints.kubernetes.io/last-change-trigger-time: "2019-12-21T03:50:13Z"
+  creationTimestamp: "2019-12-21T03:44:53Z"
+  labels:
+    app: xecho
+  name: xecho
+  namespace: default
+  resourceVersion: "185320"
+  selfLink: /api/v1/namespaces/default/endpoints/xecho
+  uid: 29feb0cd-1bc9-42d4-a4fe-53a5096e1404
+subsets:
+- addresses:
+  - ip: 172.17.0.2
+    nodeName: minikube
+    targetRef:
+      kind: Pod
+      name: xecho-67c74f4587-bt9b6
+      namespace: default
+      resourceVersion: "183820"
+      uid: 899253c5-1dda-49b4-bac2-de4f80f558c9
+  - ip: 172.17.0.3
+    nodeName: minikube
+    targetRef:
+      kind: Pod
+      name: xecho-67c74f4587-tf5gg
+      namespace: default
+      resourceVersion: "185318"
+      uid: beca461c-ea0c-4958-98e7-f77d420f3b5a
+  - ip: 172.17.0.8
+    nodeName: minikube
+    targetRef:
+      kind: Pod
+      name: xecho-67c74f4587-nrkzl
+      namespace: default
+      resourceVersion: "185310"
+      uid: cd2a481e-06e7-4b5d-8279-e94f76c7b536
+  ports:
+  - port: 8888
+    protocol: TCP
+
+$ minikube ip
+192.168.99.101 
+
+# 访问xecho服务10次，负载随机分配
+$ repeat 10 echo hello | busybox nc -w 0 192.168.99.101 31401 | grep HOSTNAME
+HOSTNAME=xecho-67c74f4587-tf5gg
+HOSTNAME=xecho-67c74f4587-nrkzl
+HOSTNAME=xecho-67c74f4587-bt9b6
+HOSTNAME=xecho-67c74f4587-tf5gg
+HOSTNAME=xecho-67c74f4587-tf5gg
+HOSTNAME=xecho-67c74f4587-bt9b6
+HOSTNAME=xecho-67c74f4587-nrkzl
+HOSTNAME=xecho-67c74f4587-tf5gg
+HOSTNAME=xecho-67c74f4587-nrkzl
+HOSTNAME=xecho-67c74f4587-tf5gg
+```
+
