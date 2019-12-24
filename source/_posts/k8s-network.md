@@ -1,6 +1,175 @@
 k8s-network
 
-通常Service可以指定一个ClusterIP(也叫做VIP), 一个ClusterIP对应一个或多个Endpoint对象， 在Endpoint对象中保存了Pod的实际IP, 这样VIP的流量会被节点上的kube-proxy根据Endpoint对象按照负载均衡算法分配到PodIP上
+## Kubernetes Network
+
+分层:
+
+1. 主机网络层
+   - namespace
+   - iptables
+   - routing
+   - IPVLAN
+2. 容器网络层
+   1. Single-host bridge
+   2. Multihost
+   3. IP-per-container
+3. 服务发现和容器编排层
+
+
+
+![](/src/amas-git/docs/source/_posts/k8s-network.assets/2019-12-24-232200_859x583_scrot.png)
+
+### 容器网络层
+
+![](/src/amas-git/docs/source/_posts/k8s-network.assets/2019-12-24-232336_878x583_scrot.png)
+
+1. Host:Container = 1:N
+   1. Facebook: 每个主机平均运行10~40个容器
+   2. Mesosphere: 物理机上运行250个容器不成问题
+
+## Docker Single-host Networking Mode
+
+单机网络有四种模式:
+
+	- Bridget Networking Mode
+	- Host Networking Mode
+	- Container Networking Mode
+	- No Networking Mode
+
+###  Bridge Mode Networking
+
+Docker创建虚拟的docker0以太网网桥，这也是Docker默认的方式, 在生环境中建议使用网桥模式，配合SDN解决方案更好，如果想控制容器之间的通讯可以用`--iptables`和`--icc`
+
+![](/src/amas-git/docs/source/_posts/k8s-network.assets/2019-12-24-233513_1034x643_scrot.png)
+
+```bash
+$ docker run -d -P --net=bridge nginx
+```
+
+### Host Mode Networking
+
+容器共享了主机网络namespace.
+
+```bash
+$ docker run -d -P --net=host nginx
+```
+
+
+
+### Container Mode Networking
+
+容器共享指定容器网络namespace， k8s便是利用这种机制。
+
+```bash
+$ docker run -d -P --net=bridge nginx
+$ docker exec -it target_container ip addr
+$ docker run -it --net=container:target_container ubuntu:14.04
+```
+
+### No Networking
+
+容器不能访问网络，适合执行一些不需要网络的Job
+
+```bash
+$ docker run -d -P --net=none nginx
+```
+
+
+
+## Docker Multihost Networking Mode
+
+当容器越来越多的时候，单机资源不足以支撑，势必需要在多个主机上运行容器，也就是容器集群。我们面临如下问题:
+
+1. 容器如何跨主机通讯？
+2. 如何控制容器与外部世界的通讯？
+3. 如何追踪管理集群中的IP分配？
+4. 如何保证安全？
+
+> Batteries included but replaceable: 总是提供默认的功能，如果你对某些解决方案不满也有选择的余地
+
+
+
+### Overlay
+
+2015年docker公司发布了SDN方案SocketPlane, 最终重新命名为DockerOverlayDriver, 作为Multihost Networking的默认解决方案。DockerOverlayDriver扩展了网桥模式用于点对点通讯，使用kv存储(支持zookeeper,etcd.consul)记录集群状态。
+
+### Flannel
+
+CoreOS的Flannel实现了一个虚拟网络，为每个主机准备一个子网用于运行容器。可以为每个容器分配唯一的IP, 这样集群内部的容器就可以相互访问。同时Flannel也支持注入VXLAN, AWS VPC等。Flannel的优点在于降低了端口映射的复杂性。
+
+### Weave
+
+Weaveworks的Weave，2层OverlayNetwork，可以看作一个switch
+
+### Calico
+
+Metaswitch的Calico使用了标准的IP路由: BorderGatewayProtocal:RFC1105, 3层OverlayNetwork. 这个主要为数据中心设计的。
+
+### Open vSwitch
+
+虚拟switch, 可被NetFlow,IPFIX,LACP,802.lag等协议控制， 类似于Vmware的vNetworkDistributedvSwitch或思科的Nexus1000V
+
+### Pipework
+
+Pipework由Docker著名工程师Jérôme Petazzoni发起，目标是要实现Linux容器的SDN。使用cgroup+namespace,支持Docker和LXC容器。
+
+### OpenVPN
+
+OpenVPN所创建的网络也可以解决容器的跨主机通讯问题。可以参考:
+
+https://www.digitalocean.com/community/tutorials/how-to-run-openvpn-in-a-docker-container-on-ubuntu-14-04
+
+### More:
+
+docker network命令 1.9引入， 可以让容器动态的访问其他网络。
+
+- http://developerblog.info/2015/11/16/splendors-and-miseries-of-docker-network/
+- https://www.oreilly.com/learning/docker-networking-service-discovery
+- https://www.weave.works/blog/docker-networking-1-9-weave-plugin/
+- https://www.docker.com/blog/tag/service-discovery/
+
+#### IPVLAN
+
+Linux 3.19+引入的IP-per-container功能，为每一个主机上的容器分配一个唯一的IP地址。工作在L2和L3层。
+
+####  IPAM
+
+IP Address Management, 多个主机构成的集群如何分配IP资源。
+
+### 容器和服务发现
+
+ - ZK
+   	- java
+   	- R/W + nginx
+ - etcd
+    - raft
+    - CoreOS
+    - go
+    - confd + nginx
+ - Consul
+    - raft
+    - HashiCorp
+    - go
+ - DNS解决方案
+    - Mesos-DNS
+    - SkyDNS
+    - WeaveDNS
+    - CoreDNS
+
+## 容器编排
+
+	- 容器调度
+	- 容器升级
+	- 健康检查
+	- 扩容
+	- 服务发现
+	- Organizational Primitives
+
+
+
+## Kubernetes Service
+
+通常Service可以指定一个ClusterIP(也叫做VIP), 一个ClusterIP对应一个或多个Endpoint对象(以前每个Endpoint对多保存100个IP, 多于100会创建新的Endpoint, 后来k8s引入EndpointSlice解决此问题)， 在Endpoint对象中保存了Pod的实际IP, 这样VIP的流量会被节点上的kube-proxy根据Endpoint对象按照负载均衡算法分配到PodIP上
 
 Service也可以把ClusterIP设置为None, 这样就不会自动建立Endpoint对象，此时你有两个选择
 
@@ -204,3 +373,14 @@ myhost.headless.default.svc.cluster.local. 30 IN A 172.17.0.10
 ;; MSG SIZE  rcvd: 412
 ```
 
+
+
+## 参考
+
+ - https://www.amazon.com/Using-Docker-Developing-Deploying-Containers/dp/1491915765
+
+ - https://github.com/docker/docker-bench-security
+
+ - https://www.weave.works/blog/automating-weave-discovery-docker/
+
+   
