@@ -87,7 +87,9 @@ $ docker run -d -P --net=none nginx
 
 > Batteries included but replaceable: 总是提供默认的功能，如果你对某些解决方案不满也有选择的余地
 
-
+> 啥叫 Overlay Networking?
+>
+> 在网络上用软件再构建一层网络，也叫虚拟网络。比如VPN就属于OverlayNetworking
 
 ### Overlay
 
@@ -140,7 +142,7 @@ IP Address Management, 多个主机构成的集群如何分配IP资源。
 
  - ZK
    	- java
-   	- R/W + nginx
+      	- R/W + nginx
  - etcd
     - raft
     - CoreOS
@@ -158,12 +160,12 @@ IP Address Management, 多个主机构成的集群如何分配IP资源。
 
 ## 容器编排
 
-	- 容器调度
-	- 容器升级
-	- 健康检查
-	- 扩容
-	- 服务发现
-	- Organizational Primitives
+- 容器调度
+- 容器升级
+- 健康检查
+- 扩容
+- 服务发现
+- Organizational Primitives
 
 
 
