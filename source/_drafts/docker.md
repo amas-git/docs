@@ -2,11 +2,47 @@
 
 # Docker
 
+## Docker的技术背景
+
+- Linux LXC
+
+- Cgroup
+
+- Namespaces (注意没有使用UID namespace)
+
+  - PID namespaces
+  - NET namespaces
+  - IPC namespaces
+  - MNT namespaces
+  - UTS namespace
+
+- FileSystem
+
+  - BtrFS
+
+    - 优点: 支持写时复制适合容器
+    - 缺点:
+      - 不支持PageCache
+      - 不支持SELinux
+      - 尚不被认为可以稳定运行在生产环境
+
+  - AUFS
+
+    - Docker支持的文件系统，很多Linux版本并不支持，常用于Ubuntu
+
+  - VFS
+
+  - DeviceMapper
+
+  - OverlayFS
+
+    
+
 ## 安装
 
 在linux上安装后会建立一个docker组， 为了方便可以将当前用户加入到docker组里:
 
-```
+```sh
 $ sudo usermod -a -G dockder <user-name>
 ```
 
@@ -18,14 +54,67 @@ $ sudo usermod -a -G dockder <user-name>
 # 可以将当前用户加入到docker组中，省去很多sudo
 $ useradd -aG docker $USER
 
-$ docker run base/archlinux echo hello
+$ docker run busybox echo hello
 hello
 
 # 进入cointainer
-$ docker run -it base/archlinux
-[root@9781ff50a159 /]#
+$ docker run -it busybox
+[ /]#
+
+# 简单的计时器
+$ docker run busybox /bin/sh -c 'while true; do echo $(date); sleep 1; done' 
+Mon Dec 30 15:40:51 UTC 2019
+Mon Dec 30 15:40:52 UTC 2019
+# <CTRL-C>
+$ docker run -d busybox /bin/sh -c 'while true; do echo $(date); sleep 1; done'
+5e968c81b422f5ba8305af2545c6e1ec1e1df2b9602fa1e087642aa134412cff
+
+# 查看
+$ docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS               NAMES
+5e968c81b422        busybox             "/bin/sh -c 'while t…"   About a minute ago   Up About a minute                       clever_davinci
+
+# 查看容器运行的日志, 通过容器ID或是随机生成的容器名都可以
+$ docker logs 5e968c81b422
+$ docker logs clever_davinci
+
+# 结束容器
+$ docker kill clever_davinci
 
 ```
+
+```bash
+# 1. 初始化CA serial文件
+$ echo 01 > sa.srl
+
+# 2. 创建CA的公私钥对
+$ openssl genrsa -des3 -out ca-key.pem 2048
+$ tree
+.
+├── ca-key.pem
+└── sa.srl
+
+# 创建证书
+$ openssl req -new -x509 -days 365 -key ca-key.pem -out ca.pem 
+$ tree
+.
+├── ca-key.pem
+├── ca.pem
+└── sa.srl
+
+# 3. 创建ServerKey和CertificateSigningRequest(CSR)
+$ openssl genrsa -des3 -out server-key.pem 2048
+$ openssl req -subj ‘/CN=<hostname here>’ -new -key server-key.pem -out server.csr
+
+# 4. 用ServerKey给CA签名
+$ openssl x509 -req -days 365 -in server.csr -CA ca.pem -CAkey ca-key.pem -out server-cert.pem
+
+# 5.
+$ openssl genrsa -des3 -out key.pem 2048
+$ openssl req -subj ‘/CN=<hostname here>’ -new -key key.pem -out client.csr
+```
+
+
 
 ## 容器运行
 
