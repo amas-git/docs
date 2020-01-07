@@ -83,6 +83,26 @@ $ docker kill clever_davinci
 
 ```
 
+
+
+### 运行一个简单的echo服务器
+
+```bash
+$ docker run -d -p 8888:80 busybox nc -lk -p 80 -e cat
+b91e3d5d7c852aa733a0f763437a4bbe2fb863a59b9cb676da0b53349cfbfc37
+$ docker ps
+CONTAINER ID        IMAGE               COMMAND                 CREATED             STATUS              PORTS                  NAMES
+b91e3d5d7c85        busybox             "nc -lk -p 80 -e cat"   51 seconds ago      Up 50 seconds       0.0.0.0:8888->80/tcp   infallible_hoover
+# 注意: 0.0.0.0:8888->80/tcp 表示主机端口8888的tcp数据将被forward到容器的80端口
+$ busybox nc localhost 8888
+hello
+hello
+```
+
+
+
+### 通过HTTPs(mTSL)访问docker
+
 ```bash
 # 1. 初始化CA serial文件
 $ echo 01 > sa.srl
@@ -109,9 +129,26 @@ $ openssl req -subj ‘/CN=<hostname here>’ -new -key server-key.pem -out serv
 # 4. 用ServerKey给CA签名
 $ openssl x509 -req -days 365 -in server.csr -CA ca.pem -CAkey ca-key.pem -out server-cert.pem
 
-# 5.
+# 5. 创建Client证书
 $ openssl genrsa -des3 -out key.pem 2048
 $ openssl req -subj ‘/CN=<hostname here>’ -new -key key.pem -out client.csr
+
+# 6. 创建ExtensionConfig文件
+$ echo extendedKeyUsage = clientAuth > extfile.cnf
+
+# 7. 给Key签名
+$ openssl x509 -req -days 365 -in client.csr -CA ca.pem -CAkey ca-key.pem -out cert.pem -extfile extfile.cnf
+
+# 8. 删除passphrase
+$ openssl rsa -in server-key.pem -out server-key.pem
+$ openssl rsa -in key.pem -out key.pem
+
+# 9. 重启dockerd(不同操作系统可能会用到不同的方法)
+$ sudo service docker.io stop
+$ docker -d —tlsverify —tlscacert=ca.pem —tlscert=server-cert.pem —tlskey=server-key.pem -H=0.0.0.0:2376
+
+# 10. 测试docker客户端
+$ docker —tlsverify —tlscacert=ca.pem —tlscert=cert.pem —tlskey=key.pem -H=172.31.1.21:2376 version
 ```
 
 
@@ -124,7 +161,7 @@ $ openssl req -subj ‘/CN=<hostname here>’ -new -key key.pem -out client.csr
 
 可以将容器之间处于同一个局域网，实际上它是通过配置hosts文件来实现的。
 
-```
+```bash
 $ docker run -it --name arch1 -d base/archlinux
 $ docker run -it --link arch2 base/archlinux cat ping arch1
 PING arch1 (172.17.0.3) 56(84) bytes of data.
@@ -157,6 +194,9 @@ $ docker run --rm --link srv1 -it base/archlinux
 #### --rm
 
 #### -p|P
+
+	- -P: 将容器的端口随映射到主机的一个随机端口上
+	- 
 
 #### -v host-dir:container-dir
 
@@ -202,7 +242,7 @@ $ docker run -e "MSG=hello" -e "VER=1.0"  base/archlinux env
 
 ### docker ps
 
-```
+```bash
 $ docker ps
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 bf98c46e26d5        base/archlinux      "/bin/bash"         6 seconds ago       Up 5 seconds                            youthful_wilson
@@ -219,7 +259,8 @@ bf98c46e26d5        base/archlinux      "/bin/bash"         6 seconds ago       
 
 一旦你退出容器，这个容器其实会作为历史保存起来
 
-```
+```bash
+# 查看过去运行的所有容器
 $ docker ps -a
 ...
 
@@ -248,27 +289,36 @@ amas.org
 
 进入容器后, 可以通过diff命令查看镜像发生的变化, 你可以清楚的看到每一步操作对文件系统的改变.
 
-```
-$ docker run -it -h hello --name hello base/archlinux                                  ~
-[root@hello /]# pacman -Su
-$ docker diff
-C /var
-C /var/lib
-C /var/lib/pacman
-C /var/lib/pacman/sync
-A /var/lib/pacman/sync/community.db
-A /var/lib/pacman/sync/core.db
-A /var/lib/pacman/sync/extra.db
-C /var/log
-C /var/log/pacman.log
+```bash
+$ docker run -it --name hello busybox sh
+/ # touch /tmp/hello
+/ #
+
+# 观察image发生了那些变化
+$ docker diff hello
+C /root
+A /root/.ash_history
+C /tmp
+A /tmp/hello
 ```
 
 
 
-### docker logs container-id|container-name
+### docker logs
 
-```
-$ docker logs
+```bash
+$ docker run -it --name hello busybox sh
+/ # echo hello
+hello
+/ # date
+Mon Jan  6 20:36:16 UTC 2020
+
+# 查看容器的stdout
+$ docker logs hello
+/ # echo hello
+hello
+/ # date
+Mon Jan  6 20:36:16 UTC 2020
 ```
 
 
@@ -321,7 +371,32 @@ hello zsh
 
 ### docker history
 
+我们可以用docker history查看容器是如何一步步被构建出来的
+
+```bash
+$ docker history busybox:latest
+IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
+b534869c81f0        4 weeks ago         /bin/sh -c #(nop)  CMD ["sh"]                   0B                  
+<missing>           4 weeks ago         /bin/sh -c #(nop) ADD file:884f543fc51111835…   1.22MB  
+
+# 我们可以知道busybox这个image有2层
+# <missing> 这个是通过ADD指令建立的
+# b534869c81f0 是通过CMD建立的
+
+
+# 既然有history,那么我们理论上就可以回到任何一个history的image里，方法是用tag命令打个标签就好
+$ docker tag <IMAGE> <IMAGE>:<TAG>
+```
+
+
+
 ### docker images
+
+```bash
+00
+```
+
+- 搜索image: https://registry.hub.Docker.com/
 
 ### docker import
 
@@ -355,6 +430,14 @@ $ docker load image.tgz
 ### docker logout
 
 ### docker seaarch 
+
+简单搜索image
+
+```bash
+$ docker search ubuntu
+```
+
+
 
 ## 容器
 
@@ -430,6 +513,15 @@ FROM
 
 
 ### Dockerfile
+
+```dockerfile
+FROM
+MAINTAINER
+```
+
+
+
+> 注意: Docker Image 最多可以支持147层
 
 cowsay/Dockerfile:
 
