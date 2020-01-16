@@ -23,9 +23,11 @@ DNS在k8s中是以add-on的形式提供的，就是说没有DNS, k8s也可以使
 
 ## CoreDNS
 
+CoreDNS启动以后会向kube-apiservice订阅Service和Endpoint资源的变化，凭借这些信息可以提供DNS服务。
+
 >为什么开发CoreDNS
 >
->1. 安全，性能
+>1. 用Go语言开发，注重安全，性能
 >2. 更好解决容器化微服务的服务发现问题
 
 ```bash
@@ -190,7 +192,7 @@ dnstools# dig  -t srv myhost.headless.default.svc.cluster.local
 ;myhost.headless.default.svc.cluster.local. IN SRV
 
 ;; ANSWER SECTION:
-myhost.headless.default.svc.cluster.local. 30 IN SRV 0 25 80 myhost.headless.default.svc.cluster.local.
+myhost.headless.default.svc.cluster.local. 30 IN SRV 0 25 80  myhost.headless.default.svc.cluster.local.
 
 ;; ADDITIONAL SECTION:
 myhost.headless.default.svc.cluster.local. 30 IN A 172.17.0.12
