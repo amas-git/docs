@@ -777,13 +777,18 @@ replicaset.apps/coredns-6955765f44   2         2         2       30d
 # 登录到pod上
 $ kubectl logs <pod-name>
 $ kubectl exec -it <pod-name> -- <cmd>
+$ kubectl attach -it <pod-name>
 # 注意pod:后面的文件路径必须去掉'/'
 $ kubectl cp xecho-67c74f4587-clfmk:etc/hostname 1.txt 
+# 通过master开一个隧道链接到Pod
 $ kubectl port-forward <pod-name>|service/<srv-name> <local-port>:<pod-port>
 
 # Rank, 必须安装heapster
 $ kubectl top pod
 $ kubectl node pod
+
+# 创建Pod
+$ kubectl run --restart=Never -it --image infoblox/dnstools dnstools 
 ```
 
 ## kubectl label
