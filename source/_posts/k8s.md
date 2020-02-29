@@ -27,6 +27,9 @@ $ ./minkube start
 🚜  Pulling images ...
 🚀  Launching Kubernetes ... 
 
+# 也可以指定minikube使用的cpu和内存
+$ minikube delete; minikube start --extra-config=kubelet.authentication-token-webhook=true --cpus 4 --memory 8192
+
 # 查看集群的IP
 $ minkube ip
 192.168.99.101
@@ -731,6 +734,76 @@ $ journalctl -xeu kubelet
 
 - 红帽的openshift的最小化部署https://github.com/MiniShift/minishift
 - CoreOS的tectonic: https://coreos.com/tectonic/
+
+## Kubectl 
+
+```bash
+# kubectl可以管理多个集群
+# 查看
+$ kubectl config current-context
+minikube
+# 修改
+$ kubectl config set-context my-context --namespace=mystuff
+# 配置文件： ~/.kube/config中
+$ cat ~/.kube/config
+# 使用
+$ kubectl config use-context my-context --namespace=mystuff
+
+# 查看
+$ kubectl get ds --namespace=kube-system kube-proxy
+
+# 以minikube为例，查看节点启动的全部k8s组件
+$ kubectl get  --namespace=kube-system all 
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/coredns-6955765f44-2kk4k           1/1     Running   12         30d
+pod/coredns-6955765f44-z5dxj           1/1     Running   12         30d
+pod/etcd-minikube                      1/1     Running   12         30d
+pod/kube-addon-manager-minikube        1/1     Running   12         30d
+pod/kube-apiserver-minikube            1/1     Running   12         30d
+pod/kube-controller-manager-minikube   1/1     Running   12         30d
+pod/kube-proxy-884mj                   1/1     Running   14         30d
+pod/kube-scheduler-minikube            1/1     Running   22         30d
+pod/storage-provisioner                1/1     Running   22         30d
+
+# CoreDNS
+NAME               TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                  AGE
+service/kube-dns   ClusterIP   10.96.0.10   <none>        53/UDP,53/TCP,9153/TCP   30d
+
+NAME                        DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                 AGE
+daemonset.apps/kube-proxy   1         1         1       1            1           beta.kubernetes.io/os=linux   30d
+
+NAME                      READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/coredns   2/2     2            2           30d
+
+NAME                                 DESIRED   CURRENT   READY   AGE
+replicaset.apps/coredns-6955765f44   2         2         2       30d
+
+
+## DEBUG
+# 登录到pod上
+$ kubectl logs <pod-name>
+$ kubectl exec -it <pod-name> -- <cmd>
+$ kubectl attach -it <pod-name>
+# 注意pod:后面的文件路径必须去掉'/'
+$ kubectl cp xecho-67c74f4587-clfmk:etc/hostname 1.txt 
+# 通过master开一个隧道链接到Pod
+$ kubectl port-forward <pod-name>|service/<srv-name> <local-port>:<pod-port>
+
+# Rank, 必须安装heapster
+$ kubectl top pod
+$ kubectl node pod
+
+# 创建Pod
+$ kubectl run --restart=Never -it --image infoblox/dnstools dnstools 
+```
+
+## kubectl label
+
+```bash
+
+```
+
+
 
 ## 参考
 
