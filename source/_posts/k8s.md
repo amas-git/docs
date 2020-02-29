@@ -1,5 +1,11 @@
 # k8s
 
+```
+The history of computer science is a history of the development of abstractions that hide complexity and empower you to build ever more sophisticated applications
+```
+
+> 理想的团队在6-8人之间，如此规模的团队更容易分享知识，迅速的做出决策，
+
 ## 安装
 
 ### 使用minikube
