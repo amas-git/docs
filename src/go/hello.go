@@ -317,6 +317,28 @@ func play_pipe() {
 	cancel()
 }
 
+func play_nil_chan() {
+	var ch chan int
+	<-ch
+}
+
+const a = 1
+const f float32 = a
+const d float64 = a
+
+func printType(a interface{}) {
+	s := ""
+	switch a.(type) {
+	case int:
+		s = "int"
+	case string:
+		s = "string"
+	default:
+		fmt.Printf("Unknown: %T\n", a)
+	}
+	fmt.Printf("%v is %T (%v)", a, a, s)
+}
+
 func main() {
 	fmt.Println("hello")
 	//play_pipline()
@@ -333,5 +355,14 @@ func main() {
 	// play_ordone()
 	//play_tee()
 	//play_ctx()
-	play_pipe()
+	//play_pipe()
+	//play_nil_chan()
+	printType(1)
+	printType(1i)
+	printType(nil)
+	printType(false)
+	printType(context.TODO())
+	for range []int{1, 1, 1, 1} {
+		fmt.Println("Looping")
+	}
 }
