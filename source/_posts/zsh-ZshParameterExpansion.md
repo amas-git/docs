@@ -21,7 +21,7 @@ $ tmp="abcd*'\""
 $ echo ${var:-$tmp}
 ```
 ### 使用vared改变变量的值
-``` 
+``` zsh
 $ x=
 # 终止编辑: CTRL-d
 # 输入回车: ALT-enter
@@ -41,7 +41,7 @@ $ print $x
 
 ### 变量是否存在: ${+name} 或 ${+map[key]}
 如果已经定义了name, 则返回1, 否则返回0
-```
+```zsh
 $ x=0
 $ print ${+x}
 1
@@ -120,8 +120,84 @@ function just-do-it() {
 }
 ```
 
+## 强大的Modifiers
+	- http://zsh.sourceforge.net/Doc/Release/Expansion.html#Expansion
+
+```zsh
+$ pwd 
+/home/amas
+
+$ print ${:-Let\'s go}
+Let's go
+
+# a|A|P : 尽可能转换为绝对路径
+$ print ${${:-.}:a}
+/home/amas
+$ print ${${:-dir}:a}
+/home/amas/dir
+
+# c   : 查找命令的可执行文件路径
+$ print ${${:-dir}:c}
+/usr/bin/ls
+
+# e   : 获取文件名扩展名
+$ print ${${:-hello.world.pdf}:e}
+pdf
+# r   : 获取文件名
+$ print ${${:-/a/b/c/d}:r[1]}
+hello.world
+
+# h[N]: 获取父目录，类似于dirname
+$ print ${${:-/a/b/c/d}:h}
+/a/b/c
+$ print ${${:-/a/b/c/d}:h1}
+/
+$ print ${${:-/a/b/c/d}:h2}
+/a
+$ print ${${:-/a/b/c/d}:h3}
+/a/b
+
+# t[N]: 类似basename
+$ print ${${:-/a/b/c/d}:t}
+d
+$ print ${${:-/a/b/c/d}:t1}
+d
+$ print ${${:-/a/b/c/d}:t2}
+c/d
+$ print ${${:-/a/b/c/d}:t3}
+b/c/d
+
+# Q   : 去掉一层引号
+$ print ${${:-'"hello"'}}
+"hello"
+$ print ${${:-'"hello"'}Q}
+hello
+
+# 字符串替换
+# s/l/r    : 从左替换第一个匹配的
+# gs/l/r   : 全局替换
+# s/l/r/:& : &可以重复上一次替换操作
+$ print ${${:-hello}:s/l/x}
+hexlo
+$ print ${${:-hello}:gs/l/x}
+hexxo
+$ print ${${:-hellllo}:gs/l/x/:&}
+hexxllo
+$ print ${${:-hellllo}:gs/l/x/:&:&}
+hexxxlo
+
+# u|l : 大小写
+$ print ${${:-hello}:u}
+HELLO
+$ print ${${:-hello}:u:l}
+hello
+$ print ${${:-hello}:s/l/x}
+```
+
+
 
 ### ${var::=value}
+
 总是声明var,并为其赋值为'value', 相当于:
 ```zsh
 $ unset var
@@ -299,8 +375,6 @@ a 1 b 2 c 3
 $ print ${${(P)m}[a]}  #等价于 $map[a]
 1
 ```
-
-## 
 
 
 ## 过滤
