@@ -1,0 +1,11 @@
+syntax = "proto3";
+package goecho;
+
+service Echo {
+    rpc say(Msg) returns (Msg);
+}
+
+message Msg {
+    int32 id = 1;
+    string text = 2;
+}
