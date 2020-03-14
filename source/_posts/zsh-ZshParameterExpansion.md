@@ -147,7 +147,7 @@ pdf
 $ print ${${:-/a/b/c/d}:r[1]}
 hello.world
 
-# h[N]: 获取父目录，类似于dirname
+# h[N]: 获取父目录，类似于dirname (HEAD)
 $ print ${${:-/a/b/c/d}:h}
 /a/b/c
 $ print ${${:-/a/b/c/d}:h1}
@@ -157,7 +157,7 @@ $ print ${${:-/a/b/c/d}:h2}
 $ print ${${:-/a/b/c/d}:h3}
 /a/b
 
-# t[N]: 类似basename
+# t[N]: 类似basename (TAIL)
 $ print ${${:-/a/b/c/d}:t}
 d
 $ print ${${:-/a/b/c/d}:t1}
