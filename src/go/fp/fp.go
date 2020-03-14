@@ -1,4 +1,6 @@
-package fp
+package main
+
+import "fmt"
 
 func Fib(n int) int {
 	switch n {
@@ -25,4 +27,34 @@ func FibIter(n int) int {
 		}
 		return n2
 	}
+}
+
+func add(n int) func(int) int {
+	return func(m int) int {
+		return n + m
+	}
+}
+
+func SumTCO(xs []int) int {
+	if len(xs) == 0 {
+		return 0
+	}
+
+	return xs[0] + SumTCO(xs[1:])
+}
+
+type FontSize int
+
+const (
+	_              = iota
+	SMALL FontSize = iota*4 + 10
+	MEDIUM
+	LARGE
+	XLARGE
+)
+
+func main() {
+	fmt.Println(SumTCO([]int{1, 2, 3}))
+	fmt.Println(add(1)(2))
+	fmt.Println(SMALL, MEDIUM, LARGE, XLARGE)
 }
