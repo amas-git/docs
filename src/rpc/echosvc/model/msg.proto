@@ -1,8 +1,12 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
 package model;
 
 service Echo {
     rpc say(Msg) returns (Msg);
+    rpc count(google.protobuf.Empty) returns (stream google.protobuf.Int64Value);
+    rpc ack(stream google.protobuf.Int64Value) returns (stream google.protobuf.Int64Value);
 }
 
 message Msg {
