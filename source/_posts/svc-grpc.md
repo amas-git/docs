@@ -28,23 +28,33 @@
 | 性能 |        |        |         |
 |      |        |        |         |
 
+```
+export GOPROXY=https://mirrors.aliyun.com/goproxy/
+```
+
 
 
 ## Hello gRPC
 
-- 建立proto文件
+- 建立echo.proto文件
 
 ```protobuf
 syntax = "proto3";
-package goecho;
+package model;
 
 service Echo {
     rpc say(Msg) returns (Msg);
 }
 
 message Msg {
-    int32 id = 1;
+    int32  id   = 1;
     string text = 2;
+    enum Type {
+        HIGH = 0;
+        NORM = 1;
+        LOW  = 2;
+    }
+    Type type = 3;
 }
 ```
 
@@ -52,18 +62,66 @@ message Msg {
 
 ```sh
 $ go get -u google.golang.org/grpc
-$ tree .
+$ tree
 .
-└── goecho
-    └── echo.proto
-    
-# 编译出go源文件
-$ protoc -I goecho/ goecho/echo.proto --go_out=plugins=grpc:goecho   
-$ tree .
-.
-└── goecho
-    ├── echo.pb.go
-    └── echo.proto
+├── cmd
+├── go.mod
+├── go.sum
+├── main.go
+├── model
+│   ├── msg.pb.go
+│   └── msg.proto
+├── svc
+│   └── echosvc.go
+├── test
+└── utils
+    └── utils.go
+```
+
+
+
+```bash
+$ grpcurl -import-path model -proto model/msg.proto localhost:8888 list
+model.Echo
+
+$ grpcurl -import-path model -proto model/msg.proto localhost:8888 describe model.Echo  
+model.Echo is a service:
+service Echo {
+  rpc say ( .model.Msg ) returns ( .model.Msg );
+}
+
+$ grpcurl -import-path model -proto model/msg.proto -plaintext -d '{"id":1, "text":"Hello gRPC"}' localhost:8888 model.Echo/say
+{
+  "id": 2
+}
+```
+
+
+
+## ProtocolBuffer
+
+### Message ID
+
+	- 范围: [1, 2^29-1] 
+	- [1,15] :  占用1字节，尽量分配给出现频率最高的字段
+	- [16,2047] : 占用2字节
+	- 19000-19999： 保留ID, 不要使用
+
+
+
+### 常用类型（google.protobuf）
+
+有很多类型google已经定义好了，我们不必重复造轮子
+
+- https://developers.google.com/protocol-buffers/docs/reference/google.protobuf
+
+
+
+### 工具
+
+```sh
+$ go get github.com/fullstorydev/grpcurl
+$ go install github.com/fullstorydev/grpcurl/cmd/grpcurl
 ```
 
 

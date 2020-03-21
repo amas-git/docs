@@ -1,5 +1,5 @@
 syntax = "proto3";
-package goecho;
+package model;
 
 service Echo {
     rpc say(Msg) returns (Msg);
@@ -8,4 +8,10 @@ service Echo {
 message Msg {
     int32 id = 1;
     string text = 2;
+    enum Type {
+        HIGH = 0;
+        NORM = 1;
+        LOW  = 2;
+    }
+    Type type = 3;
 }
