@@ -8,6 +8,7 @@ import (
 
 	"amas.org/echosvc/model"
 	pb "amas.org/echosvc/model"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
 )
@@ -31,10 +32,12 @@ func (s *EchoSVC) Say(ctx context.Context, msg *pb.Msg) (*pb.Msg, error) {
 }
 
 // Count is count
-func (s *EchoSVC) Count(stream model.Echo_CountServer) error {
-
+func (s *EchoSVC) Count(_ *empty.Empty, stream model.Echo_CountServer) error {
 	for i := 0; i < 100; i++ {
-		stream.Send(&wrappers.Int64Value{Value: i})
+		time.Sleep(1 * time.Second)
+		if err := stream.Send(&wrappers.Int64Value{Value: int64(i)}); err != nil {
+			return err
+		}
 	}
 	return nil
 }

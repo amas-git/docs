@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"amas.org/echosvc/model"
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 )
 
@@ -40,7 +41,31 @@ func say(id int32, text string) {
 	fmt.Printf("%v\n", msg)
 }
 
+func count() {
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	defer conn.Close()
+
+	if err != nil {
+		log.Fatalf("DID NOT CONNECT: %v", err)
+	}
+	c := model.NewEchoClient(conn)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	countc, err := c.Count(ctx, &empty.Empty{})
+	for {
+		v, err := countc.Recv()
+		if err != nil {
+			log.Fatalln(err)
+			return
+		}
+		fmt.Printf("[count] : received %v\n", v)
+	}
+}
+
 func main() {
 	say(1, "a")
 	say(2, "b")
+	count()
 }
