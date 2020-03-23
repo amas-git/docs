@@ -1,6 +1,9 @@
-# gRPC
+## gRPC
 
+## 技术背景
 
+- HTTP2
+- Protocol Buffer
 
 |                       |                |
 | --------------------- | -------------- |
@@ -102,10 +105,10 @@ $ grpcurl -import-path model -proto model/msg.proto -plaintext -d '{"id":1, "tex
 
 ### Message ID
 
-	- 范围: [1, 2^29-1] 
-	- [1,15] :  占用1字节，尽量分配给出现频率最高的字段
-	- [16,2047] : 占用2字节
-	- 19000-19999： 保留ID, 不要使用
+- 范围: [1, 2^29-1] 
+- [1,15] :  占用1字节，尽量分配给出现频率最高的字段
+- [16,2047] : 占用2字节
+- 19000-19999： 保留ID, 不要使用
 
 
 
@@ -117,7 +120,322 @@ $ grpcurl -import-path model -proto model/msg.proto -plaintext -d '{"id":1, "tex
 
 
 
-### 工具
+### 函数映射
+
+| PROTOBUF                            | GOLANG                                               |
+| ----------------------------------- | ---------------------------------------------------- |
+| rpc method(T1) returns (T2)         | func(Context, \*T1) (\*T2, error)                    |
+| rpc method(T1) returns (stream T2); | func(Context, \*T1, \*${package}_methodServer) error |
+|                                     |                                                      |
+|                                     |                                                      |
+
+
+
+### 交互方式
+
+- Simple RPC
+- 客户端Stream
+- 服务端Stream
+- 双向Stream
+
+## 初始化
+
+#### 服务端
+
+```go
+addr := ":8080" 
+l, err := net.Listen("tcp", addr)
+if err != nil {
+  log.Fatalf("FAILED TO CREATE SERVER @%v : %v", addr, err)
+}
+svc := grpc.NewServer()
+pb.Register/*${package}*/Server(svc, s)
+if err := svc.Serve(l); err != nil {
+  log.Fatalf("FAILED TO START: %v", err)
+}
+```
+
+
+
+#### 客户端
+
+```go
+conn, err := grpc.Dial(addr, grpc.WithInsecure()/* ...options */)
+defer conn.Close()
+
+if err != nil {
+  log.Fatalf("DID NOT CONNECT: %v", err)
+}
+c := pb.New/*${package}*/Client(conn)
+
+ctx, cancel := context.WithCancel(context.Background())
+defer cancel()
+
+// DO RPC CALL
+...
+```
+
+
+
+## Interceptors
+
+在执行gRPC整个过程中可以插入一些代码，这就是Interceptors，有两种类型的Interceptors
+
+- Unary Interceptor
+- Stream Interceptor
+
+### 服务端INTERCEPTOR
+
+#### UNARY
+
+```go
+func(ctx context.Context, 
+     req interface{}, 
+     info *UnaryServerInfo,
+	   handler UnaryHandler) 
+ 
+(resp interface{}, err error)
+```
+
+
+
+#### STREAM
+
+```go
+func(srv interface{}, 
+     ss      ServerStream, 
+     info    *StreamServerInfo,
+     handler StreamHandler) 
+error
+```
+
+
+
+#### 安装方式
+
+```go
+s := grpc.NewServer(grpc.UnaryInterceptor(${interceptor}))
+s := grpc.NewServer(grpc.StreamInterceptor(${interceptor}))
+```
+
+
+
+### 客户端INTERCEPTOR
+
+#### UNARY
+
+```go
+func(ctx context.Context, 
+     method  string, 
+     req     interface{}, 
+     reply   interface{},
+     cc      *ClientConn,
+     invoker UnaryInvoker, 
+     opts ...CallOption) 
+error
+```
+
+#### STREAM
+
+```go
+func(ctx context.Context, 
+     desc     *StreamDesc, 
+     cc       *ClientConn,
+     method   string, 
+     streamer Streamer,
+     opts     ...CallOption) 
+(ClientStream, error)
+```
+
+#### 安装方式
+
+```go
+conn, err := grpc.Dial(address, grpc.WithStreamInterceptor(${interceptor}))
+conn, err := grpc.Dial(address, grpc.WithUnaryInterceptor(${interceptor}))
+```
+
+
+
+## 截止时间和超时
+
+超时(Timeout)是客户端所能容忍的最长等待时间.
+
+> ALWAYS SET DEADLINE ! 具体设置多长时间没有固定标准，根据实际情况出发
+
+截止时间默认是一个非常大的值，具体多大取决于各个语言对gRPC的实现。如果在截止时间之内没有完成gRPC调用，则会返回DEADLINE_EXCEEDED错误。
+
+设置方法:
+
+```go
+// GO语言利用Context包处理
+ctx, cancel := context.WithDeadline(context.Background(), ${deadline}) 
+```
+
+
+
+## 取消
+
+## 错误处理
+
+| CODE                | VALUE | DESC     |
+| ------------------- | ----- | -------- |
+| OK                  | 0     | 成功     |
+| CANCELLED           | 1     | 取消     |
+| UNKNOWN             | 2     | 未知错误 |
+| INVALID_ARGUMENT    | 3     | 参数错误 |
+| DEADLINE_EXCEEDED   | 4     |          |
+| NOT_FOUND           | 5     |          |
+| ALREADY_EXISTS      | 6     |          |
+| PERMISSION_DENIED   | 7     |          |
+| UNAUTHENTICATED     | 16    |          |
+| RESOURCE_EXHAUSTED  | 8     |          |
+| FAILED_PRECONDITION | 9     |          |
+| ABORTED             | 10    |          |
+| OUT_OF_RANGE        | 11    |          |
+| UNIMPLEMENTED       | 12    |          |
+| INTERNAL            | 13    |          |
+| UNAVAILABLE         | 14    |          |
+| DATA_LOSS           | 15    |          |
+|                     |       |          |
+
+
+
+
+
+## Multiplexing
+
+多个gRPC调用可以复用一条HTTP2连接
+
+## 携带元数据
+
+## 名字解析
+
+## 负载均衡
+
+- 代理负载均衡
+- 客户端负载均衡
+
+## 安全
+
+### Oneway TLS
+
+> 客户端验证服务器
+
+- server.key
+- server.crt | server.pem
+
+
+
+服务端
+
+```go
+import (
+  "crypto/tls"
+  "google.golang.org/grpc/credentials"
+  ...
+}
+  
+cert, err := tls.LoadX509KeyPair(${server.crt},${server.key}) 
+opts := []grpc.ServerOption{
+  grpc.Creds(credentials.NewServerTLSFromCert(&cert)) 
+}
+  
+s := grpc.NewServer(opts...) 
+pb.Register${package}Server(s, &server{})
+  
+l, err := net.Listen("tcp", port)
+s.Serve(l)
+  
+```
+
+客户端
+
+```go
+creds, err := credentials.NewClientTLSFromFile(${server.crt}, ${hostname}) 
+if err != nil {
+  log.Fatalf("failed to load credentials: %v", err)
+}
+opts := []grpc.DialOption{
+  grpc.WithTransportCredentials(creds), 
+}
+
+conn, err := grpc.Dial(address, opts...) 
+if err != nil {
+  log.Fatalf("did not connect: %v", err)
+}
+defer conn.Close() 
+c := pb.New${package}Client(conn) 
+// DO RPC CALL
+```
+
+
+
+### mTLS
+
+> 客户端服务器双向验证
+
+- server.key
+- server.crt
+- client.key
+- client.crt
+- ca.crt
+
+### OAuth2
+
+### JWT
+
+
+
+## 测试
+
+### 压测ghz
+
+## 部署
+
+### DOCKER
+
+### K8S
+
+## 监控
+
+OpenCensus 
+
+Prometheus
+
+## 日志
+
+## 追踪
+
+## gRPC生态
+
+### gRPC网关
+
+### HTTP/JSON Transcoding for gRPC
+
+### gRPC Server Reflection Protocol
+
+### gRPC Middleware
+
+|                  |      |      |
+| ---------------- | ---- | ---- |
+|                  |      |      |
+| grpc_auth        |      |      |
+| grpc_ctxtags     |      |      |
+| grpc_zap         |      |      |
+| grpc_logrus      |      |      |
+| grpc_prometheus  |      |      |
+| grpc_opentracing |      |      |
+| grpc_retry       |      |      |
+| grpc_validator   |      |      |
+| grpc_recovery    |      |      |
+| grpc_ratelimit   |      |      |
+|                  |      |      |
+
+### 健康检查
+
+### 健康探测
+
+## 工具
 
 ```sh
 $ go get github.com/fullstorydev/grpcurl
@@ -128,5 +446,5 @@ $ go install github.com/fullstorydev/grpcurl/cmd/grpcurl
 
 ## 参考
 
-	-  https://grpc.io/docs/guides/
-	-  VSCode插件: vscode-proto3
+-  https://grpc.io/docs/guides/
+-  VSCode插件: vscode-proto3
