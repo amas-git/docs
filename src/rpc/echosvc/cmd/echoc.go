@@ -69,10 +69,6 @@ func (r *EchoClient) dial() error {
 	return nil
 }
 
-func (r *EchoClient) call() {
-
-}
-
 // Say with id & text
 func (r *EchoClient) Say(id int32, text string) (*model.Msg, error) {
 	if err := r.dial(); err != nil {

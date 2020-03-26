@@ -3,6 +3,7 @@ package echosvc
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -18,10 +19,16 @@ import (
 // EchoSVC is a helloworld service for gRPC
 type EchoSVC struct {
 	time time.Duration
+	opts []grpc.ServerOption
+	crt  string
+	key  string
+	svc  grpc.Server
+	port string
 }
 
-func New() *EchoSVC {
-	return new(EchoSVC)
+// New
+func New(port string) *EchoSVC {
+	return &EchoSVC{port: port}
 }
 
 // Say is NOTING to say
@@ -50,43 +57,38 @@ func (s *EchoSVC) Ack(stream model.Echo_AckServer) error {
 	return nil
 }
 
-// Start is start
-func (s *EchoSVC) Start(port string) {
-	l, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("FAILED TO CREATE SERVER @%v : %v", port, err)
-	}
-	svc := grpc.NewServer()
-	pb.RegisterEchoServer(svc, s)
-	log.Printf("GRPC SVC START LISTEN @%v\n", port)
-	if err := svc.Serve(l); err != nil {
-		log.Fatalf("FAILED TO START: %v", err)
-	}
+// AddUnaryInterceptor is cool
+func (s *EchoSVC) SetUnaryInterceptor(fn grpc.UnaryServerInterceptor) *EchoSVC {
+	s.opts = append(s.opts, grpc.UnaryInterceptor(fn))
+	return s
 }
 
-// StartSEC is start
-// create crt:
-// $ openssl req -nodes -x509 -newkey rsa:4096 -keyout svc.key -out svc.crt -days 365
-func (s *EchoSVC) StartSEC(port string, crt string, key string) {
-	l, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("FAILED TO CREATE SERVER @%v : %vn", port, err)
-		return
+// WithTLS need cert file and key file to setup
+func (s *EchoSVC) WithTLS(crt, key string) *EchoSVC {
+	s.crt = crt
+	s.key = key
+	return s
+}
+
+func (s *EchoSVC) Start() error {
+	if s.crt != "" {
+		cert, err := tls.LoadX509KeyPair(s.crt, s.key)
+		if err != nil {
+			return err
+		}
+		s.opts = append(s.opts, grpc.Creds(credentials.NewServerTLSFromCert(&cert)))
 	}
 
-	cert, err := tls.LoadX509KeyPair(crt, key)
+	l, err := net.Listen("tcp", s.port)
 	if err != nil {
-		log.Fatalf("FAILED TO LOAD CERT : %v\n", err)
-		return
+		return err
 	}
-
-	opts := []grpc.ServerOption{
-		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
-	}
-	svc := grpc.NewServer(opts...)
+	svc := grpc.NewServer(s.opts...)
 	pb.RegisterEchoServer(svc, s)
-	log.Printf("GRPC SVC START LISTEN @%v\n", port)
 	if err := svc.Serve(l); err != nil {
-		log.Fatalf("FAILED TO START: %v", err)
+		return err
 	}
+
+	fmt.Println("STARTED: ", s.port)
+	return nil
 }
