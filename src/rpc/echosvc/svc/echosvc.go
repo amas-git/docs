@@ -2,6 +2,7 @@ package echosvc
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"net"
 	"time"
@@ -11,6 +12,7 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // EchoSVC is a helloworld service for gRPC
@@ -55,6 +57,33 @@ func (s *EchoSVC) Start(port string) {
 		log.Fatalf("FAILED TO CREATE SERVER @%v : %v", port, err)
 	}
 	svc := grpc.NewServer()
+	pb.RegisterEchoServer(svc, s)
+	log.Printf("GRPC SVC START LISTEN @%v\n", port)
+	if err := svc.Serve(l); err != nil {
+		log.Fatalf("FAILED TO START: %v", err)
+	}
+}
+
+// StartSEC is start
+// create crt:
+// $ openssl req -nodes -x509 -newkey rsa:4096 -keyout svc.key -out svc.crt -days 365
+func (s *EchoSVC) StartSEC(port string, crt string, key string) {
+	l, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("FAILED TO CREATE SERVER @%v : %vn", port, err)
+		return
+	}
+
+	cert, err := tls.LoadX509KeyPair(crt, key)
+	if err != nil {
+		log.Fatalf("FAILED TO LOAD CERT : %v\n", err)
+		return
+	}
+
+	opts := []grpc.ServerOption{
+		grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
+	}
+	svc := grpc.NewServer(opts...)
 	pb.RegisterEchoServer(svc, s)
 	log.Printf("GRPC SVC START LISTEN @%v\n", port)
 	if err := svc.Serve(l); err != nil {

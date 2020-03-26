@@ -302,13 +302,21 @@ ctx, cancel := context.WithDeadline(context.Background(), ${deadline})
 
 
 
-## Multiplexing
-
+## 多路复用
+Multiplexing
 多个gRPC调用可以复用一条HTTP2连接
 
 ## 携带元数据
 
 ## 名字解析
+
+## 数据压缩
+
+```go
+import "google.golang.org/grpc/encoding/gzip"
+```
+
+
 
 ## 负载均衡
 
@@ -324,6 +332,29 @@ ctx, cancel := context.WithDeadline(context.Background(), ${deadline})
 - server.key
 - server.crt | server.pem
 
+```sh
+$ openssl req -nodes -x509 -newkey rsa:4096 -keyout svc.key -out svc.crt -days 365
+Generating a RSA private key
+................................................++++
+..............................................................................................................................++++
+writing new private key to 'svc.key'
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:.
+State or Province Name (full name) [Some-State]:.
+Locality Name (eg, city) []:.
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:.
+Organizational Unit Name (eg, section) []:.
+Common Name (e.g. server FQDN or YOUR name) []:localhost # 注意CN要设置正确，如果你想在本地测试可以使用localhost
+Email Address []:. 
+```
+
 
 
 服务端
@@ -337,7 +368,7 @@ import (
   
 cert, err := tls.LoadX509KeyPair(${server.crt},${server.key}) 
 opts := []grpc.ServerOption{
-  grpc.Creds(credentials.NewServerTLSFromCert(&cert)) 
+  grpc.Creds(credentials.NewServerTLSFromCert(&cert)),
 }
   
 s := grpc.NewServer(opts...) 
@@ -366,6 +397,25 @@ if err != nil {
 defer conn.Close() 
 c := pb.New${package}Client(conn) 
 // DO RPC CALL
+```
+
+```bash
+$ grpcurl -import-path model -proto model/msg.proto  -d '{"id":100, "text":"Hello gRPC"}' localhost:8888 model.Echo/say   
+Failed to dial target host "localhost:8888": x509: certificate is valid for amas.org, not localhost
+
+# 使用-insecure参数，不检查CA信任链
+$ grpcurl -import-path model -proto model/msg.proto -insecure -d '{"id":100, "text":"Hello gRPC"}' localhost:8888 model.Echo/say   
+{
+  "id": 101,
+  "text": "Hello gRPC"
+}
+# 将服务端的证书作为根证书
+# -cacert cert/svc.crt 
+$  grpcurl -import-path model -proto model/msg.proto  -d '{"id":100, "text":"Hello gRPC"}' -cacert cert/svc.crt localhost:8888 model.Echo/say 
+{
+  "id": 101,
+  "text": "Hello gRPC"
+}
 ```
 
 
@@ -435,6 +485,59 @@ Prometheus
 
 ### 健康探测
 
+
+
+## 最佳实践
+
+- https://gist.github.com/tcnksm/eb78363fda067fdccd06ee8e7455b38b
+
+### API设计
+
+### 错误处理
+
+### 截至时间
+
+- 截至时间是服务端和客户端都清楚应该合适终止操作
+- 总是使用截至时间
+- 客户端负责设置截至时间
+- 服务端负责检查截至时间，并做恰当的处理
+
+### 限速
+
+- 服务端限速: grpc.IntapHandle(rateLimitter)
+- 客户端可以实现调用限速
+
+### 重试
+
+- 官方计划在[gRFC A6]( https://github.com/grpc/proposal/blob/master/A6-client-retries.md)中支持
+  - 通过服务端的配置实现
+  - 计划支持
+    - 顺序重试
+    - 并发对冲请求(hedged requests)
+- 目前使用客户端包装或Interceptor处理重试
+- 重试可以用中间件的方式实现，避免重复开发
+
+```go
+ d, _ := ctx.Deadline()
+ ctx1, cancel := context.WithDeadline(ctx, d.Add(-150*time.Millisecond))
+```
+
+
+
+### 内存管理
+
+1. gRPC go版本不限制server使用的goroutines
+   1. 限制网络监听器的数量: netutil.LimitListener
+   2. 使用TapHandler处理淤积RPC
+2. 服务端设置载荷大小
+3. 使用StreamAPI
+
+### 日志
+
+### 监控
+
+- 尽可能暴露一切必要的度量指标
+
 ## 工具
 
 ```sh
@@ -444,7 +547,17 @@ $ go install github.com/fullstorydev/grpcurl/cmd/grpcurl
 
 
 
+```
+
+```
+
+
+
 ## 参考
 
 -  https://grpc.io/docs/guides/
+-  https://github.com/square/certstrap
 -  VSCode插件: vscode-proto3
+-  https://github.com/grpc-ecosystem/awesome-grpc
+-  测试: https://github.com/bojand/ghz
+-  gRFC: https://github.com/grpc/proposal
