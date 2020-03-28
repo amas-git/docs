@@ -9,36 +9,80 @@ import (
 	"amas.org/echosvc/model"
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
 	addr = "localhost:8888"
 )
 
-func say(id int32, text string) {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
-	defer conn.Close()
+// EchoClient is gRPC client
+type EchoClient struct {
+	addr     string
+	opts     []grpc.DialOption
+	crt      string
+	hostname string
+	client   model.EchoClient
+}
 
-	if err != nil {
-		log.Fatalf("DID NOT CONNECT: %v", err)
+// New create new echo client
+func NewEchoClient(addr string) EchoClient {
+	c := EchoClient{addr: addr}
+	return c
+}
+
+// WithTLS set crt file and hostname
+func (r *EchoClient) WithTLS(crt, hostname string) *EchoClient {
+	//cred, err := credentials.NewClientTLSFromFile(crt, hostname)
+	//append(r.opts, grpc.WithTransportCredentials(cred))
+	r.crt = crt
+	r.hostname = hostname
+	return r
+}
+
+// WithInsecure NOT USE TLS
+func (r *EchoClient) WithInsecure() *EchoClient {
+	r.opts = append(r.opts, grpc.WithInsecure())
+	return r
+}
+
+func (r *EchoClient) dial() error {
+	if r.client != nil {
+		return nil
 	}
 
-	c := model.NewEchoClient(conn)
+	if r.crt != "" {
+		cred, err := credentials.NewClientTLSFromFile(r.crt, r.hostname)
+		if err != nil {
+			return err
+		}
+
+		r.opts = append(r.opts, grpc.WithTransportCredentials(cred))
+	}
+
+	conn, err := grpc.Dial(r.addr, r.opts...)
+	if err != nil {
+		return fmt.Errorf("DIAL FAILED: %v", err)
+	}
+
+	r.client = model.NewEchoClient(conn)
+	return nil
+}
+
+// Say with id & text
+func (r *EchoClient) Say(id int32, text string) (*model.Msg, error) {
+	if err := r.dial(); err != nil {
+		return nil, err
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
-	// go!!!
-	msg, err := c.Say(ctx, &model.Msg{
+	msg, err := r.client.Say(ctx, &model.Msg{
 		Id:   id,
 		Text: text,
 	})
-
-	if err != nil {
-		log.Fatalf("CALL ERROR: %v", err)
-	}
-
-	fmt.Printf("%v\n", msg)
+	return msg, err
 }
 
 func count() {
@@ -65,7 +109,18 @@ func count() {
 }
 
 func main() {
-	say(1, "a")
-	say(2, "b")
-	count()
+	//count()
+	//echoc := EchoClient.N
+
+	echoc := NewEchoClient(addr)
+	//echoc.WithInsecure()
+	echoc.WithTLS("cert/svc.crt", "localhost")
+
+	for i := 0; i < 10; i++ {
+		msg, err := echoc.Say(int32(i), fmt.Sprintf("HELLO %v", i))
+		if err != nil {
+			log.Fatalf("ERROR: %v\n", err)
+		}
+		fmt.Printf("%v\n", msg)
+	}
 }

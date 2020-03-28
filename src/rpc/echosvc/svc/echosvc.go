@@ -2,6 +2,7 @@ package echosvc
 
 import (
 	"context"
+	"crypto/tls"
 	"log"
 	"net"
 	"time"
@@ -11,15 +12,22 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // EchoSVC is a helloworld service for gRPC
 type EchoSVC struct {
 	time time.Duration
+	opts []grpc.ServerOption
+	crt  string
+	key  string
+	svc  grpc.Server
+	port string
 }
 
-func New() *EchoSVC {
-	return new(EchoSVC)
+// New
+func New(port string) *EchoSVC {
+	return &EchoSVC{port: port}
 }
 
 // Say is NOTING to say
@@ -48,16 +56,36 @@ func (s *EchoSVC) Ack(stream model.Echo_AckServer) error {
 	return nil
 }
 
-// Start is start
-func (s *EchoSVC) Start(port string) {
-	l, err := net.Listen("tcp", port)
+// AddUnaryInterceptor is cool
+func (s *EchoSVC) SetUnaryInterceptor(fn grpc.UnaryServerInterceptor) *EchoSVC {
+	s.opts = append(s.opts, grpc.UnaryInterceptor(fn))
+	return s
+}
+
+// WithTLS need cert file and key file to setup
+func (s *EchoSVC) WithTLS(crt, key string) *EchoSVC {
+	s.crt = crt
+	s.key = key
+	return s
+}
+
+func (s *EchoSVC) Start() error {
+	if s.crt != "" {
+		cert, err := tls.LoadX509KeyPair(s.crt, s.key)
+		if err != nil {
+			return err
+		}
+		s.opts = append(s.opts, grpc.Creds(credentials.NewServerTLSFromCert(&cert)))
+	}
+
+	l, err := net.Listen("tcp", s.port)
 	if err != nil {
-		log.Fatalf("FAILED TO CREATE SERVER @%v : %v", port, err)
+		return err
 	}
-	svc := grpc.NewServer()
+	svc := grpc.NewServer(s.opts...)
 	pb.RegisterEchoServer(svc, s)
-	log.Printf("GRPC SVC START LISTEN @%v\n", port)
 	if err := svc.Serve(l); err != nil {
-		log.Fatalf("FAILED TO START: %v", err)
+		return err
 	}
+	return nil
 }
