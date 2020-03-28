@@ -440,6 +440,45 @@ $  grpcurl -import-path model -proto model/msg.proto  -d '{"id":100, "text":"Hel
 
 ### 压测ghz
 
+```bash
+$  ghz --proto model/msg.proto --cacert cert/svc.crt --call model.Echo/say -n 1000 -d '{"id":100, "text":"Hello gRPC"}' localhost:8888  
+
+Summary:
+  Count:        1000
+  Total:        38.03 ms
+  Slowest:      11.30 ms
+  Fastest:      0.14 ms
+  Average:      1.77 ms
+  Requests/sec: 26293.81
+
+Response time histogram:
+  0.144 [1]     |
+  1.260 [557]   |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  2.376 [320]   |∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎∎
+  3.492 [61]    |∎∎∎∎
+  4.608 [11]    |∎
+  5.724 [0]     |
+  6.840 [0]     |
+  7.957 [0]     |
+  9.073 [0]     |
+  10.189 [0]    |
+  11.305 [50]   |∎∎∎∎
+
+Latency distribution:
+  10 % in 0.67 ms 
+  25 % in 0.91 ms 
+  50 % in 1.19 ms 
+  75 % in 1.65 ms 
+  90 % in 2.60 ms 
+  95 % in 10.51 ms 
+  99 % in 10.97 ms 
+
+Status code distribution:
+  [OK]   1000 responses
+```
+
+
+
 ## 部署
 
 ### DOCKER
