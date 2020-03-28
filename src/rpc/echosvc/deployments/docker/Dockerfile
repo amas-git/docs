@@ -10,6 +10,6 @@ LABEL maintainer=zhoujb.cn@gmail.com
 USER nobody
 WORKDIR /app
 EXPOSE ${PORT:-8888}
-COPY --from=builder --chown=nobody /src/app/cert    /app/cert
-COPY --from=builder --chown=nobody /src/app/echosvc /app
+COPY --from=builder --chown=nobody /src/app/cert    ./cert
+COPY --from=builder --chown=nobody /src/app/echosvc .
 ENTRYPOINT [ "/app/echosvc" ]
