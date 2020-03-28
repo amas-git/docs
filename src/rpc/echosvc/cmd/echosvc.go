@@ -27,5 +27,7 @@ func main() {
 	svc := echosvc.New(":8888")
 	svc.WithTLS(crt, key)
 	svc.SetUnaryInterceptor(logInterceptor)
-	svc.Start()
+	if err := svc.Start(); err != nil {
+		fmt.Errorf("START FAILED %v\n", err)
+	}
 }

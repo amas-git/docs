@@ -3,7 +3,6 @@ package echosvc
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"log"
 	"net"
 	"time"
@@ -88,7 +87,5 @@ func (s *EchoSVC) Start() error {
 	if err := svc.Serve(l); err != nil {
 		return err
 	}
-
-	fmt.Println("STARTED: ", s.port)
 	return nil
 }
