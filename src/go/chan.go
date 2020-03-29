@@ -24,8 +24,8 @@ func deadlock_01() {
 	fmt.Println(<-ch)
 }
 
-func seq(max int) (r chan int) {
-	ch := make(chan int)
+func seq(max int) (r <-chan interface{}) {
+	ch := make(chan interface{})
 	go func() {
 		defer close(ch)
 		for i := 0; i < max; i++ {

@@ -134,7 +134,7 @@ func play_fanin() {
 
 func orDone(done <-chan interface{}, in <-chan interface{}) <-chan interface{} {
 	ch := make(chan interface{})
-	func() {
+	go func() {
 		defer close(ch)
 		for {
 			select {
@@ -153,16 +153,7 @@ func orDone(done <-chan interface{}, in <-chan interface{}) <-chan interface{} {
 	}()
 	return ch
 }
-func seq(n int) <-chan interface{} {
-	ch := make(chan interface{})
-	go func() {
-		defer close(ch)
-		for i := 0; i < n; i++ {
-			ch <- i
-		}
-	}()
-	return ch
-}
+
 func tee(done <-chan interface{}, in <-chan interface{}) (<-chan interface{}, <-chan interface{}) {
 	out1 := make(chan interface{})
 	out2 := make(chan interface{})
@@ -170,18 +161,22 @@ func tee(done <-chan interface{}, in <-chan interface{}) (<-chan interface{}, <-
 	go func() {
 		defer close(out1)
 		defer close(out2)
-		for v := range orDone(done, in) {
+
+		for v := range in {
 			o1, o2 := out1, out2
 			for i := 0; i < 2; i++ {
 				select {
 				case <-done:
 					return
 				case o1 <- v:
-					o1 = nil
+					{
+						o1 = nil
+					}
 				case o2 <- v:
-					o2 = nil
+					{
+						o2 = nil
+					}
 				}
-
 			}
 		}
 	}()
@@ -194,6 +189,17 @@ func slowFn(fn func() interface{}, t time.Duration) interface{} {
 	return fn()
 }
 
+func seq(max int) (r <-chan interface{}) {
+	ch := make(chan interface{})
+	go func() {
+		defer close(ch)
+		for i := 0; i < max; i++ {
+			ch <- i
+		}
+	}()
+	return ch
+}
+
 func play_tee() {
 	done := make(chan interface{})
 	defer close(done)
@@ -201,11 +207,7 @@ func play_tee() {
 	ch1, ch2 := tee(done, seq(10))
 
 	for v := range ch1 {
-		fmt.Println("tee1:", v)
-	}
-
-	for v := range ch2 {
-		fmt.Println("tee2:", v)
+		fmt.Println("[1]", v, "[2]", <-ch2)
 	}
 }
 
@@ -357,12 +359,18 @@ func main() {
 	//play_ctx()
 	//play_pipe()
 	//play_nil_chan()
-	printType(1)
-	printType(1i)
-	printType(nil)
-	printType(false)
-	printType(context.TODO())
-	for range []int{1, 1, 1, 1} {
-		fmt.Println("Looping")
-	}
+	// printType(1)
+	// printType(1i)
+	// printType(nil)
+	// printType(false)
+	// printType(context.TODO())
+	// for range []int{1, 1, 1, 1} {
+	// 	fmt.Println("Looping")
+	// }
+
+	play_tee()
+
+	// for v := range seq(10) {
+	// 	fmt.Println(v)
+	// }
 }
