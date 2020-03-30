@@ -12,7 +12,9 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 )
 
 // EchoSVC is a helloworld service for gRPC
@@ -33,6 +35,10 @@ func New(port string) *EchoSVC {
 // Say is NOTING to say
 func (s *EchoSVC) Say(ctx context.Context, msg *pb.Msg) (*pb.Msg, error) {
 	log.Printf("[echosvc] : RECIVE <- %v\n", msg)
+	if msg.Id < 0 {
+		return nil, status.Error(codes.InvalidArgument, "Id must > 0")
+	}
+
 	r := new(pb.Msg)
 	r.Id = msg.Id + 1
 	r.Text = msg.Text

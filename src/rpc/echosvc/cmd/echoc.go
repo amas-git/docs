@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"amas.org/echosvc/model"
-	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -25,10 +25,15 @@ type EchoClient struct {
 	client   model.EchoClient
 }
 
-// New create new echo client
+// NewEchoClient new echo client
 func NewEchoClient(addr string) EchoClient {
 	c := EchoClient{addr: addr}
 	return c
+}
+
+// RPC is CallBuilder
+func (r *EchoClient) RPC() *CallBuilder {
+	return &CallBuilder{client: r, timeout: 2 * time.Second}
 }
 
 // WithTLS set crt file and hostname
@@ -69,44 +74,83 @@ func (r *EchoClient) dial() error {
 	return nil
 }
 
+// CallBuilder is method for easy build rpc call
+type CallBuilder struct {
+	client   *EchoClient
+	header   metadata.MD
+	trailer  metadata.MD
+	timeout  time.Duration
+	deadline time.Duration
+}
+
+// WithHeader add new header to header
+func (r *CallBuilder) WithHeader(key string, value ...string) *CallBuilder {
+	if r.header == nil {
+		r.header = make(map[string][]string)
+	}
+	r.header.Set(key, value...)
+	return r
+}
+
+// WithTrailer is call build func
+func (r *CallBuilder) WithTrailer(key string, value ...string) *CallBuilder {
+	if r.trailer == nil {
+		r.trailer = make(map[string][]string)
+	}
+	r.trailer.Set(key, value...)
+	return r
+}
+
+// WithTimeout set the gRPC timeout
+func (r *CallBuilder) WithTimeout(t time.Duration) *CallBuilder {
+	r.timeout = t
+	return r
+}
+
+// WithDeadline set the gRPC call Deadline
+func (r *CallBuilder) WithDeadline(t time.Duration) *CallBuilder {
+	r.timeout = t
+	return r
+}
+
 // Say with id & text
-func (r *EchoClient) Say(id int32, text string) (*model.Msg, error) {
-	if err := r.dial(); err != nil {
+func (r *CallBuilder) Say(id int32, text string) (*model.Msg, error) {
+	if err := r.client.dial(); err != nil {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()
 
-	msg, err := r.client.Say(ctx, &model.Msg{
+	msg, err := r.client.client.Say(ctx, &model.Msg{
 		Id:   id,
 		Text: text,
 	})
 	return msg, err
 }
 
-func count() {
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
-	defer conn.Close()
+// func count() {
+// 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+// 	defer conn.Close()
 
-	if err != nil {
-		log.Fatalf("DID NOT CONNECT: %v", err)
-	}
-	c := model.NewEchoClient(conn)
+// 	if err != nil {
+// 		log.Fatalf("DID NOT CONNECT: %v", err)
+// 	}
+// 	c := model.NewEchoClient(conn)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+// 	ctx, cancel := context.WithCancel(context.Background())
+// 	defer cancel()
 
-	countc, err := c.Count(ctx, &empty.Empty{})
-	for {
-		v, err := countc.Recv()
-		if err != nil {
-			log.Fatalln(err)
-			return
-		}
-		fmt.Printf("[count] : received %v\n", v)
-	}
-}
+// 	countc, err := c.Count(ctx, &empty.Empty{})
+// 	for {
+// 		v, err := countc.Recv()
+// 		if err != nil {
+// 			log.Fatalln(err)
+// 			return
+// 		}
+// 		fmt.Printf("[count] : received %v\n", v)
+// 	}
+// }
 
 func main() {
 	//count()
@@ -117,7 +161,7 @@ func main() {
 	echoc.WithTLS("cert/svc.crt", "localhost")
 
 	for i := 0; i < 10; i++ {
-		msg, err := echoc.Say(int32(i), fmt.Sprintf("HELLO %v", i))
+		msg, err := echoc.RPC().WithHeader("timestamp", time.Now().String()).Say(int32(i), fmt.Sprintf("HELLO %v", i))
 		if err != nil {
 			log.Fatalf("ERROR: %v\n", err)
 		}

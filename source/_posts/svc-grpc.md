@@ -298,7 +298,59 @@ ctx, cancel := context.WithDeadline(context.Background(), ${deadline})
 | DATA_LOSS           | 15    |          |
 |                     |       |          |
 
+服务端：
 
+```go
+// 简单的错误
+...
+	if msg.Id < 0 {
+		return nil, status.Error(codes.InvalidArgument, "Id must > 0")
+	}
+...
+
+// 复杂的错误，可以携带额外的数据
+errrStatus := status.New(codes.InvalidArgument, "Id must > 0")
+ds, err := errStatus.WithDetails {
+    &errdetails.BadRequest_FieldViolation {
+        Field: "Id",
+        Description: fmt.Sprintf("Id = %v, MUST > 0", msg.Id)
+    }
+} 
+```
+
+
+
+```sh
+$  grpcurl -import-path model -proto model/msg.proto  -d '{"id":-1, "text":"Hello gRPC"}'  -cacert cert/svc.crt  localhost:8888 model.Echo/say
+ERROR:
+  Code: InvalidArgument
+  Message: Id must > 0
+```
+
+
+
+客户端：
+
+```go
+st, ok := status.FromError(err)
+if !ok {
+	...
+	// st.Code(), st.Message()
+}
+
+// 或者
+st := status.Convert(err)
+for _, detail := range st.Details() {
+    switch t := detail.(type) {
+    case *errdetails.BadRequest:
+        fmt.Println("Oops! Your request was rejected by the server.")
+        for _, violation := range t.GetFieldViolations() {
+            fmt.Printf("The %q field was wrong:\n", violation.GetField())
+            fmt.Printf("\t%s\n", violation.GetDescription())
+        }
+    }
+}
+```
 
 
 
