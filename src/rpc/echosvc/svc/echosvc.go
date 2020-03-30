@@ -3,6 +3,7 @@ package echosvc
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -39,10 +41,23 @@ func (s *EchoSVC) Say(ctx context.Context, msg *pb.Msg) (*pb.Msg, error) {
 		return nil, status.Error(codes.InvalidArgument, "Id must > 0")
 	}
 
+	timestamp := md(ctx, "timestamp")
+	if len(timestamp) > 0 {
+		fmt.Println("[ timestamp ]", timestamp[0])
+	}
+
 	r := new(pb.Msg)
 	r.Id = msg.Id + 1
 	r.Text = msg.Text
 	return r, nil
+}
+
+func md(ctx context.Context, key string) []string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return []string{}
+	}
+	return md[key]
 }
 
 // Count is count

@@ -79,14 +79,16 @@ type CallBuilder struct {
 	client   *EchoClient
 	header   metadata.MD
 	trailer  metadata.MD
+	md       metadata.MD
 	timeout  time.Duration
-	deadline time.Duration
+	deadline time.Time
+	opts     []grpc.CallOption
 }
 
 // WithHeader add new header to header
 func (r *CallBuilder) WithHeader(key string, value ...string) *CallBuilder {
 	if r.header == nil {
-		r.header = make(map[string][]string)
+		r.header = metadata.MD{}
 	}
 	r.header.Set(key, value...)
 	return r
@@ -95,9 +97,18 @@ func (r *CallBuilder) WithHeader(key string, value ...string) *CallBuilder {
 // WithTrailer is call build func
 func (r *CallBuilder) WithTrailer(key string, value ...string) *CallBuilder {
 	if r.trailer == nil {
-		r.trailer = make(map[string][]string)
+		r.trailer = metadata.MD{}
 	}
 	r.trailer.Set(key, value...)
+	return r
+}
+
+// WithMetadata is call build func
+func (r *CallBuilder) WithMetadata(key string, value ...string) *CallBuilder {
+	if r.md == nil {
+		r.md = metadata.MD{}
+	}
+	r.md.Set(key, value...)
 	return r
 }
 
@@ -113,13 +124,24 @@ func (r *CallBuilder) WithDeadline(t time.Duration) *CallBuilder {
 	return r
 }
 
+func (r *CallBuilder) buildContext() (ctx context.Context, cancel context.CancelFunc) {
+	ctx, cancel = context.WithTimeout(context.Background(), r.timeout)
+	if len(r.md) > 0 {
+		ctx = metadata.NewOutgoingContext(ctx, r.md)
+	}
+
+	r.opts = append(r.opts, grpc.Header(&r.header))
+	r.opts = append(r.opts, grpc.Trailer(&r.trailer))
+	return
+}
+
 // Say with id & text
 func (r *CallBuilder) Say(id int32, text string) (*model.Msg, error) {
 	if err := r.client.dial(); err != nil {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	ctx, cancel := r.buildContext()
 	defer cancel()
 
 	msg, err := r.client.client.Say(ctx, &model.Msg{
@@ -161,7 +183,7 @@ func main() {
 	echoc.WithTLS("cert/svc.crt", "localhost")
 
 	for i := 0; i < 10; i++ {
-		msg, err := echoc.RPC().WithHeader("timestamp", time.Now().String()).Say(int32(i), fmt.Sprintf("HELLO %v", i))
+		msg, err := echoc.RPC().WithMetadata("timestamp", time.Now().String()).Say(int32(i), fmt.Sprintf("HELLO %v", i))
 		if err != nil {
 			log.Fatalf("ERROR: %v\n", err)
 		}
