@@ -360,6 +360,12 @@ Multiplexing
 
 ## 携带元数据
 
+```go
+metadata.New(map[string]string{"key1": "val1", "key2": "val2"}).
+```
+
+
+
 ## 名字解析
 
 ## 数据压缩
