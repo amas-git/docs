@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"time"
@@ -48,6 +49,27 @@ func (r *EchoClient) WithTLS(crt, hostname string) *EchoClient {
 // WithInsecure NOT USE TLS
 func (r *EchoClient) WithInsecure() *EchoClient {
 	r.opts = append(r.opts, grpc.WithInsecure())
+	return r
+}
+
+type basicAuth struct {
+	username string
+	password string
+}
+
+func (r basicAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
+	auth := r.username + ":" + r.password
+	return map[string]string{
+		"authorization": "Basic " + base64.StdEncoding.EncodeToString([]byte(auth)),
+	}, nil
+}
+
+func (r basicAuth) RequireTransportSecurity() bool {
+	return true
+}
+
+func (r *EchoClient) WithAuthBasic(user string, pwd string) *EchoClient {
+	r.opts = append(r.opts, grpc.WithPerRPCCredentials(basicAuth{username: user, password: pwd}))
 	return r
 }
 
@@ -135,6 +157,12 @@ func (r *CallBuilder) buildContext() (ctx context.Context, cancel context.Cancel
 	return
 }
 
+// WithGZip is enable gzip
+func (r *CallBuilder) WithGZip() *CallBuilder {
+	r.opts = append(r.opts, grpc.UseCompressor("HELLO"))
+	return r
+}
+
 // Say with id & text
 func (r *CallBuilder) Say(id int32, text string) (*model.Msg, error) {
 	if err := r.client.dial(); err != nil {
@@ -181,9 +209,10 @@ func main() {
 	echoc := NewEchoClient(addr)
 	//echoc.WithInsecure()
 	echoc.WithTLS("cert/svc.crt", "localhost")
+	echoc.WithAuthBasic("amas", "888888")
 
 	for i := 0; i < 10; i++ {
-		msg, err := echoc.RPC().WithMetadata("timestamp", time.Now().String()).Say(int32(i), fmt.Sprintf("HELLO %v", i))
+		msg, err := echoc.RPC().WithGZip().WithMetadata("timestamp", time.Now().String()).Say(int32(i), fmt.Sprintf("HELLO %v", i))
 		if err != nil {
 			log.Fatalf("ERROR: %v\n", err)
 		}
