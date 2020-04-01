@@ -48,6 +48,10 @@ func loginInterceptor(ctx context.Context, r interface{}, i *grpc.UnaryServerInf
 	return h(ctx, r)
 }
 
+// func jwtInterceptor(ctx context.Context, r interface{}, i *grpc.UnaryServerInfo, h grpc.UnaryHandler) (interface{}, error) {
+
+// }
+
 func main() {
 	utils.HelloWorld()
 

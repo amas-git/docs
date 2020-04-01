@@ -154,7 +154,13 @@ spec:
 status:
   loadBalancer: {}
 ```
+ - ports
+   	- nodePort: 节点IP, `--service-node-port-range` flag (default: 30000-32767).
+   	- port: Service的端口
+   	- targetPort: 通过selector选出的Pod的端口
+
 ### Endpoint
+
 ```yaml
 apiVersion: v1
 kind: Endpoints
@@ -343,6 +349,28 @@ export DOCKER_CERT_PATH="/home/amas/.minikube/certs"
 $ eval $(minikube docker-env)
 ```
 
+```bash
+# 我们也可以利用docker context命令来保存minkube的docker链接信息
+$ docker context create minikube  \
+--default-stack-orchestrator=kubernetes  \
+--kubernetes config-file=/home/amas/.kube/config \
+--docker 'host=tcp://192.168.99.106:2376,ca=/home/amas/.minikube/certs/ca.pem,cert=/home/amas/.minikube/certs/cert.pem,key=/home/amas/.minikube/certs/key.pem
+
+# 查看所有的docker context
+$ docker context ls
+NAME                DESCRIPTION                               DOCKER ENDPOINT               KUBERNETES ENDPOINT                     ORCHESTRATOR
+default *           Current DOCKER_HOST based configuration   unix:///var/run/docker.sock   https://192.168.99.106:8443 (default)   swarm
+minikube                                                      tcp://192.168.99.106:2376     https://192.168.99.106:8443 (default)   kubernetes
+
+$ docker context use minikube
+```
+
+
+
+
+
+
+
 minikube创建了一个叫minikube的kubectrl context, 当我们想操作其他集群后，需要切换context, 想要再用回minikube可以
 
 ```zsh
@@ -352,6 +380,20 @@ $ kubectl get pods --context=minikube
 ```
 
 
+
+
+
+### 配置Minikube
+
+minkube默认使用的资源可能不够用，可以通过以下命令调整
+
+```bash
+minikube config set cpus 4
+minikube config set memory 4096
+minikube config view
+minikube delete || true
+minikube start --vm-driver ${1-"virtualbox"}
+```
 
 ### 安装集群
 
@@ -814,3 +856,4 @@ $ kubectl run --restart=Never -it --image infoblox/dnstools dnstools
 
 - https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/13-smoke-test.md
 - https://github.com/kelseyhightower/kubernetes-the-hard-way
+- https://github.com/kubernetes/examples/tree/master/
