@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"strings"
 
 	echosvc "amas.org/echosvc/svc"
-	"amas.org/echosvc/utils"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -53,8 +54,13 @@ func loginInterceptor(ctx context.Context, r interface{}, i *grpc.UnaryServerInf
 // }
 
 func main() {
-	utils.HelloWorld()
-
+	hostname := func() string {
+		if name, err := os.Hostname(); err == nil {
+			return name
+		}
+		return ""
+	}()
+	logrus.WithField("host", hostname).Info("HELLO")
 	svc := echosvc.New(":8888")
 	svc.WithTLS(crt, key)
 	svc.SetUnaryInterceptor(loginInterceptor)

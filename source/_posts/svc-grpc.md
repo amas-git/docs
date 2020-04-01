@@ -543,6 +543,85 @@ Status code distribution:
 
 ### K8S
 
+```
+deployments
+├── docker
+│   └── Dockerfile
+├── echosvc-deployment.k8s.yaml
+└── echosvc-service.k8s.yaml
+```
+
+echosvc-deployment.k8s.yaml:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echosvc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: echosvc
+  template:
+    metadata:
+      labels:
+        app: echosvc
+    spec:
+      containers:
+      - name: echosvc
+        image: echosvc:v1.0.0
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8888
+```
+
+echosvc-service.k8s.yaml:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: echosvc
+spec:
+  selector:
+    app: echosvc
+  ports:
+  - nodePort: 30100  # NodePort,可通过该节点的$IP:30100访问
+    port: 8888       # Service的端口
+    targetPort: 8888 # 通过selector选中对象的端口
+  type: NodePort
+```
+
+```sh
+# 启动minikube
+$ minikube start
+# 使用minikube上的docker
+$ eval $(minikube docker-env) 
+# 构建镜像, 注意此处buildTag要设置
+$ docker build -t echosvc:v1.0.0 -f deployments/docker/Dockerfile . 
+
+$ kubectl apply -f echosvc-deployment.k8s.yaml:
+$ kubectl apply -f deployments/echosvc-service.k8s.yaml
+$ kubectl get svc  
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
+echosvc      NodePort    10.96.100.3   <none>        8888:30100/TCP   28m
+kubernetes   ClusterIP   10.96.0.1     <none>        443/TCP          83m
+$ kubectl get pod
+NAME                       READY   STATUS    RESTARTS   AGE
+echosvc-6585d48566-klpln   1/1     Running   0          42m
+$ ./echoc
+# 查看服务端日志
+$ kubectl logs echosvc-6585d48566-klpln 
+```
+
+
+
+
+
 ## 监控
 
 OpenCensus 

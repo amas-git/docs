@@ -18,4 +18,5 @@ message Msg {
         LOW  = 2;
     }
     Type type = 3;
+    string from = 4;
 }

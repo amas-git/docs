@@ -21,12 +21,13 @@ import (
 
 // EchoSVC is a helloworld service for gRPC
 type EchoSVC struct {
-	time time.Duration
-	opts []grpc.ServerOption
-	crt  string
-	key  string
-	svc  grpc.Server
-	port string
+	time     time.Duration
+	opts     []grpc.ServerOption
+	crt      string
+	key      string
+	svc      grpc.Server
+	port     string
+	hostname string
 }
 
 // New
@@ -87,6 +88,11 @@ func (s *EchoSVC) SetUnaryInterceptor(fn grpc.UnaryServerInterceptor) *EchoSVC {
 func (s *EchoSVC) WithTLS(crt, key string) *EchoSVC {
 	s.crt = crt
 	s.key = key
+	return s
+}
+
+func (s *EchoSVC) SetHostname(hostname string) {
+	s.hostname = hostname
 	return s
 }
 
