@@ -62,6 +62,7 @@ func main() {
 	}()
 	logrus.WithField("host", hostname).Info("HELLO")
 	svc := echosvc.New(":8888")
+	svc.SetHostname(hostname)
 	svc.WithTLS(crt, key)
 	svc.SetUnaryInterceptor(loginInterceptor)
 	if err := svc.Start(); err != nil {

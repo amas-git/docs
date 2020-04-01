@@ -3,8 +3,6 @@ package echosvc
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
-	"log"
 	"net"
 	"time"
 
@@ -12,6 +10,7 @@ import (
 	pb "amas.org/echosvc/model"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -37,26 +36,24 @@ func New(port string) *EchoSVC {
 
 // Say is NOTING to say
 func (s *EchoSVC) Say(ctx context.Context, msg *pb.Msg) (*pb.Msg, error) {
-	log.Printf("[echosvc] : RECIVE <- %v\n", msg)
 	if msg.Id < 0 {
 		return nil, status.Error(codes.InvalidArgument, "Id must > 0")
 	}
 
-	timestamp := md(ctx, "timestamp")
-	if len(timestamp) > 0 {
-		fmt.Println("[ timestamp ]", timestamp[0])
-	}
+	timestamp := md(ctx, "timestamp")[0]
+	logrus.WithField("hostname", s.hostname).Info("RECV:", msg, "timestamp", timestamp)
 
 	r := new(pb.Msg)
 	r.Id = msg.Id + 1
 	r.Text = msg.Text
+	r.From = s.hostname
 	return r, nil
 }
 
 func md(ctx context.Context, key string) []string {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return []string{}
+		return []string{""}
 	}
 	return md[key]
 }
@@ -91,7 +88,7 @@ func (s *EchoSVC) WithTLS(crt, key string) *EchoSVC {
 	return s
 }
 
-func (s *EchoSVC) SetHostname(hostname string) {
+func (s *EchoSVC) SetHostname(hostname string) *EchoSVC {
 	s.hostname = hostname
 	return s
 }
