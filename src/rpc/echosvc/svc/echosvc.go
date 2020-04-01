@@ -10,6 +10,9 @@ import (
 	pb "amas.org/echosvc/model"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+
+	// "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -27,6 +30,8 @@ type EchoSVC struct {
 	svc      grpc.Server
 	port     string
 	hostname string
+	ius      []grpc.UnaryServerInterceptor
+	iss      []grpc.StreamServerInterceptor
 }
 
 // New
@@ -52,7 +57,7 @@ func (s *EchoSVC) Say(ctx context.Context, msg *pb.Msg) (*pb.Msg, error) {
 
 func md(ctx context.Context, key string) []string {
 	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
+	if !ok || len(md[key]) < 1 {
 		return []string{""}
 	}
 	return md[key]
@@ -75,9 +80,16 @@ func (s *EchoSVC) Ack(stream model.Echo_AckServer) error {
 	return nil
 }
 
-// AddUnaryInterceptor is cool
-func (s *EchoSVC) SetUnaryInterceptor(fn grpc.UnaryServerInterceptor) *EchoSVC {
-	s.opts = append(s.opts, grpc.UnaryInterceptor(fn))
+// AddUnaryInterceptor add unary server interceptors
+func (s *EchoSVC) AddUnaryInterceptor(fns ...grpc.UnaryServerInterceptor) *EchoSVC {
+	if len(fns) == 0 {
+		return s
+	}
+
+	if len(s.ius) < 1 {
+		s.ius = make([]grpc.UnaryServerInterceptor, 3)
+	}
+	s.ius = append(s.ius, fns...)
 	return s
 }
 
@@ -93,14 +105,31 @@ func (s *EchoSVC) SetHostname(hostname string) *EchoSVC {
 	return s
 }
 
-func (s *EchoSVC) Start() error {
+func (s *EchoSVC) appendOptions(opts ...grpc.ServerOption) *EchoSVC {
+	s.opts = append(s.opts, opts...)
+	return s
+}
+
+func (s *EchoSVC) cred() (grpc.ServerOption, error) {
 	if s.crt != "" {
 		cert, err := tls.LoadX509KeyPair(s.crt, s.key)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		s.opts = append(s.opts, grpc.Creds(credentials.NewServerTLSFromCert(&cert)))
+		return grpc.Creds(credentials.NewServerTLSFromCert(&cert)), nil
 	}
+	return nil, nil
+}
+
+// Start EchoSvc
+func (s *EchoSVC) Start() error {
+	cred, err := s.cred()
+	if err != nil {
+		return err
+	}
+
+	s.appendOptions(cred)
+	s.appendOptions(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(s.ius...)))
 
 	l, err := net.Listen("tcp", s.port)
 	if err != nil {

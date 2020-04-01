@@ -40,6 +40,7 @@ func loginInterceptor(ctx context.Context, r interface{}, i *grpc.UnaryServerInf
 		}
 		token := strings.TrimPrefix(auth[0], "Basic ")
 		return token == base64.StdEncoding.EncodeToString([]byte("amas:888888"))
+
 	}
 
 	if !valid(md["authorization"]) {
@@ -64,7 +65,7 @@ func main() {
 	svc := echosvc.New(":8888")
 	svc.SetHostname(hostname)
 	svc.WithTLS(crt, key)
-	svc.SetUnaryInterceptor(loginInterceptor)
+	//svc.AddUnaryInterceptor(loginInterceptor)
 	if err := svc.Start(); err != nil {
 		fmt.Errorf("START FAILED %v\n", err)
 	}

@@ -604,6 +604,7 @@ $ eval $(minikube docker-env)
 # 构建镜像, 注意此处buildTag要设置
 $ docker build -t echosvc:v1.0.0 -f deployments/docker/Dockerfile . 
 
+
 $ kubectl apply -f echosvc-deployment.k8s.yaml:
 $ kubectl apply -f deployments/echosvc-service.k8s.yaml
 $ kubectl get svc  
@@ -619,6 +620,13 @@ $ kubectl logs echosvc-6585d48566-klpln
 ```
 
 
+
+其他:
+
+```bash
+# 将echosvc Service类型改为负载均衡
+$ kubectl patch svc echosvc -p '{"spec":{"type": "LoadBalancer"}}'
+```
 
 
 
