@@ -636,7 +636,7 @@ OpenCensus
 
 Prometheus
 
-https://opencensus.io/guides/grpc/go/#1
+- https://opencensus.io/guides/grpc/go/#1
 
 - https://linuxacademy.com/blog/kubernetes/running-prometheus-on-kubernetes/
 - https://github.com/grpc-ecosystem/go-grpc-prometheus/issues/4
@@ -646,6 +646,7 @@ https://opencensus.io/guides/grpc/go/#1
 
 ```go
 import "github.com/grpc-ecosystem/go-grpc-prometheus"
+import grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 ...
     // Initialize your gRPC server's interceptor.
     myServer := grpc.NewServer(
@@ -658,6 +659,25 @@ import "github.com/grpc-ecosystem/go-grpc-prometheus"
     grpc_prometheus.Register(myServer)
     // Register Prometheus metrics handler.    
     http.Handle("/metrics", promhttp.Handler())
+	http.ListenAndServe(":7777", nil) // 在7777端口上提供metrics检索
+...
+```
+
+ 如果只想保留一个端口，可以用cmux, cmux可以通过检测首次链接的几个字符来确定协议类型。所以可以让http/https/grpc公用一个端口
+
+
+
+修改service, 让p8s能够自动抓取metrics
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: echosvc
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port:   '7777' #POD的p8s监控端口
+spec:
 ...
 ```
 

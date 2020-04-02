@@ -86,9 +86,32 @@ p8s的prometheus.yml中：
 
 所有报警规则保存在`prometheus.rules`中
 
+```yml
+    groups:
+    - name: devopscube demo alert
+      rules:
+      - alert: High Pod Memory
+        expr: sum(container_memory_usage_bytes) > 1
+        for: 1m
+        labels:
+          severity: slack
+        annotations:
+          summary: High Memory Usage
 ```
 
+
+
+故障排除
+
+```bash
+$ kubectl describe --namespace=monitoring pods alertmanager-5c94c6bf89-t9s4v
+  Warning  FailedMount  19s (x8 over 83s)  kubelet, minikube  MountVolume.SetUp failed for volume "templates-volume" : configmap "alertmanager-templates" not found
+
 ```
+
+
+
+### 安装Grafana
 
 
 

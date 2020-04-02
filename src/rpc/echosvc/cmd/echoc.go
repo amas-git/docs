@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	addr = "localhost:8888"
-	//addr = "amas.org:80"
+	//addr = "localhost:8888"
+	addr = "minikube:30100"
 )
 
 // EchoClient is gRPC client

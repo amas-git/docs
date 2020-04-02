@@ -16,6 +16,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var version string // set env VERSION to this
+
 const (
 	crt = "cert/svc.crt"
 	key = "cert/svc.key"
@@ -61,10 +63,11 @@ func main() {
 		}
 		return ""
 	}()
-	logrus.WithField("host", hostname).Info("HELLO")
+	logrus.WithField("host", hostname).Info("HELLO", " version=", version)
 	svc := echosvc.New(":8888")
 	svc.SetHostname(hostname)
 	svc.WithTLS(crt, key)
+	svc.WithP8S(":8080")
 	//svc.AddUnaryInterceptor(loginInterceptor)
 	if err := svc.Start(); err != nil {
 		fmt.Errorf("START FAILED %v\n", err)
