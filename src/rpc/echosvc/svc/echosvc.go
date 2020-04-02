@@ -12,7 +12,7 @@ import (
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 
-	// "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -119,6 +119,12 @@ func (s *EchoSVC) cred() (grpc.ServerOption, error) {
 		return grpc.Creds(credentials.NewServerTLSFromCert(&cert)), nil
 	}
 	return nil, nil
+}
+
+// WithP8S added unary service interceptor
+func (s *EchoSVC) WithP8S() *EchoSVC {
+	s.AddUnaryInterceptor(grpc_prometheus.UnaryServerInterceptor)
+	return s
 }
 
 // Start EchoSvc

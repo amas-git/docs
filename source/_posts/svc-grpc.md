@@ -636,6 +636,33 @@ OpenCensus
 
 Prometheus
 
+https://opencensus.io/guides/grpc/go/#1
+
+- https://linuxacademy.com/blog/kubernetes/running-prometheus-on-kubernetes/
+- https://github.com/grpc-ecosystem/go-grpc-prometheus/issues/4
+- https://github.com/philips/grpc-gateway-example/blob/master/cmd/serve.go
+- https://sysdig.com/blog/kubernetes-monitoring-prometheus-operator-part3/
+- https://devopscube.com/setup-prometheus-monitoring-on-kubernetes/
+
+```go
+import "github.com/grpc-ecosystem/go-grpc-prometheus"
+...
+    // Initialize your gRPC server's interceptor.
+    myServer := grpc.NewServer(
+        grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+        grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+    )
+    // Register your gRPC service implementations.
+    myservice.RegisterMyServiceServer(s.server, &myServiceImpl{})
+    // After all your registrations, make sure all of the Prometheus metrics are initialized.
+    grpc_prometheus.Register(myServer)
+    // Register Prometheus metrics handler.    
+    http.Handle("/metrics", promhttp.Handler())
+...
+```
+
+
+
 ## 日志
 
 ## 追踪
@@ -666,6 +693,8 @@ Prometheus
 |                  |      |      |
 
 ### 健康检查
+
+https://github.com/grpc/grpc/blob/v1.15.0/doc/health-checking.md
 
 ### 健康探测
 
