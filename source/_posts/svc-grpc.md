@@ -676,7 +676,7 @@ metadata:
   name: echosvc
   annotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port:   '7777' #POD的p8s监控端口
+    prometheus.io/port:   '7777' #注意，这个是POD的p8s监控端口
 spec:
 ...
 ```

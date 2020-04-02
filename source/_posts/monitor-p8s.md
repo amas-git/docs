@@ -111,7 +111,157 @@ $ kubectl describe --namespace=monitoring pods alertmanager-5c94c6bf89-t9s4v
 
 
 
+
+
 ### 安装Grafana
+
+
+
+### 服务发现
+
+静态监控, 可在配置文件中添加
+
+```yml
+scrape_configs:
+  - job_name: prometheus
+	static_configs:
+	 - targets:
+      - localhost:9090
+      - web:8888
+```
+
+
+
+文件形式的服务发现:
+
+```yml
+scrape_configs:
+  - job_name: file
+    file_sd_configs:
+     - files:
+     - '*.json'
+```
+
+```json
+[
+    {
+    "targets": [ "host1:9100", "host2:9100" ],
+    "labels": {
+    "team": "infra",
+    "job": "node"
+    },
+    ...
+]
+```
+
+- 文件形式的服务发现，可以是通过CMS生成文件，也可以是用cron job定期获取
+
+### 监控节点
+
+> 监控主机节点时，不要用容器运行expoter,以获得更准确的监控数据
+
+### APP监控
+
+1. APP需要以http/https方式暴露/metrics
+2. k8s需要在Service中配置anotation, 以便p8s可以检索到这些需要被监控的服务，以及如何监控
+
+## 自定义Exporter
+
+## PromQL
+
+> Gauges: 意思是状态的快照
+
+```sh
+# 不带device,fstype,mountpoint标签的node_filesystem_size_bytes求和
+sum without(device, fstype, mountpoint)(node_filesystem_size_bytes)
+
+# 求平均
+avg (without(a,b,c))(x)
+
+# 求最大
+max (without(a,b,c))(x)
+
+# 求最小
+min (without(a,b,c))(x)
+
+# 过去5分钟的rate, sum(x[5m])/5m*60
+rate(x[5m])
+
+# 5分钟之前的总请求数量
+sum(http_requests_total{method="GET"} offset 5m) 
+
+# Selector
+x{a="" b!="" d=~"regex" e=!~"regex"}
+
+# TimeUnit: ms s m h d w y
+
+# by: 带有a,b,c标签的
+by(a,b,c)(x)
+
+# 统计gauges的长度
+count(x)
+
+#
+stddev(x)
+
+#
+stdvar(x)
+
+# topk, TOP n
+topk(n,x)
+
+# bottomk, BOTTOM n
+bottomk(n, x)
+
+# quantile: 90%分位点
+quantile(0.9, x)
+
+# count_values, 按照value分组，计算出value出现的次数
+software_version{instance="a",job="j"} 7
+software_version{instance="b",job="j"} 4
+software_version{instance="c",job="j"} 8
+software_version{instance="d",job="j"} 4
+software_version{instance="e",job="j"} 7
+software_version{instance="f",job="j"} 4
+count_values withoutt(instance)("version", software_version)
+{job="j",version="7"} 2
+{job="j",version="8"} 1
+{job="j",version="4"} 3
+
+# 二元操作
+x / y
+x + y
+x - y
+x * y
+x % y
+^e
+
+==
+!=
+>
+<
+>=
+<=
+```
+
+直方图
+
+> 用来分析事件大小的分布
+>
+> ```
+> histogram_quantile(
+> 0.90,
+> rate(prometheus_tsdb_compaction_duration_seconds_bucket[1d]))
+> 
+> 结果：
+> {instance="172.17.0.10:9090",job="kubernetes-service-endpoints",kubernetes_name="prometheus-service",kubernetes_namespace="monitoring"} 0.9
+> 
+> 意思是90%的延迟在0.9s
+> ```
+
+
+
+## 报警
 
 
 
