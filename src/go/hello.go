@@ -184,6 +184,65 @@ func tee(done <-chan interface{}, in <-chan interface{}) (<-chan interface{}, <-
 	return out1, out2
 }
 
+func split(done <-chan interface{}, in <-chan interface{}, router map[string](func(interface{}) bool)) map[string](<-chan interface{}) {
+	chmap := make(map[string](chan interface{}), len(router))
+	rmap := make(map[string](<-chan interface{}), len(router))
+	for key := range router {
+		chmap[key] = make(chan interface{})
+		rmap[key] = chmap[key]
+	}
+
+	go func() {
+		for _, ch := range chmap {
+			defer close(ch)
+		}
+
+		for v := range in {
+			fmt.Println(v)
+			for key, fn := range router {
+				//fmt.Printf("%v <- %v", key, v)
+				if fn(v) {
+					tch := chmap[key]
+					fmt.Println(key, v)
+					select {
+					case <-done:
+						return
+					case tch <- v:
+						{
+							tch = nil
+						}
+					}
+				}
+			}
+		}
+	}()
+	return rmap
+}
+
+func play_split() {
+	done := make(chan interface{})
+	defer close(done)
+	isodd := func(n interface{}) bool {
+		return n.(int)%2 == 0
+	}
+
+	iseven := func(n interface{}) bool {
+		return !isodd(n)
+	}
+
+	chs := split(done, seq(100), map[string](func(interface{}) bool){
+		"odd":  isodd,
+		"even": iseven,
+	})
+	fmt.Print(chs)
+
+	for k := range chs {
+		for x := range chs[k] {
+			fmt.Printf("[%v] : %v\n", k, x)
+		}
+	}
+}
+
 func slowFn(fn func() interface{}, t time.Duration) interface{} {
 	time.Sleep(t * time.Second)
 	return fn()
@@ -341,6 +400,15 @@ func printType(a interface{}) {
 	fmt.Printf("%v is %T (%v)", a, a, s)
 }
 
+func play_ordone1() {
+
+	ch := seq(10)
+	for i := 0; i < 15; i++ {
+		x, ok := <-ch
+		fmt.Println("->", x, "(", ok, ")")
+	}
+}
+
 func main() {
 	fmt.Println("hello")
 	//play_pipline()
@@ -368,8 +436,10 @@ func main() {
 	// 	fmt.Println("Looping")
 	// }
 
-	play_tee()
+	//play_tee()
+	//play_ordone1()
 
+	play_split()
 	// for v := range seq(10) {
 	// 	fmt.Println(v)
 	// }

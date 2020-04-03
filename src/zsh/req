@@ -1,0 +1,7 @@
+#!/bin/zsh
+function good() {
+function hello() {
+    echo hello
+}
+    hello
+}
