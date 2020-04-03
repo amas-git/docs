@@ -33,8 +33,8 @@ func main() {
 		}
 		return os.Args[1]
 	}()
-
 	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/static", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "HELLO")
 		app_hello_processed_ops_total.Inc()
