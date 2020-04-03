@@ -154,7 +154,13 @@ spec:
 status:
   loadBalancer: {}
 ```
+ - ports
+   	- nodePort: 节点IP, `--service-node-port-range` flag (default: 30000-32767).
+      	- port: Service的端口
+   	- targetPort: 通过selector选出的Pod的端口
+
 ### Endpoint
+
 ```yaml
 apiVersion: v1
 kind: Endpoints
@@ -343,6 +349,28 @@ export DOCKER_CERT_PATH="/home/amas/.minikube/certs"
 $ eval $(minikube docker-env)
 ```
 
+```bash
+# 我们也可以利用docker context命令来保存minkube的docker链接信息
+$ docker context create minikube  \
+--default-stack-orchestrator=kubernetes  \
+--kubernetes config-file=/home/amas/.kube/config \
+--docker 'host=tcp://192.168.99.106:2376,ca=/home/amas/.minikube/certs/ca.pem,cert=/home/amas/.minikube/certs/cert.pem,key=/home/amas/.minikube/certs/key.pem
+
+# 查看所有的docker context
+$ docker context ls
+NAME                DESCRIPTION                               DOCKER ENDPOINT               KUBERNETES ENDPOINT                     ORCHESTRATOR
+default *           Current DOCKER_HOST based configuration   unix:///var/run/docker.sock   https://192.168.99.106:8443 (default)   swarm
+minikube                                                      tcp://192.168.99.106:2376     https://192.168.99.106:8443 (default)   kubernetes
+
+$ docker context use minikube
+```
+
+
+
+
+
+
+
 minikube创建了一个叫minikube的kubectrl context, 当我们想操作其他集群后，需要切换context, 想要再用回minikube可以
 
 ```zsh
@@ -352,6 +380,20 @@ $ kubectl get pods --context=minikube
 ```
 
 
+
+
+
+### 配置Minikube
+
+minkube默认使用的资源可能不够用，可以通过以下命令调整
+
+```bash
+minikube config set cpus 4
+minikube config set memory 4096
+minikube config view
+minikube delete || true
+minikube start --vm-driver ${1-"virtualbox"}
+```
 
 ### 安装集群
 
@@ -808,9 +850,408 @@ $ kubectl run --restart=Never -it --image infoblox/dnstools dnstools
 
 ```
 
+## LABELS
+
+> 标签: 一个或多个绑定在k8s资源对象之上的key/value对
+>
+> - 合法字符集: [a-Z0-9.-_]
+> - 长度限制： key256， value63
+
+```sh
+$ kubectl run $pod --image=$image --replicas=$n --labels="k1=v1,k2=v2,..."
+$ kubectl get pods --show-labels
+$ kubectl get pods -L $label-key
+$ kubectl get pods --selector="k1=v1,k2=v2,..." # or -l
+```
+
+
+
+##  PODS
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+	name: kuard
+spec:
+	containers:
+		- image:
+		  name:
+		  resources:     #------------------------[ CPU | 内存]
+		  	requests:
+		  	  cpu:
+		  	  memory:
+		  	limits:      # 资源上限
+		  	  cpu:
+		  	  memory:
+		  volumes:       # ---------------------··[ 存储 ]
+		  	- name:
+		  	  hostPath:  # 访问主机文件系统
+		  	    path:
+		  	- name:      # NFS存储
+		  	  nfs:
+		  	    server:
+		  	    path:
+		  ports:
+		  	- containerPort:
+		  	  name:
+		  	  protocal:
+          livenessProbe:  # ----------------------[ 探活 ]
+          	httpGet:
+          	  path:
+              port:
+            initialDelaySecods:
+            timeoutSeconds:
+            periodSeconds:
+            failureThreshold:
+          readinessProbe: # ----------------------[ 可服务 ]
+            httpGet:
+              path:
+              pot:
+            initialDelaySecods:
+            timeoutSeconds:
+            periodSeconds:
+            failureThreshold: 
+          startupProbe:   # ----------------------[] ， 设置之后，readiness和liveness会失效，直到starup成功
+```
+
+```bash
+$ kubectl get [po]ds 
+$ kubectl get [po]ds --watch # 持续监控
+$ kubectl get po -o wide
+$ kubectl --namespace=xxx get $pods
+$ kubectl describe pods $pod
+$ kubectl delete $pod
+$ kubectl port-forward [$local-port]:$remote-port # remote-port: = pod|svc port 
+$ kubectl logs $pod
+$ kubectl exec $pod $cmd
+$ kubectl exec -it $pod [sh|ash|bash|zsh]
+$ kubectl cp $pod/$path $local-path
+$ kubectl label pod $pod "k=v"
+$ kubectl edit pod $pod
+```
+
+## DEPLOYMENT
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: $name
+spec:
+  paused: [true|false]       # 是否允许暂停发布
+  progressDeadlineSeconds: 5 # 发布允许执行的最长时间(秒)
+  minReadySeconds: 0         # 新创建的POD变为Ready状态所允许的最小等待时间，看到readiness后升级下一个POD
+  revisionHistoryLimit: 14   # 保存的发布历史数量，默认10
+  strategy:
+      type: [rollingUpdate|Recreate] # Recreate简单粗暴，会downtime, rollingUpdate为默认
+      maxUnavailable: [n|n%] # 发布过程中允许不可用的POD数
+      maxSurge: [n|n%]       # 默认25%，发布过程中允许使用的额外POD数
+  selector:
+    matchLabels:
+    run: $name
+  replicas: 1 # 创建RS
+  template:
+    metadata:
+      labels:
+        run: $name
+    spec:
+      containers:
+      - name: $name
+        image: 
+```
+
+
+
+```sh
+$ kubectl run $pod --image=$image --replicas=$n
+$ kubectl delete deployments --all
+$ kubectl delete deployments --selector="k1=v1,k2=v2"
+# 扩展
+$ kubectl scale deployments $name --replicas=2
+
+# 滚动升级
+$ kubectl apply -f $name-deployment.yaml # 更新后，k8s将自动触发rollout
+# 观察进度
+$ kubectl rollout status deployments $name
+# 暂停发布
+$ kubectl rollout pause deployments $name
+# 继续发布
+$ kubectl rollout resume depoyments $name
+# 查看发布历史
+$ kubectl rollout history deployment $name
+# 回滚发布
+$ kubectl rollout undo deployments $name
+# 查看某个发布版本的详情
+$ kubectl rollout history deploment $name --reversion=2
+# 回滚到指定版本
+$ kubectl rollout undo deployments $name 		
+```
+
+## SERVICE
+
+	- L4
+
+
+
+## REPLICASETS
+
+rs主要解决三种问题
+
+- 冗余(Redundancy)
+- 扩展(Scale)
+- 分片(Shading)
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: ReplicaSet
+metadata:
+  name: $name
+spec:
+  replicas: $n
+  template:
+    metadata:
+      labels:
+    version: $n
+    spec:
+      containers:
+        - name: $name
+          image:
+          ports:
+            - containerPort:
+```
+
+```bash
+# 扩容
+$ kubectl scale replicasets $name --replicas=4
+# 根据CPU自动扩容， autoscaler
+$ kubectl autoscale rs $name --min=2 --max=5 --cpu-percent=80
+# HPA
+$ kubectl get hpa
+# 删除RS(包含POD)
+$ kubectl delete rs $name
+# 删除RS,保留POD
+$ kubectl delete rs $name --cascade=false
+```
+
+
+
+## INGRESS
+
+- L7
+
+```yml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name:
+spec:
+  tls:
+  - hosts:
+    - $hostname
+    secretName: $secret-name
+  rules:
+  - host:
+    http:
+      paths:
+      - path:
+        backend:
+          serviceName:
+          servicePort:
+      - backend:
+        serviceName:
+        servicePort:
+  backend:
+    serviceName:
+    servicePort: 
+```
+
+
+
+## DAEMONSETS
+
+> 在全部或部分节点上运行一组POD
+
+```yaml
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+name: $name
+  labels:
+spec:
+  template:
+    metadata:
+      labels:
+    spec:
+      containers:
+        - name: $name
+          image:
+          resources:
+            limits:
+              memory: 200Mi
+          requests:
+              cpu: 100m
+              memory: 200Mi
+          volumeMounts:
+           - name: $volume-name
+             mountPath: $path
+             readOnly: true
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: $volume-name
+          hostPath:
+            path: $name
+```
+
+## JOB
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+name: $job
+spec:
+  parallelism:
+  completions:
+  template:
+    spec:
+    containers:
+      - name: kuard
+      image: gcr.io/kuar-demo/kuard-amd64:blue
+      imagePullPolicy: Always
+      args:
+        - $arg1
+        - $arg2
+restartPolicy: OnFailure
+```
+
+
+
+```bash
+$ kubectl run -i $job --image=$image --restart=OnFailure -- $args
+$ kubectl delete jobs $job
+```
+
+## CRONJOB
+
+```yaml
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: $cron-job
+spec:
+  schedule: "0 */5 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: $job
+            image:
+          restartPolicy: OnFailure
+```
+
+## CONFIGMAP
+
+> ConfigMap(cm)可以理解为k8s的一个小型文件系统
+
+```yaml
+apiVersion: v1
+data:
+  msg: $cm
+kind: ConfigMap
+metadata:
+  name: cm-hello
+```
+
+引用方法
+
+```yaml
+containers:
+  - name:
+    image:
+    command:
+      - "$env-arg"
+    env:                   # 环境变量方式引用
+      - name: $env-arg
+        valueFrom:
+          configMapKeyRef:
+            name: $cm
+            key: $key
+    volumeMounts:          # 文件方式引用
+      - name: $volume
+        mountPath: $path
+volumes:
+  - name: $volume
+    configMap:
+      name: $cm
+```
+
+
+
+```bash
+$ kubectl create configmap $cm --from-file=[dir|filename|key=filename]
+$ kubectl create configmap $cm --from-literal="k1=v1" --from-literal="k2=v2"
+$ kubectl edit cm $cm
+```
+
+
+
+## SECRET
+
+```yml
+apiVersion: v1
+kind: Secret
+metadata:
+  creationTimestamp:
+  name:
+type:
+data:
+  tls.crt:
+  tls.key:
+```
+
+```bash
+$ kubectl create secret tls $secret-name --cert $cert-pem-file --key $key-pem-file
+```
+
+
+
+### RBAC
+
+authentication:
+
+- HTTP Basic
+- x509 
+- Token
+- 云服务商提供的
+
+```sh
+$ kubectl auth can-i create pods
+```
+
+
+
+## 服务发现
+
+### DNS
+
+### ENV
+
+```sh
+${SVC}_PORT_${PORT}_TCP
+${SVC}_PORT_${PORT}_TCP_ADDR
+${SVC}_PORT_${PORT}_TCP_PROTO
+${SVC}_SERVICE_HOST
+${SVC}_SERVICE_PORT
+```
+
+
+
 
 
 ## 参考
 
 - https://github.com/kelseyhightower/kubernetes-the-hard-way/blob/master/docs/13-smoke-test.md
 - https://github.com/kelseyhightower/kubernetes-the-hard-way
+- https://github.com/kubernetes/examples/tree/master/

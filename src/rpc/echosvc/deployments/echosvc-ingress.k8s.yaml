@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+      kubernetes.io/ingress.class: "nginx"
+      nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+  name: echosvc-ingress
+spec:
+  rules:
+    - host: amas.org
+      http:
+        paths:
+        - backend:
+            serviceName: echosvc
+            servicePort: grpc

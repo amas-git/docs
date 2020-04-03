@@ -3,26 +3,39 @@ package echosvc
 import (
 	"context"
 	"crypto/tls"
-	"log"
+	"fmt"
 	"net"
+	"net/http"
 	"time"
 
 	"amas.org/echosvc/model"
 	pb "amas.org/echosvc/model"
 	empty "github.com/golang/protobuf/ptypes/empty"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // EchoSVC is a helloworld service for gRPC
 type EchoSVC struct {
-	time time.Duration
-	opts []grpc.ServerOption
-	crt  string
-	key  string
-	svc  grpc.Server
-	port string
+	time     time.Duration
+	opts     []grpc.ServerOption
+	crt      string
+	key      string
+	svc      grpc.Server
+	port     string
+	hostname string
+	ius      []grpc.UnaryServerInterceptor
+	iss      []grpc.StreamServerInterceptor
+	uphook   []func()
 }
 
 // New
@@ -32,11 +45,26 @@ func New(port string) *EchoSVC {
 
 // Say is NOTING to say
 func (s *EchoSVC) Say(ctx context.Context, msg *pb.Msg) (*pb.Msg, error) {
-	log.Printf("[echosvc] : RECIVE <- %v\n", msg)
+	if msg.Id < 0 {
+		return nil, status.Error(codes.InvalidArgument, "Id must > 0")
+	}
+
+	timestamp := md(ctx, "timestamp")[0]
+	logrus.WithField("hostname", s.hostname).Info("RECV:", msg, "timestamp", timestamp)
+
 	r := new(pb.Msg)
 	r.Id = msg.Id + 1
 	r.Text = msg.Text
+	r.From = s.hostname
 	return r, nil
+}
+
+func md(ctx context.Context, key string) []string {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok || len(md[key]) < 1 {
+		return []string{""}
+	}
+	return md[key]
 }
 
 // Count is count
@@ -56,9 +84,16 @@ func (s *EchoSVC) Ack(stream model.Echo_AckServer) error {
 	return nil
 }
 
-// AddUnaryInterceptor is cool
-func (s *EchoSVC) SetUnaryInterceptor(fn grpc.UnaryServerInterceptor) *EchoSVC {
-	s.opts = append(s.opts, grpc.UnaryInterceptor(fn))
+// AddUnaryInterceptor add unary server interceptors
+func (s *EchoSVC) AddUnaryInterceptor(fns ...grpc.UnaryServerInterceptor) *EchoSVC {
+	if len(fns) == 0 {
+		return s
+	}
+
+	if len(s.ius) < 1 {
+		s.ius = make([]grpc.UnaryServerInterceptor, 0)
+	}
+	s.ius = append(s.ius, fns...)
 	return s
 }
 
@@ -69,14 +104,48 @@ func (s *EchoSVC) WithTLS(crt, key string) *EchoSVC {
 	return s
 }
 
-func (s *EchoSVC) Start() error {
+func (s *EchoSVC) SetHostname(hostname string) *EchoSVC {
+	s.hostname = hostname
+	return s
+}
+
+func (s *EchoSVC) appendOptions(opts ...grpc.ServerOption) *EchoSVC {
+	s.opts = append(s.opts, opts...)
+	return s
+}
+
+func (s *EchoSVC) cred() (grpc.ServerOption, error) {
 	if s.crt != "" {
 		cert, err := tls.LoadX509KeyPair(s.crt, s.key)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		s.opts = append(s.opts, grpc.Creds(credentials.NewServerTLSFromCert(&cert)))
+		return grpc.Creds(credentials.NewServerTLSFromCert(&cert)), nil
 	}
+	return nil, nil
+}
+
+// WithP8S added unary service interceptor
+func (s *EchoSVC) WithP8S(port string) *EchoSVC {
+	s.AddUnaryInterceptor(grpc_prometheus.UnaryServerInterceptor)
+	s.uphook = []func(){func() {
+		grpc_prometheus.Register(&s.svc)
+		http.Handle("/metrics", promhttp.Handler())
+		fmt.Println("START Ma")
+		go http.ListenAndServe(":8080", nil)
+	}}
+	return s
+}
+
+// Start EchoSvc
+func (s *EchoSVC) Start() error {
+	cred, err := s.cred()
+	if err != nil {
+		return err
+	}
+
+	s.appendOptions(cred)
+	s.appendOptions(grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(s.ius...)))
 
 	l, err := net.Listen("tcp", s.port)
 	if err != nil {
@@ -84,6 +153,9 @@ func (s *EchoSVC) Start() error {
 	}
 	svc := grpc.NewServer(s.opts...)
 	pb.RegisterEchoServer(svc, s)
+	for _, fn := range s.uphook {
+		fn()
+	}
 	if err := svc.Serve(l); err != nil {
 		return err
 	}

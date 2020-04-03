@@ -298,7 +298,59 @@ ctx, cancel := context.WithDeadline(context.Background(), ${deadline})
 | DATA_LOSS           | 15    |          |
 |                     |       |          |
 
+服务端：
 
+```go
+// 简单的错误
+...
+	if msg.Id < 0 {
+		return nil, status.Error(codes.InvalidArgument, "Id must > 0")
+	}
+...
+
+// 复杂的错误，可以携带额外的数据
+errrStatus := status.New(codes.InvalidArgument, "Id must > 0")
+ds, err := errStatus.WithDetails {
+    &errdetails.BadRequest_FieldViolation {
+        Field: "Id",
+        Description: fmt.Sprintf("Id = %v, MUST > 0", msg.Id)
+    }
+} 
+```
+
+
+
+```sh
+$  grpcurl -import-path model -proto model/msg.proto  -d '{"id":-1, "text":"Hello gRPC"}'  -cacert cert/svc.crt  localhost:8888 model.Echo/say
+ERROR:
+  Code: InvalidArgument
+  Message: Id must > 0
+```
+
+
+
+客户端：
+
+```go
+st, ok := status.FromError(err)
+if !ok {
+	...
+	// st.Code(), st.Message()
+}
+
+// 或者
+st := status.Convert(err)
+for _, detail := range st.Details() {
+    switch t := detail.(type) {
+    case *errdetails.BadRequest:
+        fmt.Println("Oops! Your request was rejected by the server.")
+        for _, violation := range t.GetFieldViolations() {
+            fmt.Printf("The %q field was wrong:\n", violation.GetField())
+            fmt.Printf("\t%s\n", violation.GetDescription())
+        }
+    }
+}
+```
 
 
 
@@ -307,6 +359,12 @@ Multiplexing
 多个gRPC调用可以复用一条HTTP2连接
 
 ## 携带元数据
+
+```go
+metadata.New(map[string]string{"key1": "val1", "key2": "val2"}).
+```
+
+
 
 ## 名字解析
 
@@ -485,11 +543,145 @@ Status code distribution:
 
 ### K8S
 
+```
+deployments
+├── docker
+│   └── Dockerfile
+├── echosvc-deployment.k8s.yaml
+└── echosvc-service.k8s.yaml
+```
+
+echosvc-deployment.k8s.yaml:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: echosvc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: echosvc
+  template:
+    metadata:
+      labels:
+        app: echosvc
+    spec:
+      containers:
+      - name: echosvc
+        image: echosvc:v1.0.0
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8888
+```
+
+echosvc-service.k8s.yaml:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: echosvc
+spec:
+  selector:
+    app: echosvc
+  ports:
+  - nodePort: 30100  # NodePort,可通过该节点的$IP:30100访问
+    port: 8888       # Service的端口
+    targetPort: 8888 # 通过selector选中对象的端口
+  type: NodePort
+```
+
+```sh
+# 启动minikube
+$ minikube start
+# 使用minikube上的docker
+$ eval $(minikube docker-env) 
+# 构建镜像, 注意此处buildTag要设置
+$ docker build -t echosvc:v1.0.0 -f deployments/docker/Dockerfile . 
+
+
+$ kubectl apply -f echosvc-deployment.k8s.yaml:
+$ kubectl apply -f deployments/echosvc-service.k8s.yaml
+$ kubectl get svc  
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)          AGE
+echosvc      NodePort    10.96.100.3   <none>        8888:30100/TCP   28m
+kubernetes   ClusterIP   10.96.0.1     <none>        443/TCP          83m
+$ kubectl get pod
+NAME                       READY   STATUS    RESTARTS   AGE
+echosvc-6585d48566-klpln   1/1     Running   0          42m
+$ ./echoc
+# 查看服务端日志
+$ kubectl logs echosvc-6585d48566-klpln 
+```
+
+
+
+其他:
+
+```bash
+# 将echosvc Service类型改为负载均衡
+$ kubectl patch svc echosvc -p '{"spec":{"type": "LoadBalancer"}}'
+```
+
+
+
 ## 监控
 
 OpenCensus 
 
 Prometheus
+
+- https://opencensus.io/guides/grpc/go/#1
+
+- https://linuxacademy.com/blog/kubernetes/running-prometheus-on-kubernetes/
+- https://github.com/grpc-ecosystem/go-grpc-prometheus/issues/4
+- https://github.com/philips/grpc-gateway-example/blob/master/cmd/serve.go
+- https://sysdig.com/blog/kubernetes-monitoring-prometheus-operator-part3/
+- https://devopscube.com/setup-prometheus-monitoring-on-kubernetes/
+
+```go
+import "github.com/grpc-ecosystem/go-grpc-prometheus"
+import grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+...
+    // Initialize your gRPC server's interceptor.
+    myServer := grpc.NewServer(
+        grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+        grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+    )
+    // Register your gRPC service implementations.
+    myservice.RegisterMyServiceServer(s.server, &myServiceImpl{})
+    // After all your registrations, make sure all of the Prometheus metrics are initialized.
+    grpc_prometheus.Register(myServer)
+    // Register Prometheus metrics handler.    
+    http.Handle("/metrics", promhttp.Handler())
+	http.ListenAndServe(":7777", nil) // 在7777端口上提供metrics检索
+...
+```
+
+ 如果只想保留一个端口，可以用cmux, cmux可以通过检测首次链接的几个字符来确定协议类型。所以可以让http/https/grpc公用一个端口
+
+
+
+修改service, 让p8s能够自动抓取metrics
+
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: echosvc
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port:   '7777' #注意，这个是POD的p8s监控端口
+spec:
+...
+```
+
+
 
 ## 日志
 
@@ -521,6 +713,8 @@ Prometheus
 |                  |      |      |
 
 ### 健康检查
+
+https://github.com/grpc/grpc/blob/v1.15.0/doc/health-checking.md
 
 ### 健康探测
 
