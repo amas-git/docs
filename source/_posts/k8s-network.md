@@ -31,10 +31,10 @@ k8s-network
 
 单机网络有四种模式:
 
-	- Bridget Networking Mode
-	- Host Networking Mode
-	- Container Networking Mode
-	- No Networking Mode
+- Bridget Networking Mode
+- Host Networking Mode
+- Container Networking Mode
+- No Networking Mode
 
 ###  Bridge Mode Networking
 
@@ -346,7 +346,7 @@ myhost.headless.default.svc.cluster.local. 30 IN A 172.17.0.9
 ;; MSG SIZE  rcvd: 310
 
 # A records中包含SRV records, 可以看下
-dnstools# dig  -t srv myhost.headless.default.svc.cluster.local
+dnstools# dig -t srv myhost.headless.default.svc.cluster.local
 ; <<>> DiG 9.11.3 <<>> -t srv myhost.headless.default.svc.cluster.local
 ;; global options: +cmd
 ;; Got answer:
