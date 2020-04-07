@@ -157,7 +157,7 @@ status:
  - ports
    	- nodePort: 节点IP, `--service-node-port-range` flag (default: 30000-32767).
       	- port: Service的端口
-   	- targetPort: 通过selector选出的Pod的端口
+      	- targetPort: 通过selector选出的Pod的端口
 
 ### Endpoint
 
@@ -922,6 +922,7 @@ $ kubectl get po -o wide
 $ kubectl --namespace=xxx get $pods
 $ kubectl describe pods $pod
 $ kubectl delete $pod
+$ kubectl delete pod -l app=sleep 
 $ kubectl port-forward [$local-port]:$remote-port # remote-port: = pod|svc port 
 $ kubectl logs $pod
 $ kubectl exec $pod $cmd
@@ -929,6 +930,7 @@ $ kubectl exec -it $pod [sh|ash|bash|zsh]
 $ kubectl cp $pod/$path $local-path
 $ kubectl label pod $pod "k=v"
 $ kubectl edit pod $pod
+
 ```
 
 ## DEPLOYMENT
@@ -1228,6 +1230,27 @@ authentication:
 
 ```sh
 $ kubectl auth can-i create pods
+```
+
+## SERVICE  ACCOUNT
+
+> SA为运行在POD中的进程提供身份
+
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: $service_account
+spec:
+  serviceAccountName: build-robot
+  automountServiceAccountToken: false
+  ...
+```
+
+```bash
+# 
+$ kubectl get secrets $secrets
+$ kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "$secrets"}]}'
 ```
 
 
