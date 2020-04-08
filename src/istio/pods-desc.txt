@@ -1,0 +1,202 @@
+Name:         hello-66f85974fd-4czjl
+Namespace:    default
+Priority:     0
+Node:         minikube/192.168.99.106
+Start Time:   Wed, 08 Apr 2020 15:37:54 +0800
+Labels:       app=hello
+              pod-template-hash=66f85974fd
+              security.istio.io/tlsMode=istio
+              service.istio.io/canonical-name=hello
+              service.istio.io/canonical-revision=a
+              version=a
+Annotations:  sidecar.istio.io/status:
+                {"version":"64f53c7f7e9dca50ddb9767390392872119f042c4a541dbbb6a973d5638bd264","initContainers":["istio-init"],"containers":["istio-proxy"]...
+Status:       Running
+IP:           172.17.0.22
+IPs:
+  IP:           172.17.0.22
+Controlled By:  ReplicaSet/hello-66f85974fd
+Init Containers:
+  istio-init:
+    Container ID:  docker://ce1348ba5582d5b02fc37da9cfb1174661abcd868fee6f24190ab095c4f58e05
+    Image:         docker.io/istio/proxyv2:1.5.1
+    Image ID:      docker-pullable://istio/proxyv2@sha256:3ad9ee2b43b299e5e6d97aaea5ed47dbf3da9293733607d9b52f358313e852ae
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      istio-iptables
+      -p
+      15001
+      -z
+      15006
+      -u
+      1337
+      -m
+      REDIRECT
+      -i
+      *
+      -x
+      
+      -b
+      *
+      -d
+      15090,15020
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Wed, 08 Apr 2020 15:37:55 +0800
+      Finished:     Wed, 08 Apr 2020 15:37:55 +0800
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     100m
+      memory:  50Mi
+    Requests:
+      cpu:        10m
+      memory:     10Mi
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-n27gz (ro)
+Containers:
+  hello:
+    Container ID:  docker://86b5edbfa15007c4cef4890d7e2768b8496bd7d92836fddb58b907dc0ce9ce3f
+    Image:         hello:v1.0.0
+    Image ID:      docker://sha256:ec3b7f01e9c3b2f99866ff30d7ef0c8aa49593fdb278e35c4a19b1d1f69c26ee
+    Port:          6666/TCP
+    Host Port:     0/TCP
+    Command:
+      /app/hello
+    Args:
+      :6666
+      a
+    State:          Running
+      Started:      Wed, 08 Apr 2020 15:37:57 +0800
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  128Mi
+    Requests:
+      cpu:        500m
+      memory:     128Mi
+    Readiness:    http-get http://:6666/healthz delay=0s timeout=1s period=10s #success=1 #failure=3
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-n27gz (ro)
+  istio-proxy:
+    Container ID:  docker://db7746997126263346323d7b1bcd3af99ff198be15956bdf7f8555e2a355d54c
+    Image:         docker.io/istio/proxyv2:1.5.1
+    Image ID:      docker-pullable://istio/proxyv2@sha256:3ad9ee2b43b299e5e6d97aaea5ed47dbf3da9293733607d9b52f358313e852ae
+    Port:          15090/TCP
+    Host Port:     0/TCP
+    Args:
+      proxy
+      sidecar
+      --domain
+      $(POD_NAMESPACE).svc.cluster.local
+      --configPath
+      /etc/istio/proxy
+      --binaryPath
+      /usr/local/bin/envoy
+      --serviceCluster
+      hello.$(POD_NAMESPACE)
+      --drainDuration
+      45s
+      --parentShutdownDuration
+      1m0s
+      --discoveryAddress
+      istiod.istio-system.svc:15012
+      --zipkinAddress
+      zipkin.istio-system:9411
+      --proxyLogLevel=warning
+      --proxyComponentLogLevel=misc:error
+      --connectTimeout
+      10s
+      --proxyAdminPort
+      15000
+      --concurrency
+      2
+      --controlPlaneAuthPolicy
+      NONE
+      --dnsRefreshRate
+      300s
+      --statusPort
+      15020
+      --trust-domain=cluster.local
+      --controlPlaneBootstrap=false
+    State:          Running
+      Started:      Wed, 08 Apr 2020 15:37:57 +0800
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     2
+      memory:  1Gi
+    Requests:
+      cpu:      10m
+      memory:   40Mi
+    Readiness:  http-get http://:15020/healthz/ready delay=1s timeout=1s period=2s #success=1 #failure=30
+    Environment:
+      JWT_POLICY:                    first-party-jwt
+      PILOT_CERT_PROVIDER:           istiod
+      CA_ADDR:                       istio-pilot.istio-system.svc:15012
+      POD_NAME:                      hello-66f85974fd-4czjl (v1:metadata.name)
+      POD_NAMESPACE:                 default (v1:metadata.namespace)
+      INSTANCE_IP:                    (v1:status.podIP)
+      SERVICE_ACCOUNT:                (v1:spec.serviceAccountName)
+      HOST_IP:                        (v1:status.hostIP)
+      ISTIO_META_POD_PORTS:          [
+                                         {"containerPort":6666,"protocol":"TCP"}
+                                     ]
+      ISTIO_META_CLUSTER_ID:         Kubernetes
+      ISTIO_META_POD_NAME:           hello-66f85974fd-4czjl (v1:metadata.name)
+      ISTIO_META_CONFIG_NAMESPACE:   default (v1:metadata.namespace)
+      ISTIO_META_INTERCEPTION_MODE:  REDIRECT
+      ISTIO_META_WORKLOAD_NAME:      hello
+      ISTIO_META_OWNER:              kubernetes://apis/apps/v1/namespaces/default/deployments/hello
+      ISTIO_META_MESH_ID:            cluster.local
+    Mounts:
+      /etc/istio/pod from podinfo (rw)
+      /etc/istio/proxy from istio-envoy (rw)
+      /var/run/secrets/istio from istiod-ca-cert (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from default-token-n27gz (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  default-token-n27gz:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  default-token-n27gz
+    Optional:    false
+  istio-envoy:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     Memory
+    SizeLimit:  <unset>
+  podinfo:
+    Type:  DownwardAPI (a volume populated by information about the pod)
+    Items:
+      metadata.labels -> labels
+      metadata.annotations -> annotations
+  istiod-ca-cert:
+    Type:        ConfigMap (a volume populated by a ConfigMap)
+    Name:        istio-ca-root-cert
+    Optional:    false
+QoS Class:       Burstable
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute for 300s
+                 node.kubernetes.io/unreachable:NoExecute for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  2m28s  default-scheduler  Successfully assigned default/hello-66f85974fd-4czjl to minikube
+  Normal  Pulled     2m27s  kubelet, minikube  Container image "docker.io/istio/proxyv2:1.5.1" already present on machine
+  Normal  Created    2m27s  kubelet, minikube  Created container istio-init
+  Normal  Started    2m27s  kubelet, minikube  Started container istio-init
+  Normal  Pulled     2m26s  kubelet, minikube  Container image "hello:v1.0.0" already present on machine
+  Normal  Created    2m26s  kubelet, minikube  Created container hello
+  Normal  Started    2m25s  kubelet, minikube  Started container hello
+  Normal  Pulled     2m25s  kubelet, minikube  Container image "docker.io/istio/proxyv2:1.5.1" already present on machine
+  Normal  Created    2m25s  kubelet, minikube  Created container istio-proxy
+  Normal  Started    2m25s  kubelet, minikube  Started container istio-proxy
