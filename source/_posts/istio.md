@@ -185,6 +185,17 @@ $ kubectl delete clusterrolebinding istio-sidecar-injector-admin-role-binding-is
 
 ## VirtualService
 
+> 控制一个名字下的流量如何路由到目的地集合
+
+VirtualService可以采用如下方式路由和控制流量:
+
+- URI中的属性
+- Headers
+- 请求scheme
+- 请求的目标端口
+- 重试
+- 请求超时
+
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -192,19 +203,24 @@ metadata:
   name: $vsvc
 spec:
   hosts:
-  - "*"
-  gateways:
-  - $gat4way
-  http:
+  - ${istio_internal_name}      # e.g.: foo.default.svc.cluster.local
+                                #       *.foo.com
+  gateways:                     #-------------------------------------[ 绑定Gateway ]
+  - $gatway
+  [http|tcp|tls]:               # 根据什么协议路由流量
   - match:
     - headers:
         user-agent: ${regex}
+        cookie:
       uri:
         prefix: $uri_path
     - uri:
         exact: $uri_path
     - uri:
-        prefix: $uri_path
+        regex: ${regex}
+    - port: ${port}             # tcp
+      destinationSubsets:
+    - sniHosts:                 # tls
     route:
     - destination:
         host: $host
@@ -217,42 +233,107 @@ spec:
       perTryTimeout: ${time}
     timeout: ${time}            #------------------------------------[ 超时 ]
     fault:                      #------------------------------------[ FAULT INJECTION ]
+      abort:
+        httpStatus: ${http_code}
+        percentage: ${percent}
       delay:
         fixedDelay: ${time}
-        percent: ${percent}  
+        percentage: ${percent}  
       match:
       - headers:
+# 没有被分流的请求会返回404      
 ```
 
+> 注意： 实际开发中可以采用VirtualService分层的方式，这样可以避免多个team编辑同一个VirtualService定义
+
+
+
+利用VirtualService我们可以实现
+
+- 蓝绿发布
+- 金丝雀发布
+- 生产环境切分测试流量(在请求头中加入测试标识)
+
+
+
 ## DESTINATION RULE
+
+配置如何与某个名字进行通讯,通过DestinationRule找到对应的ServiceEntry进而找到ServiceEntry中的Endpoint然后结束整个流量的路由。
+
+ISTIO采用客户端LoadBalance取代反向代理，一方面使得系统的弹性更加强，第二方面客户端可以根据服务端的反馈动态调整自己的行为，如停止向不断出错的终端发送数据。
+
+
+
+> OUTLIER DETECTION: 触发Endpoint的Lame-Ducking, 将lame-duck从active的LB中摘除
+
+- secrets
+- load-balancing 
+  - 一致性哈希
+- cricuit breaking
+- (L4,L7)connection pool
+- TLS
 
 ```yaml
 apiVersion: "networking.istio.io/v1alpha3"
 kind: "DestinationRule"
 metadata:
-  name: "default"
-  namespace: "stock-trader"
+  name: ${name}
+  namespace: ${ns}
 spec:
-  host: "*.stock-trader.svc.cluster.local"
+  host: ${istio_internal_name}
+  subsets:
+  - name:
+    labels:
+      version:
+    trafficPolicy:
+    ...
+  - name:
+    ...
   trafficPolicy:
     tls:
-      mode: ISTIO_MUTUAL
-    connectionPool:                     #----------------------------------[ 融短 ]
+      mode: [ISTIO_MUTUAL|SIMPLE|DISABLED|MUTUAL]
+            # ISTIO_MUTUAL: 使用istio管理mTLS证书
+            # MUTUAL      : mTLS
+            # SIMPLE      : TLS
+            # DISABLED    : 不使用TLS
+      clientCertificate: ${path}
+      privateKey: ${path}
+      caCertificates: ${path}
+    connectionPool:                     #----------------------------------[ 短路 ]
       tcp:
         maxConnections: ${n}
       http:
         http1MaxPendingRequest: ${n}
+        http2MaxRequests: ${n}
         maxRequestsPerConnection: ${n}
-    outlierDecection:
+    outlierDecection:                  #-----------------------------------[ 破脚鸭检测 ]
       consecutiveErrors: ${n}
       interval: ${time}
       baseEjectionTime: ${time}
       maxEjectionPercent: ${percent}
+    loadBalancer:
+      simple: [LEAST_CONN|ROUND_ROBIN]
+      consistentHash:
+        useSourceIp: true
+```
+
+```bash
+$ kubectl get destinationrules.networking.istio.io
 ```
 
 
 
+
+
 ## GATEWAY
+
+> 向mesh外部暴露名字
+>
+> Gateway可以被VirtualService引用 (显式绑定VS， 也叫MeshGateway)
+>
+> VirtualService声明的hostname恰好被某个Gateway暴露了  (隐式绑定VS)
+>
+> 可以使用Gateway构建mTLS隧道，多个独立的mesh可以通过L3层网络链接到一起(实现跨地区，跨IDC的mesh)
 
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
@@ -262,38 +343,116 @@ metadata:
 spec:
   selector:
   servers:
-  - port:
-      number:
-      name:
-      protocol: 
-    hosts:
-    - $hostname
-    tls:
-    	httpsRedirect:
-	- port:
+    - hosts: 
+      - ${hostname}     
+	  port:
+	    number: ${port}
+	    name:
+	    protocol: [HTTP|HTTPS]
+	  tls:              #----------------------[ 这个证书需要从CA申请长期证书 ]
+	    mode: [SIMPLE|PASSTHROUGH]
+	    serverCertificate:
+	    privateKey:
+	    httpsRedirect: [true|false] # true: 配合HTTP使用，将HTTP请求重定向到HTTPS，更加安全
 	...
   	
+```
+
+```
+
 ```
 
 
 
 ## SERVICE ENTRY
 
-访问集群外部的服务
+> 定义新的名字，这个名字在mesh内部是被所有proxy知道的，可以访问到的，并不会添加到K8S的DNS中
+>
+> K8S的Service会
 
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
 kind: ServiceEntry
 metadata:
-  name: ${service_entry}
+  name: ${service_entry} 
 spec:
-  hosts:
-  - ${host}
+  hosts:   
+  - ${host}                 # 这是一个在mesh内部可以访问的名字
+  addresses: ${vips}        # Mesh内部可访问的虚拟IP
+  location: [MESH_EXTERNAL] # 这个名字是MESH内部的还是外部的，如果外部可话可以用DNS解析或者静态IP
   ports:
   - number: ${port}
     name: https
-    protocol: https
-  resolution: DNS
+    protocol: [https|http|tcp|udp|tls|redis|mongo|http2|grpc]
+  resolution: [DNS|STATIC]  # 静态解析将使用下面定义的endpoints
+  endpoints:
+  - address: 2.2.2.2
+  subjectAltNames:
+  - "spiffe://..."
+```
+
+```
+$ kubectl get serviceentries.networking.istio.io 
+```
+
+
+
+## POLICY
+
+```yaml
+apiVersion: authentication.istio.io/v1alpha1
+kind: Policy
+metadata:
+  name: $name
+  namespace: $ns
+spec:
+  targets: # 如果不配置，则Policy作用于制定的${ns}
+  - name: ${host:=${svc}-${ns}-svc-${cluster_domain}}
+    port:
+      name: ${port_name}
+  peers:
+  - mtls:
+      mode: [STRICT | {} | PERMISSIVE]
+  origins:
+  - jwt:
+    issuer:
+    audiences:
+    jwksUri:
+    jwt_headers:
+  principalBindings:  
+```
+
+
+
+## RBACCONFIG
+
+```yaml
+apiVersion: "rbac.istio.io/v1alpha1"
+kind: RBACConfig
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  mode: [ON|OFF|ON_WITH_INCLUSION|ON_WITH_EXCLUSION]
+```
+
+
+
+## CLUSTERRBACCONFIG
+
+```yaml
+apiVersion: "rbac.istio.io/v1alpha1"
+kind: ClusterRBACConfig
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  mode: ON_WITH_INCLUSION
+  inclusion:
+    services:
+    - bar.bar.svc.cluster.local
+    namespaces:
+    - default
 ```
 
 
@@ -318,9 +477,96 @@ $ pod=$(kubectl get pod -l ${key}=${value} -o jsonpath{.items..metadata.name} -n
 $ istioctl authn tls-check ${pod}.${svc} ${svc}.svc.cluster.local
 ```
 
+```
+[Register API] -> [Identity Register]
+                        |
+[Author]   ->   [ Authzer         ] -> [ Issuer ]      
+   |                                       |
+[                    CA SERVICE               ]
+
+   |                                       |
+   Requests                               Certs
+```
+
+1. Citadel以API的方式提供CA服务，Citadel需要从Pilot获取合法的名字
+2. Citadel接受CSR, 然后进行一系列的认证，之后签名后以X.509 SVID的证书下发给NodeAgent
+3. Citadel办法的证书通常只有1小时有效期，过了45分钟之后NodeAgent会为快要过期的证书发送CSR
+4. NodeAgent会把证书发送到Envoy上 (SDS协议, Envoy 1.8.0+)
+5. NodeAgent以无状态的方式工作，将所有的秘密保存到内存中，如果挂了，则由编排系统重新启动，启动之后从Citadel上同步所需要的数据
+6. Pilot向Envoy发布配置，告诉目前有什么服务，如何连接
+7. 所有Envoy的证书保存在/etc/certs目录下
+
+## Pilot
+
+> Pilot用来对数据平面编程
+>
+> Pilot根据Galley的要求，配合K8S的服务发现，将配置下发给Envoy, 完成对Mesh的配置
+
+Pilot的配置包含三个方面 
+
+- Mesh
+  - istio各模块如何通讯
+  - Proxy配置，Envoy初始化的配置
+  - Mesh Networks
+    - 如何使用Mixer
+    - 如何配置proxy
+    - 是否支持 k8s的Ingress
+    - istio各组件的配置
+- Networking
+  - VirtualServices
+  - ServiceEntries
+  - DestinationRules
+  - Gateways
+- Service discovery
+
+## Mixer
+
+![](/src/amas/docs/source/_posts/istio.assets/DeepinScreenshot_select-area_20200409214750.png)
+
+mixer是属性处理器，可以分为两类
+
+- Policy Evaluation: checks，策略的二级缓存
+  - ACLs
+  - 配额管理
+- Telemetry: reports, envoy将数据上报给mixer， mixer通过adpters把数据汇总给外部
+  - 指标(metrics)
+  - 日志(logs)
+  - 分布式追踪(traces)
+
+mixer是高可用的(可HA)， 无状态的服务
+
+mixer这两个功能都包含在一个DockerImage中，编排的时候采用不同的命令和参数
+
+mixer采用plug-ins架构，这些插件也叫做adaptor
 
 
 
+```bash
+$ kubectl -n istio-system get cm istio -o jsonpath="{@.data.mesh}" | grep disablePolicyChecks
+$ kubectl -n istio-system get metrics requestduration -o yaml
+```
+
+> 属性:
+>
+> 属性是Mixer的关键概念，本质上是一些三元组(type,name,value)
+
+
+
+> 问: 哪些策略来自Mixer?哪些策略来自Pilot
+>
+> 答: 影响流量的策略都由Pilot定义，需要增强认证的策略由Mixer定义
+
+
+
+## 监控
+
+> Envoy -> Mixer - adapter -> p8s -> grafana
+
+需要配置三种资源:
+
+- handler
+- instance
+- rules
 
 ## 出口流量
 
@@ -332,13 +578,40 @@ $ kubectl get configmap istio -n istio-system -o yaml | grep -o 'mode: ALLOW_ANY
 $ kubectl get configmap istio -n istio-system -o yaml | sed 's/mode: ALLOW_ANY/mode: REGISTRY_ONLY/g' | kubectl replace -n istio-system -f -configmap "istio" replaced
 ```
 
+## istioctl
 
+```sh
+$ istioctl proxy-config bootstrap ${pod}
+```
+
+
+
+## 调试
+
+- 不要使用UID 1337
+- 不要使用HTTP1.0
+- 每个POD至少关联到1个SERVICE上，如果关联到多个SERVICE, 则SERVICE中暴露的接口和协议保持一样
+- DEPLOYMENT加上app和version标签
+- POD必须开启NET_ADMIN, 不然istio没法完成注入, 如果使用了ISTIO CNI, 则NET_ADMIN不必要
+- 
 
 ## 性能问题
 
 
 
+## xDS协议
 
+### LDS (Listener Discovory Service)
+
+### RDS (Router Discovory Service)
+
+### CDS (Cluster Discovory Service)
+
+### EDS (Endpoint Discovory Service)
+
+### ADS (Aggre Discovory Service)
+
+### HDS (Health Discovory Service)
 
 ## 实验1
 
@@ -480,3 +753,6 @@ inject操作需要注入2个容器，是同一个image, 采用不同的启动方
    - ISTIO_META_OWNER
    - ISTIO_META_MESH_ID
 
+## 参考
+
+- SNI:https://en.wikipedia.org/wiki/Server_Name_Indication
