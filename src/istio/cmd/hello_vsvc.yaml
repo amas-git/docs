@@ -62,6 +62,17 @@ spec:
           subset: a
           port: 
             number: 80
+        weight: 0 
+      - destination:
+          host: hello
+          subset: b 
+          port: 
+            number: 80
+        weight: 100
+      fault:
+        delay:
+          fixedDelay: 5s
+          percent: 100
 ---
 apiVersion: apps/v1
 kind: Deployment
