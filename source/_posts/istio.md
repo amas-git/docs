@@ -391,14 +391,22 @@ spec:
   - "spiffe://..."
 ```
 
-```
+```bash
 $ kubectl get serviceentries.networking.istio.io 
+```
+
+```bash
+# 检测Mesh是否允许访问外部
+$ kubectl get configmap istio -n istio-system -o yaml 
+# global.outboundTrafficPolicy.mode:
+#  - ALLOW_ANY
+#  - REGISTRY_ONLY
+$ kubectl edit configmap istio -n istio-system -o yaml 
 ```
 
 
 
 ## POLICY
-
 ```yaml
 apiVersion: authentication.istio.io/v1alpha1
 kind: Policy
@@ -407,22 +415,22 @@ metadata:
   namespace: $ns
 spec:
   targets: # 如果不配置，则Policy作用于制定的${ns}
+
   - name: ${host:=${svc}-${ns}-svc-${cluster_domain}}
     port:
       name: ${port_name}
-  peers:
+    peers:
   - mtls:
       mode: [STRICT | {} | PERMISSIVE]
-  origins:
+    origins:
   - jwt:
     issuer:
     audiences:
     jwksUri:
     jwt_headers:
-  principalBindings:  
+    principalBindings:  
+
 ```
-
-
 
 ## RBACCONFIG
 
@@ -752,6 +760,83 @@ inject操作需要注入2个容器，是同一个image, 采用不同的启动方
    - ISTIO_META_WORKLOAD_NAME
    - ISTIO_META_OWNER
    - ISTIO_META_MESH_ID
+
+
+
+## 实验1: 运行sleep pod
+
+```bash
+$ kubectl -f samples/sleep/sleep.yaml
+# 确认istio是否完成了注入
+$ export SLEEP_POD=$(kubectl get pod -l app=sleep -o jsonpath={.items..metadata.name})
+$ kubectrl describe $SLEEP_POD 
+...
+  Normal  Pulled     3m53s      kubelet, minikube  Container image "docker.io/istio/proxyv2:1.5.1" already present on machine
+  Normal  Created    3m53s      kubelet, minikube  Created container istio-proxy
+  Normal  Started    3m53s      kubelet, minikube  Started container istio-proxy
+  
+$ kubectl exec -it $SLEEP_POD -c sleep curl hello-a.default.svc.cluster.local
+HELLO a
+
+# 查看
+$ kubectl get svc istio-ingressgateway -n istio-system
+NAME                   TYPE           CLUSTER-IP       EXTERNAL-IP     PORT(S)                                      AGE
+istio-ingressgateway   LoadBalancer   172.21.109.129   130.211.10.121  80:31380/TCP,443:31390/TCP,31400:31400/TCP   17h
+# EXTERNAL-IP: 如果设置，则当前环境有一个外部的LB, 如果是<none>或<pending>则说明不提供外部LB, 直接使用NodeIP访问
+```
+
+
+
+## 实验2: 限制mesh之外的http/https(Egress控制)
+
+```bash
+# 1. 首先看下outboundTrafficPolicy.mode的设置
+$ kubectl get configmap istio -n istio-system -o yaml > tmp.yaml
+​```
+      outboundTrafficPolicy:
+        mode: ALLOW_ANY      # <- 注意这个，允许envoy转发不在mesh里的域名请求
+​```
+
+# 进入到pod的容器中, 注意注入之后的pod里面有两个容器，我们指定一下进入到我们自己的容器里
+$ kubectl exec -it sleep-f8cbf5b76-pzprd -c sleep -- sh  
+/ # curl -I www.baidu.com
+HTTP/1.1 200 OK
+...
+
+# 我们把outboundTrafficPolicy改为REGISTRY_ONLY
+$  kubectl get configmap istio -n istio-system -o yaml | sed 's/mode: ALLOW_ANY/mode: REGISTRY_ONLY/g' | kubectl replace -n istio-system -f -
+configmap "istio" replaced
+
+# 配置下方到envoy需要一点时间，过一会可以登录到mesh里再试试
+$ kubectl exec -it sleep-f8cbf5b76-pzprd -c sleep -- sh  
+/ # curl -I www.baidu.com
+HTTP/1.1 502 Bad Gateway
+...
+```
+
+
+
+
+
+## 常用命令
+
+```bash
+$ istioctl proxy-status
+# SYNCED:   envoy已经拿到最新的配置
+# NOT SENT: envoy没有收到任何配置
+# STALE:    istiod发送了配置，但没收到envoy的确认
+
+# 如指定了具体的名字，则显示当前配置与最新配置的差异
+$ istioctl proxy-status ${pod} 
+
+# 查看指定POD的proxy配置
+$ istioctl proxy-config cluster -n istio-system ${pod}
+
+# 使用了哪个版本的envoy
+$ kubectl exec -it $pod -c istio-proxy pilot-agent request GET server_info
+```
+
+
 
 ## 参考
 
