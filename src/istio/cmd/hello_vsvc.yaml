@@ -72,7 +72,7 @@ spec:
       fault:
         delay:
           fixedDelay: 5s
-          percent: 100
+          percent: 50
 ---
 apiVersion: apps/v1
 kind: Deployment
