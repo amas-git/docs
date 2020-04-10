@@ -53,7 +53,6 @@ spec:
   hosts:
     - hello
   gateways:
-    - hello-gateway  
     - mesh
   http:
     - route:
@@ -71,7 +70,7 @@ spec:
         weight: 100
       fault:
         delay:
-          fixedDelay: 5s
+          fixedDelay: 1s
           percent: 50
 ---
 apiVersion: apps/v1
