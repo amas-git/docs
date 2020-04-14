@@ -202,46 +202,150 @@ kind: VirtualService
 metadata:
   name: $vsvc
 spec:
-  hosts:
+  hosts: []
   - ${istio_internal_name}      # e.g.: foo.default.svc.cluster.local
                                 #       *.foo.com
-  gateways:                     #-------------------------------------[ 绑定Gateway ]
+  gateways: []                  #-------------------------------------[ 绑定Gateway ]
   - $gatway
-  [http|tcp|tls]:               # 根据什么协议路由流量
+  http: []                      #---------------------------------------------[ HTTP路由 ]
   - match:
     - headers:
-        user-agent: ${regex}
-        cookie:
+        ${header_key}:          # header_key必须小写，可使用`-`
+          ${value}:             # $value大小写敏感
+            prefix: $target
+            exact: $target
+            regex: ${regex}
       uri:
         prefix: $uri_path
-    - uri:
         exact: $uri_path
-    - uri:
         regex: ${regex}
-    - port: ${port}             # tcp
-      destinationSubsets:
-    - sniHosts:                 # tls
+      ignore_uri_case: [true|false] # URI匹配是否大小写敏感，针对prefix和exact有效    
+      scheme:
+        prefix: $uri_path
+        exact: $uri_path
+        regex: ${regex}
+      method:
+        prefix: $uri_path
+        exact: $uri_path
+        regex: ${regex}
+      authority:
+        prefix: $uri_path
+        exact: $uri_path
+        regex: ${regex}
+      port: ${port}             # tcp端口
+      destinationSubsets: []    # IPv[4|6],可以是a.b.c.d/xx或a.b.c.d
+      sniHosts:                 # tls
+      sourceLabels:
+        ${label}: ${value}      # 限制规则应用的标签
+      authority:  
+         prefix: $target
+         exact: $target
+         regex: ${regex}
+      gateways: []              # 规则应用的gateway, 顶层gateway将被覆盖
+      queryParams:
+         ${key}:
+           exact: $target
+           regex: ${regex}
     route:
-    - destination:
+     - name:                 # 路由名，主要用于DEBUG
+     destination: []
         host: $host
         subset: ${subset}
         port:
           number: $port
-      weight: ${n}
+     weight: ${n}            # 所有weight之和必须为100
+     headers:                # 处理header
+       request:
+         set:
+           ${key}: ${value}
+         add:
+           ${key}: ${value}
+         remove: []
+       response:
+    corsPolicy:
+      allowOrigin: []        # CORS匹配规则，只要命中一条即可，
+                             # 命中后Access-Control-Allow-Origin会设置为${origin}
+        - ${host}
+      allowMethods: []       # 允许CORS的方法，保存到Access-Control-Allow-Methods中
+        - [POST|GET]
+      allowCredentials: [true|false] # Access-Control-Allow-Credentials
+      allowHeaders:          # 允许CORS的Header, 保存到Access-Control-Allow-Headers中
+        - ${haader_name}
+      exposeHeaders: []      # 允许浏览器访问的Header, 保存到Access-Control-Expose-Headers中  
+      maxAge: ${time}        # preflight请求被缓存的时间， 保存到ccess-Control-Max-Age中
     retries:
-      attempts: ${n}
-      perTryTimeout: ${time}
+      attempts: ${n}         # 重试次数
+      perTryTimeout: ${time} # 单次retry允许的超时时间
+      retryOn:               # 重试策略，可以多个策略用逗号分割
+                             # x-envoy-retry-on:
+                             #  - 5xx
+                             #  - gateway-error
+                             #  - reset
+                             #  - connect-failure
+                             #  - retriable-4xx
+                             #  - refused-stream
+                             #  - retriable-status-codes
+                             #  - retriable-headers
+                             # x-envoy-retry-grpc-on: 
+                             #  - cancelled
+                             #  - deadline-exceeded
+                             #  - internal
+                             #  - resource-exhausted
+                             #  - unavaliable
     timeout: ${time}            #------------------------------------[ 超时 ]
+    rewrite:                    #------------------------------------[ 重写 ]
+      uri: ${uri}
+      authority: ${string}      # 重写时此值覆盖Host或Authority头
+    redirect:                   #------------------------------------[ 重定向 ]
+      uri: ${uri}
+      authority: ${string}      # 重定向时此值覆盖Host或Authority头
+      redirectCode: ${code:=-301}
     fault:                      #------------------------------------[ FAULT INJECTION ]
       abort:
         httpStatus: ${http_code}
-        percentage: ${percent}
+        percentage: ${percentage}  # 0.0 - 1.0 (DOUBLE)
+        percent: ${percent}        # 0   - 100
       delay:
         fixedDelay: ${time}
-        percentage: ${percent}  
+        percentage: ${percentage}  # 0.0 - 1.0 (DOUBLE)
+        percent: ${percent}        # 0   - 100  
       match:
       - headers:
-# 没有被分流的请求会返回404      
+    mirror: ${}                     #------------------------------------[ 旁路 ]  
+    mirrorPercentage: ${percentage} # 导入mirror的流量占比(目前没有实现)
+  tcp: []                      #-----------------------------------------------[ TCP路由 ] 
+    - match:
+      - port: ${port}
+        sourceLabels:
+          ${key}: ${value}
+        gateways: []     
+        destinationSubnets: []
+    route:
+    - name: ${name}
+      destination:
+        host: ${host}
+        port:
+          number: ${port}
+      weight: ${n} 
+  tls: []                      #----------------------------------------------[ TLS路由 ] 
+    - match:
+      - port: ${port}
+        sourceLabels:
+          ${key}: ${value}
+        gateways: []     
+        destinationSubnets: []
+        sniHosts: []
+    route:
+    - name: ${name}
+      destination:
+        host: ${host}
+        port:
+          number: ${port}
+      weight: ${n} 
+   exportTo: []               # 这个VirtualService暴露的名字空间
+                              # 如果不指定则暴露给全部名字空间   
+                              # '.':暴露给VirtualService定义的名字空间
+                              # '*':暴露给全部名字空间
 ```
 
 > 注意： 实际开发中可以采用VirtualService分层的方式，这样可以避免多个team编辑同一个VirtualService定义
@@ -280,41 +384,92 @@ metadata:
   name: ${name}
   namespace: ${ns}
 spec:
-  host: ${istio_internal_name}
-  subsets:
+  host: ${host} # 1. Service Registry中的名字
+                # 2. 也可以是ServiceEntry中定义的名字
+                # 3. 对于k8s尽量使用FQDN,istio会将段名字按照名字空间的规则进行解析，而不是当作service对待
+  trefficPolicy:              
+  subsets:      #-------------------------------------------------------------[ SUBSET ]
+                # 1. 用于AB测试，或将流量路由到指定的服务商
+                # 2. subset的路由策略会覆盖VirtualService的策略
+                # 3. subsets的策略专辑有路由规则明确发送过流量之后才会生效
   - name:
     labels:
-      version:
+      ${label}: ${value}
     trafficPolicy:
     ...
   - name:
     ...
-  trafficPolicy:
-    tls:
-      mode: [ISTIO_MUTUAL|SIMPLE|DISABLED|MUTUAL]
-            # ISTIO_MUTUAL: 使用istio管理mTLS证书
-            # MUTUAL      : mTLS
-            # SIMPLE      : TLS
-            # DISABLED    : 不使用TLS
-      clientCertificate: ${path}
-      privateKey: ${path}
-      caCertificates: ${path}
-    connectionPool:                     #----------------------------------[ 短路 ]
-      tcp:
-        maxConnections: ${n}
-      http:
-        http1MaxPendingRequest: ${n}
-        http2MaxRequests: ${n}
-        maxRequestsPerConnection: ${n}
-    outlierDecection:                  #-----------------------------------[ 破脚鸭检测 ]
-      consecutiveErrors: ${n}
-      interval: ${time}
-      baseEjectionTime: ${time}
-      maxEjectionPercent: ${percent}
-    loadBalancer:
-      simple: [LEAST_CONN|ROUND_ROBIN]
-      consistentHash:
-        useSourceIp: true
+    trafficPolicy:
+      tls:
+        mode: [ISTIO_MUTUAL|SIMPLE|DISABLED|MUTUAL]
+              # ISTIO_MUTUAL: 使用istio管理mTLS证书
+              # MUTUAL      : mTLS
+              # SIMPLE      : TLS
+              # DISABLED    : 不使用TLS
+        clientCertificate: ${path} # MUTUAL时必须填写，ISTIO_MUTUAL时必须为空
+        privateKey: ${path}        # MUTUAL时必须填写，ISTIO_MUTUAL时必须为空
+        caCertificates: ${path}    # 如果不填,proxy不会确认服务端证书
+        subjectAltNames: []        # 验证证书用的SAN，可以覆盖ServiceEntry中的值
+        sni: ${sni}                # SNI(Server Name Indication), TLS握手时使用,帮助服务端找到正确的证书(多个服务运行在同一主机上的时候)
+      connectionPool:                     #----------------------------------[ 短路 ]
+        tcp:
+          maxConnections: ${n}
+          connectTimeout: ${time}
+          tcpKeepalive:
+            time: ${time}                # 在探测发送之前链接多长时间进入IDLE状态，Linux为7200s
+            interval: ${time}            # 探测间隔时间，默认使用OS的配置，Linux为75s
+            probes: ${n}                 # 最大探测次数，默认使用OS的配置，Linux为9
+        http:
+          http1MaxPendingRequest: ${n:=2^32-1}   # 最大等待的http请求数
+          http2MaxRequests: ${n:=2^32-1}         # 最大等待的http2请求数，默认为：2^32-1
+          maxRetries: ${n:=2^32-1}               # 制定时间内最多重试次数，默认为：2^32-1
+          maxRequestsPerConnection: ${n}         #
+          idleTimeout: ${time}           # Upstream空闲超时时间，默认为1h，超时后Upstream断开
+          h2UpgradePolicy: [DEFAULT|DO_NOT_UPGRADE|UPGRADE] # 是否将HTTP1升级为HTTP2
+                         # DEFAULT       : 使用全局的默认值
+                         # DO_NOT_UPGRADE: 不升级
+                         # UPGRADE       : 升级connection到HTTP2
+      outlierDecection:                  #-----------------------------------[ 破脚鸭检测 ]
+        consecutiveErrors: ${n}            # 
+        interval: ${time:=10s}             # 检测周期？
+        baseEjectionTime: ${time:=30s}     # ${踢出次数} x ${baseEjectionTime}决定踢出时间 ?
+        maxEjectionPercent: ${percent:=10} # 上游最多可以踢掉的故障下游的比例
+        minHelalthPercent: %{percent:=0}   # 健康节点低于此比例时停止检测
+        consecutiveGatewayErrors: ${n}  # 什么是网关错误: 
+                                        #   - HTTP 502,503,504
+                                        #   - TCP各种timeout, 连接错误,
+                                        # 可以与consecutive5xxErrors一起使用，
+                                        # 只有小于consecutive5xxerrors才会有效
+                                        
+        consecutive5xxErrors: ${n:=5}   # Host被踢出ConnectionPool之前遇到的5xx错误数
+                                        #，如果是OpaqueTCP连接(超时，错误失败等都算作是5xx错误) 
+      loadBalancer:
+        simple: [LEAST_CONN|ROUND_ROBIN|RANDOM|PASSTHROUGH]
+                # LEAST_CONN : 最少请求优先，O(1)时间复杂度，随机选择2个健康节点，取活跃连接少的
+                # ROUND_ROBIN: 轮寻 (默认)
+                # RANDOM     : 随机，假如不需要健康检测，随机方式比ROUND_ROBIN要性能好
+                # PASSTHROUGH: IP直链，谨慎使用
+        consistentHash:
+          useSourceIp: true   # 基于请求IP
+          httpCookie:         # 基于Cookie
+            name:             # Cookie名
+            path:             # Cookie路径
+            ttl: ${time}      # Cookie的生命周期
+          ${header}: ${value} # 基于指定的http头进行HASH
+          minimumRingSize: ${n64} # HashRing的最小个数
+        distribute: []        # 本地负载均衡策略不
+          from:
+          to: []
+            ${location}: ${weight}   
+          failover:             # 故障转移
+            from:               # 来源地址，异常
+            to:                 # 转移地址，正常
+          enabled: [true|false] # 功能开关 
+          
+      portLevelSettings:        # 注意: 端口级别的策略优先级最高
+      - port:
+          number: $port
+        loadBalancer:
 ```
 
 ```bash
@@ -376,19 +531,26 @@ kind: ServiceEntry
 metadata:
   name: ${service_entry} 
 spec:
-  hosts:   
+  hosts: []   
   - ${host}                 # 这是一个在mesh内部可以访问的名字
-  addresses: ${vips}        # Mesh内部可访问的虚拟IP
-  location: [MESH_EXTERNAL] # 这个名字是MESH内部的还是外部的，如果外部可话可以用DNS解析或者静态IP
+  addresses: []             # Mesh内部可访问的虚拟IP
+  location: [MESH_EXTERNAL|MESH_INTERNAL] # 这个名字是MESH内部的还是外部的，如果外部可话可以用DNS解析或者静态IP
   ports:
   - number: ${port}
     name: https
     protocol: [https|http|tcp|udp|tls|redis|mongo|http2|grpc]
-  resolution: [DNS|STATIC]  # 静态解析将使用下面定义的endpoints
+  resolution: [DNS|STATIC|NONE]  # 静态解析将使用下面定义的endpoints
   endpoints:
-  - address: 2.2.2.2
+  - address:
+    ports:
+    labels:
+      ${key}: ${value}
+    network:  
+    weight: ${weight}
+  locality: ${string} # ?  
   subjectAltNames:
   - "spiffe://..."
+  exportTo: []
 ```
 
 ```bash

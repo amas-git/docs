@@ -44,6 +44,10 @@ spec:
   - name: b
     labels:
       version: b
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 2
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -52,8 +56,6 @@ metadata:
 spec:
   hosts:
     - hello
-  gateways:
-    - mesh
   http:
     - route:
       - destination:
@@ -70,8 +72,8 @@ spec:
         weight: 100
       fault:
         delay:
-          fixedDelay: 1s
-          percent: 50
+          fixedDelay: 10s
+          percent: 100
 ---
 apiVersion: apps/v1
 kind: Deployment
