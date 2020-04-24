@@ -794,3 +794,4 @@ $ go install github.com/fullstorydev/grpcurl/cmd/grpcurl
 -  https://github.com/grpc-ecosystem/awesome-grpc
 -  测试: https://github.com/bojand/ghz
 -  gRFC: https://github.com/grpc/proposal
+-  https://grpc.io/blog/grpc-stacks/
