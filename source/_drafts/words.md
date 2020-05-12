@@ -86,3 +86,19 @@
 > - 经济周期是在缩短还是在增长？
 > - 每一代人赚到的钱都比上一代多？
 > - 康德拉季耶夫长波
+
+
+
+>“It is better to lead from behind and to put others in front, especially when you celebrate victory when nice things occur. You take the front line when there is danger. Then people will appreciate your leadership.” Nelson Mandela
+
+
+
+> “You never really understand a person until you consider things from his point of view. . . . Until you climb inside of his skin and walk around in it.” Atticus Finch, To Kill a Mockingbird, by Harper Lee
+
+
+
+> “It often requires more courage to dare to do right than to fear to do wrong.” Abraham Lincoln
+
+
+
+> “Coming together is a beginning, staying together is progress, and working together is success.” Henry Ford
