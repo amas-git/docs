@@ -844,6 +844,33 @@ $ kubectl node pod
 $ kubectl run --restart=Never -it --image infoblox/dnstools dnstools 
 ```
 
+
+
+## 组件之间的关系
+
+```mermaid
+graph TD;
+	Deployment-->ReplicaSet-->Pod;
+	CronJob-->Job --> Pod;
+	DaemonSet --> Pod;
+	StatefulSet --> Pod;
+	ReplicationController --> Pod;
+	Service --> Pod;
+	HPA --> Pod;
+	VPA --> Pod;
+	PDB --> Pod;
+	Pod --> APP;
+	APP --> Volume;
+	Volume --> ConfigMap;
+	Volume --> Secret;
+	Volume --> PVC;
+	Volume --> DownwardAPI
+	Volume --> HostPath
+	Volume --> EmptyDir
+```
+
+
+
 ## kubectl label
 
 ```bash
@@ -867,6 +894,42 @@ $ kubectl get pods --selector="k1=v1,k2=v2,..." # or -l
 
 
 ##  PODS
+
+```yaml
+containers:
+  - image:
+    name:
+    imagePullPolicy: [IfNotPresent|Always|]
+    resources: resources
+```
+
+```yaml
+resources:
+  requests:
+    cpu:
+    memory:
+  limits:
+    cpu:
+    memory:
+```
+
+```yaml
+volumes:
+  - name: 
+    persistentVolumeClaim:
+      claimName:
+```
+
+```yaml
+env:
+  - name:
+    valueFrom:
+    configMapKeyRef:
+      name: ${cm_name}
+      key: $pattern
+```
+
+
 
 ```yaml
 apiVersion: v1
@@ -922,6 +985,7 @@ spec:
              readOnly:
           command: []
           args: []
+          env: []
           securityContext:
             allowPrivilegeEscalation: [true|false]
             capabilities:
@@ -933,6 +997,9 @@ spec:
             runAsUser: ${user_id} 
     dnsPolicy: [ClusterFirst]
     enableServiceLinks: [true|false]
+    priorityClassName: ${priority_class_name} # 调度优先级， 会影响调度器部署的优先级
+                                              # 调度队列中按照这个来排序
+                                              # 资源不够的时候，调度器会试图回收低优先级的Pod
     initContainers:        
 ```
 
@@ -976,10 +1043,12 @@ spec:
   revisionHistoryLimit: 14   # 保存的发布历史数量，默认10
   strategy:
       type: [rollingUpdate|Recreate] # Recreate简单粗暴，会downtime, rollingUpdate为默认
+                                     # 滚动升级不会出现Downtime, 通过新床架一个RS来完成滚动
       maxUnavailable: [n|n%] # 发布过程中允许不可用的POD数
       maxSurge: [n|n%]       # 默认25%，发布过程中允许使用的额外POD数
   selector:
     matchLabels:
+      ${label_key}: ${label_value}
     run: $name
   replicas: 1 # 创建RS
   template:
@@ -1017,9 +1086,21 @@ $ kubectl rollout undo deployments $name
 $ kubectl rollout history deploment $name --reversion=2
 # 回滚到指定版本
 $ kubectl rollout undo deployments $name 		
+
+$ kubectl replace
+$ kubectl patch
+$ kubectl set image
 ```
 
 ## SERVICE
+
+Service的域名:
+
+```sh
+$svc.$ns.svc.cluster.local
+```
+
+
 
 	- L4
 
@@ -1228,6 +1309,20 @@ $ kubectl edit cm $cm
 
 
 
+## PRIORTYCLASS
+
+```yaml
+apiVersion: scheduling.k8s.io/v1beta1
+kind: PriorityClass
+metadata:
+  name: high-priority
+value: 1000
+globalDefault: false
+description: This is a very high priority Pod clas
+```
+
+
+
 ## SECRET
 
 ```yml
@@ -1248,7 +1343,7 @@ $ kubectl create secret tls $secret-name --cert $cert-pem-file --key $key-pem-fi
 
 
 
-### RBAC
+## RBAC
 
 authentication:
 
@@ -1313,6 +1408,12 @@ subjects:
 ```
 
 
+
+## QoS
+
+- Best-Effort
+- Bustable
+- Guaranteed
 
 ## 服务发现
 

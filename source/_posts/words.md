@@ -1,5 +1,19 @@
 # words
 
+```
+亞歷山大大帝是活躍於西元前四世紀的馬其頓國王。當年他遠徵到波斯領土的利底亞時,當地
+的神殿中祭祀著一輛戰車。那輛戰車是過去的國王哥帝安用特殊而牢靠的繩結綁在神殿柱子
+上的,大家都傳說「解開這個繩結的人,將成為亞洲之王」。許多自認為很有辦法的人都抱
+著「捨我其誰」的想法前來挑戰,可是那繩結卻異常牢固,沒有人能解開。那麼,你認為當
+亞歷山大大帝見到這繩結之後,會怎麼做呢?
+亞歷山大大帝看到那繩結非常牢固,就拿出一把短劍,一刀切斷
+了它。他是這麼說的:「所謂的命運,並非依靠傳說來安排,而是揮舞自己的劍
+去斬開。」
+```
+> 康德认为：人的欲望 = 倾向性
+
+> 自由 = 被别人讨厌
+
 >人类生活痛苦和混乱的一个主要的根源,似乎是人们过分看重一种永久状况与另一种永久状况之间的差异。贪欲的根源是过分看重贫困与富有之间的差异,野心的根源是过分看重私人身份和社会地位之间的差异,虚荣的根源是过分看重默默无闻和声名远播之间的差异。受到这些过度的激情影响的人,不仅在个人的实际处境中是悲惨的,而且还经常为了达到他愚蠢的目的而扰乱社会的秩序。——亚当·斯密,《道德情操论》嗯
 
 
@@ -72,3 +86,53 @@
 > - 经济周期是在缩短还是在增长？
 > - 每一代人赚到的钱都比上一代多？
 > - 康德拉季耶夫长波
+
+
+
+>“It is better to lead from behind and to put others in front, especially when you celebrate victory when nice things occur. You take the front line when there is danger. Then people will appreciate your leadership.” Nelson Mandela
+
+
+
+> “You never really understand a person until you consider things from his point of view. . . . Until you climb inside of his skin and walk around in it.” Atticus Finch, To Kill a Mockingbird, by Harper Lee
+
+
+
+> “It often requires more courage to dare to do right than to fear to do wrong.” Abraham Lincoln
+
+
+
+> “Coming together is a beginning, staying together is progress, and working together is success.” Henry Ford
+
+
+
+> 我们之所以下赌注,是因为我们认识到的风险超过了实际风
+> 险,这是我们做任何事的出发点。
+> ——威尔伯·罗斯(Wilbur Ross)
+
+
+
+> 在柏拉图的《理想国》(Phaedrus)里,人类智慧被比作驾
+> 驶两匹马的马车的驭者:一匹马无理性且疯狂,而另一匹马温顺
+> 易驾驭。驭者的工作是在朝着快乐和真理前进时,控制好这两匹
+> 马。柏拉图归纳的人类思维特征包含一个关键缺点:人类认为自
+> 己是驭者,掌控了局势,而实际上他们自己就是其中的一匹马。
+> 控制情绪说来容易,做起来难
+
+> 偏见比无知离真理更远
+
+## 幸福
+
+> 象牙、大理石、图画、银盆、雕像、紫衣， 很多人视它们为必不可少， 但是有的人却不为这些东西烦心。
+
+> 健康的身体加上健康的 心灵
+
+> 谁经常笑，谁就 是幸福的；谁经常哭，谁就是痛苦不幸的
+
+> 痛苦和无聊是人类幸福的两 个死敌
+
+```
+无论身在何处，
+我们只能在我们自身寻找或者获得幸福
+——《旅行者》
+```
+
