@@ -101,13 +101,13 @@ $ go test bench=. -benchtime 2s -count 2 -cpu 4
  - P: Proccesor, 逻辑处理器，可通过GOMAXPROC设置
    	- P Id
       	- 可运行的G: runq
-   	- M
-   	- defer pool
+      	- M
+         	- defer pool
    	- 可用的G: gFree
  - G: Goruntine
    	- 当前stack指针(stack.lo / stack.hi)
       	- stackguard0 / stackguard1
-   	- M
+      	- M
 
 
 
@@ -196,6 +196,73 @@ $ go build -gcflag '-m -m -m'
 $ go tool compile -help
 ```
 
+- 源代码: https://golang.org/src/runtime/malloc.go
+
+  
+
+>  span: 大于8kb的连续内存
+
+- mspan: 管理主要的xpan分配
+  - next: 下一个span在列表中的位置
+  - previous: 前一个span
+  - list: span list用于debug
+  - startAddr:
+  - npages: span中包含的耶码
+
+- mheap
+  - lock
+  - free
+  - scav
+  - sweepgen
+  - sweepdone
+  - sweepers
+  
+- 内存对象分类
+
+  - Tiny: 小于16b
+
+    - 分配算法:
+      1. 如果P的M有空间，就用M的空间
+      2. 找到一个已有的对象？然后扩展到8,4,2 byte?
+      3. 把这个tiny对象放进去
+
+  - Small: 16b ~ 32 kb
+
+    - 向上对齐
+    - 从P的mcache中找到一个足够用的mspan
+    - 如果mcache中不够，则从mcentral中的mspan列表中拿一个新的mspan，如果没有则从mheap中分配出页，若果分配不出页，从OS中分配页出来，这个操作比较昂贵，至少一次获取1M的内存
+    - 从mspan中释放一个对象的过程是
+      - mspan不用的还给mcache
+      - mspan idle, 没有任何对象占用，则还给mheap
+      - mspan idle几个周期之后，mspan中的页还给OS
+
+  - Large: 大于32byte
+
+    - 大的对象不用mcache和mcetral, 直接使用mheap
+
+    
+
+>
+>
+>强制GC:
+>
+>```go
+>FreeOSMemory()
+>runtime.GC()
+>```
+>
+> 
+
+
+
+## CPU
+
+- Cgo: go中调用c
+- GPU
+- CUDA on GCP
+- CUDA
+
+
 
 
 
@@ -211,6 +278,7 @@ $ go tool compile -help
   - text/template
   - html/tmp;late
   - sprig
+- goweight: 分析依赖包的大小
 
 ## 参考
 
