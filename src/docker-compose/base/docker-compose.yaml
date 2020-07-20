@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  ping:
+    build: .
+    image: ping
+    ports: 
+      - "8888:80"
+    secrets:
+        - source: password
+          target: /app/config/password
+secrets:
+  password: 
+    file: ./password.txt

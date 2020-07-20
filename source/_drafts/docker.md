@@ -36,7 +36,10 @@
 
   - OverlayFS
 
-    
+
+## containerd
+
+DockerEngine使用containerd管理容器，containerd与具体的操作系统打交道，利用操作系统的特性完成容器的生命周期管理。containerd属于CNCF发起的开源项目Open Container Initiative (OCI)中的一部分。
 
 ## 安装
 
@@ -83,7 +86,19 @@ $ docker kill clever_davinci
 
 ```
 
-
+>
+>
+>## docker run 和 docker container run
+>
+>```
+>Prior to docker 1.13 the docker run command was only available. The cli commands were then refactored to have the form docker COMMAND SUBCOMMAND, where in this case the COMMAND is container and the SUBCOMMAND is run. This was done to have a more inituitive grouping of commands since the number of commands at the time has grown substantially.
+>
+>You can read more under CLI restructured.
+>
+>In short, use docker container run as it is the more modern way to run a container.
+>```
+>
+>
 
 ### 运行一个简单的echo服务器
 
@@ -101,7 +116,7 @@ hello
 
 
 
-### 通过HTTPs(mTSL)访问docker
+### 通过HTTPs(mTSL)访问docker registry
 
 ```bash
 # 1. 初始化CA serial文件
@@ -191,9 +206,29 @@ $ docker run --rm --link srv1 -it base/archlinux
 
 > Docker容器之间的网络连接未来会使用publish services。但是link仍然是支持的。
 
-#### --rm
+#### -[-d]etach: 以后台方式运行容器
 
-#### -p|P
+#### --rm: 无痕运行容器
+
+容器运行结束后自动删除
+
+#### --name $name: 给容器命名
+
+
+
+#### -[-e]nv $key=value: 设置容器运行时环境变量
+
+```sh
+# 多个环境变量继续追加-e即可
+$ docker container run --rm --env MSG=hello busybox env 
+...
+MSG=hello
+...
+```
+
+
+
+#### -[-p]ublish 
 
 	- -P: 将容器的端口随映射到主机的一个随机端口上
 	- 
@@ -234,6 +269,15 @@ messagedb hello
 
 ```bash
 $ docker run -e "MSG=hello" -e "VER=1.0"  base/archlinux env
+```
+
+
+
+#### -it 或 --[i]nteractive -[-t]ty
+
+``` bash
+$ docker container run busybox
+/ # 
 ```
 
 
@@ -327,12 +371,30 @@ Mon Jan  6 20:36:16 UTC 2020
 
 ### docker top
 
-### docker stats container-id
+### docker rm
+
+```sh
+# 强制删除所有容器（包括正在运行的）
+$ docker container rm --force $(docker container ls --all --quiet)
+$ docker container rm -f $container
+```
+
+
+
+### docker stats $containerId
 查看容器的系统资源使用情况
 
 ```zsh
 # 获取全部容器的资源使用情况
 $ docker stats $(docker inspect -f {{.Name}} $(docker ps -q))
+```
+
+
+
+### 进入正在运行的容器
+
+```sh
+$ docker container exec -it $container_id sh
 ```
 
 
@@ -392,11 +454,19 @@ $ docker tag <IMAGE> <IMAGE>:<TAG>
 
 ### docker images
 
-```bash
-00
+- 搜索image: https://registry.hub.Docker.com/
+
+### docker image
+
+```sh
+# 模糊搜索
+$ docker image ls 'x*'
+
+# 查看历史
+$ docker image history $target
 ```
 
-- 搜索image: https://registry.hub.Docker.com/
+
 
 ### docker import
 
@@ -417,15 +487,34 @@ $ docker load image.tgz
 
 ### docker tag
 
-
-
 ## Docker Registry
+
+```sh
+$ docker info | grep Registry 
+ Registry: https://index.docker.io/v1/
+$ docker container run -d -p 5000:5000 --restart always registry
+$ docker image push $registry:$port/$id/$image:$version
+```
+
+
+
+Image的三个类型:
+
+- Verified Publishers: 注入微软，Google等在DockerHub上认证过的
+- Official Images: 一般是开源项目，通常经过安全扫描并且经常更新
+- Golden Images: 使用OfficalImages作为base的Images, 在一个组织内或项目内通常需要对OfficalImages进一步配置，得到一个可以在项目内使用的base, 这个叫做GoldenImages, 通常你可以将这些images保存到golden路径下，这样对于CI可以进行扫描，保证所有的Images都基于GoldenImages来构建
 
 ### docker pull
 
 ### docker push
 
 ### docker login
+
+```sh
+$ docker login --username $dockerId
+```
+
+
 
 ### docker logout
 
@@ -439,6 +528,12 @@ $ docker search ubuntu
 
 
 
+### docker service
+
+```
+
+```
+
 ## 容器
 
 - 基于AUFS, 最多127层
@@ -450,7 +545,92 @@ $ docker search ubuntu
   - paused
   - exited: 曾经运行过
 
+## 容器存储
 
+Docker Volume是一个存储单元，你可以认为它是一个给容器准备的U盘。Volumes有自己的生命周期，可以attached到容器之上。
+
+有两种方法可以定义Volumes:
+
+- 创建一个Volume然后attached到容器上
+- 使用VOLUME $target-dir在Dockerfile中定义Volumes
+
+
+
+
+
+```sh
+$ docker volume ls
+$ docker container inspect --format '{{.Mounts}}' $target
+```
+
+
+
+```dockerfile
+FROM busybox
+VOLUME /src
+```
+
+```sh
+$ docker build -t vol .
+$ docker run --rm -it -name voltest vol
+$ docker inspect --format '{{.Mounts}}'
+[{volume a77d2b5bddb0fb16ecbfc191381d04604f51de40c24eeaa6ae4e457b0faf422c /var/lib/docker/volumes/a77d2b5bddb0fb16ecbfc191381d04604f51de40c24eeaa6ae4e457b0faf422c/_data /src local  true }]
+# volume对应本机路径/var/lib/docker/volumes/a77d2b5.../_data
+
+$ docker volume ls
+DRIVER              VOLUME NAME
+local               a77d2b5bddb0...
+```
+
+
+
+````sh
+# 手动创建一个volume
+$ docker volume create src
+# 在Host机上对应的volume目录中创建一个文件
+$ sudo touch /var/lib/docker/volumes/src/_data/hello
+# 在新的容器中使用这个volume
+$ docker run -it --rm -v src:/src  busybox ls /src 
+hello
+````
+
+
+
+使用bind mount是一种容器与Host主机共享文件系统的方式，需要注意的是这种方式虽然方便，但存在安全隐患，如果容器不需要写，那么可以用只读的方式。
+
+```sh
+# 读写方式
+$ docker container run --mount type=bind,source=$source,target=$target $image
+
+# 只读方式
+$ docker container run --mount type=bind,source=$source,target=$target,readonly $image
+```
+
+使用Host存储另外一个需要了解的，假如在image中有同样的目录，然后同时mount了同样的主机目录，结果会如何？
+
+1. Host 目录的内容替换容器中的目录？
+2. 容器中的目录？
+3. Host和容器目录合并？
+
+使用Host存储，在linux和windows系统上会有差异，比如windows不支持单个文件的bind mount
+
+虽然同是一个路径，可以背后的文件系统有差异，并非一定支持所有的操作，因此在这一点上会使得同样的dockerfile在不同host机上运行效果不同，比如有些文件系统fat32，azure file不支持
+
+>存储层级： APP -> 可写层 -> Mount层 -> 镜像层
+
+1. 可写层（writable layer)：每个容器有唯一的可写层，容器生命周期结束后回收
+2. Local Bind Mounts层：用于Host机与容器间共享数据
+3. Distributed Bind Mounts层： 用户网络存储与容器间共享数据
+4. Volumes  Mounts：容器与docker管理的存储（Volumes）之间共享数据
+5. Images层：只读数据
+
+### 容器存储是如何工作的？
+
+
+
+## Docker网络
+
+Docker内置DNS系统，如果名字是容器的，那么返回容器IP, 否则交给操作系统的DNS进行解析？
 
 ## 镜像是怎么构建出来的？
 
@@ -516,7 +696,7 @@ FROM
 
 ```dockerfile
 FROM
-MAINTAINER
+MAINTAINER # 过时了，可以用LABEL代替
 ```
 
 
@@ -530,7 +710,7 @@ FROM base/archlinux
 RUN  pacman -Sy --noconfirm &&  pacman -S --noconfirm cowsay
 ```
 
-```
+```sh
 $ mkdir cowsay ; cd cowsay
 $ docker build -t test/cowsay .
 ...
@@ -547,7 +727,7 @@ $ docker run test/cowsay cowsay hello
 
 我们稍加修改:
 
-```
+```sh
 FROM base/archlinux
 RUN  pacman -Sy --noconfirm &&  pacman -S --noconfirm cowsay
 ENTRYPOINT ["cowsay"]
@@ -645,6 +825,16 @@ ff02::2	ip6-allrouters
 
 #### --volumes-from container
 
+### docker network
+
+```sh
+# windows版需要手工创建nat网络
+$ docker network create nat
+$ docker container run --network nat $target
+```
+
+
+
 ### docker build
 
 ### Build Context
@@ -716,6 +906,71 @@ STOPSIGNAL
 HEALTHCHECK
 
 SHELL
+
+
+
+
+
+## 利用Layer Cache加速构建
+
+我们知道在build镜像的时候，Docker是按照Dockerfile中指令的顺序逐步构建的，对于每一个指令产生的中间镜像会尽可能利用缓存，因此如果我们把不太发生变化的指令放到Dockerfile前面，那么意味着可以利用缓存加速构建的过程. 
+
+例如:
+
+```dockerfile
+FROM node
+ENV  X=1                     # 不变
+WORKDIR /app                 # 不变
+COPY app.js                  # 变
+CMD ["node", "/app/app.js"]  # 不变
+```
+
+可以将CMD这种不太发生变化的指令调整到前面
+
+```dockerfile
+FROM node
+ENV  X=1                     # 不变
+CMD ["node", "/app/app.js"]  # 不变
+WORKDIR /app                 # 不变
+COPY app.js                  # 变
+```
+
+## 分部构建（Muilt）
+
+```dockerfile
+FROM diamol/base AS build-stage
+RUN echo 'Building...' > /build.txt
+
+FROM diamol/base AS test-stage
+COPY --from=build-stage /build.txt /build.txt
+RUN echo 'Testing...' >> /build.txt
+
+FROM diamol/base
+COPY --from=test-stage /build.txt /build.txt
+CMD cat /build.txt
+```
+
+```dockerfile
+FROM diamol/maven AS builder
+
+WORKDIR /usr/src/iotd
+COPY pom.xml .
+RUN mvn -B dependency:go-offline
+
+COPY . .
+RUN mvn package
+
+# app
+FROM diamol/openjdk
+
+WORKDIR /app
+COPY --from=builder /usr/src/iotd/target/iotd-service-0.1.0.jar .
+
+EXPOSE 80
+ENTRYPOINT ["java", "-jar", "/app/iotd-service-0.1.0.jar"]
+```
+
+
 
 ## 底层技术
 
@@ -931,7 +1186,59 @@ Many of these tests can be classified as preregistry and postregistry, depending
 
 ### 日志和监控
 
-## 安全
+```sh
+# 通过p8s监控dockerd的健康状况
+$ cat /etc/docker/daemon.json
+{ 
+        "metrics-addr" : "127.0.0.1:9323",
+        "experimental": true
+}
+$ sudo systemctl restart docker.service 
+$ curl http://127.0.0.1:9323/metrics
+```
+
+
+
+
+
+### 健康检查
+
+````dockerfile
+HEALTHCHECK [OPTIONS] CMD command
+[OPTIONS]
+  --interval=DURATION (default 30s)
+  --timeout=DURATION (default 30s)
+  --retries=N (default 3)
+  
+# 需要注意，CMD执行后exit code为1表示失败，0表示成功, 所以下面这个声明你就明白为什么要加exit 1
+HEALTHCHECK CMD curl --fail http://localhost:9000/guid/ || exit 1  
+````
+
+```sh
+# 也可以在docker命令行中设置
+$ docker run -d --name db --health-cmd "curl --fail http://localhost:8091/pools || exit 1" --health-interval=5s --timeout=3s
+```
+
+
+
+```sh
+$ docker inspect $container | grep FailingStreak
+                "FailingStreak": 7,
+$ docker inspect $container  | grep Status  
+            "Status": "running",
+                "Status": "unhealthy",
+$ docker inspect --format "{{json .State.Health }}"
+$ docker events --filter event=health_status
+$ docker container ls 
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                      PORTS                  NAMES
+0f582d8dd273        hping               "nc -lk -p 80 -e hos…"   47 minutes ago      Up 47 minutes (unhealthy)   0.0.0.0:9111->80/tcp   hping
+```
+
+> 注意：
+>
+> Docker只能按照你的要求进行健康检查，并且记录健康状况，但是并不会采取任何措施，主要原因是需不需要重启，什么时候重起，怎么重启都可能会影响你的业务，并不是应该由Docker来自动处理的
+
+## 、安全
 
 ## 容器的局限
 
@@ -943,16 +1250,17 @@ Many of these tests can be classified as preregistry and postregistry, depending
 
 ## 周边工具
 
+- Universal Control Plane (UCP)： https://docs.docker.com/ee/ucp/
+- Portainer
+
 ### Swarm 
 
 Docker’s clustering solution. Swarm can group together several Docker hosts, allowing the user to treat them as a unified resource. See Chapter 12 for more information. 
 
-### Compose 
+### Docker Compose 
 
-启动容器要使用命令行配置容器的很多参数，很不方便，我们可以把这些参数放到一个名为docker-compose.yml的文件中，利用docker-compose up命令来代替原来的启动方法。当我们需要一次性定义和启动很多容器的时候使用compose方式也会更加直观和方便。
+通常我们的服务需要由多个容器支撑，如何将多个容器组合到一起提供服务便是DockerCompose所解决的问题。我们可以把这些参数放到一个名为docker-compose.yml的文件中，利用docker-compose up命令来代替原来的启动方法。docker-compose的配置项目的定义规则与Dockerfile中的一致
 
-> docker-compose的配置项目的定义规则与Dockerfile中的一致
->
 > 比如: ports : container-port:host-port 等价的命令行参数则是 p host-port:container-port
 >
 > 当一个参数用来描述host与container的映射关系时，命令行参数总是host在前，而Dockerfile和docker-compose总是container在前. 
@@ -976,7 +1284,100 @@ services:
     image: "redis:alpine"
 ```
 
-​	- https://docs.docker.com/compose/
+	- https://docs.docker.com/compose/
+
+```yaml
+version: ''
+services:
+    $name:
+      image: $image
+      ports:
+        - ${local-port}:${container-expose-port}
+      depend_on:
+        - ${name1}
+        - ${nameN}
+      environment:
+        - ${key}=${value}
+      restart: [always]  
+      secrets:
+        - source: ${source_name}
+          target: ${file}
+      healthcheck:
+          test: $cmd
+          interval: ${time}
+          timeout: ${time}
+          retries: ${n}
+volumes:          
+```
+
+
+
+```sh
+$ docker-compose up
+$ docker-compose up -d # --detach, 后台运行
+$ docker-compose up -d --scale ${name}=${n} # 运行3个${name}容器
+$ docker-compose down  # 停止相关容器，删除相关网络，Volumes
+$ docker-compose stop  # 停止容器
+$ docker-compose start # 启动容器
+$ docker-compose run ${container_name}
+
+```
+
+
+
+```sh
+$ tree .
+.
+├── docker-compose.yaml
+├── Dockerfile
+└── password.txt
+$ cat password.txt
+hello
+```
+
+```dockerfile
+FROM busybox
+EXPOSE 80
+ENTRYPOINT ["nc", "-lk", "-p", "80", "-e", "hostname"]
+```
+
+```yaml
+version: '3.7'
+services:
+  ping:
+    build: .
+    image: ping
+    ports: 
+      - "8888:80"
+    secrets:
+        - source: password
+          target: /app/config/password
+secrets:
+  password: 
+    file: ./password.txt
+```
+
+```
+$ docker-compose up -d
+$ docker container exec ping_1 cat /app/config/password
+hello
+
+```
+
+
+
+### 使用compose构建多个环境
+
+Docker Compose可以支持合并，我们可以将基础的配置放到一个文件中，而后将变化部分放到另外一个文件中。
+
+
+
+```sh 
+# 检测合并后的配置是否合法
+$ docker-compose -f docker-compose.yml -f docker-compose-v2.yml config
+```
+
+
 
 ### Docker Machine 
 
@@ -1046,6 +1447,10 @@ $ docker-machine ssh default
 >
 >#### AMD CPU:
 >$ cat /proc/cpuinfo | grep --color svm
+
+
+
+
 
 #### 如何使用SSH登录容器?
 

@@ -9,6 +9,8 @@ public class Hello {
     
     List<Integer> xs = Arrays.asList(1,2,3,4,5,6);
     System.out.println(Arrays.toString(suffle(xs).toArray()));
+
+    Collections.shuffle(arg0, arg1);
   }
 
 
