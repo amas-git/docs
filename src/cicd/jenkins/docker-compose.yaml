@@ -1,0 +1,14 @@
+# docker-compose.yml
+services:
+  jenkins:
+    image: diamol/jenkins
+    ports:
+      - "8080:8080"
+  networks:
+    - infrastructure
+
+jenkins:
+  volumes:
+    - type: bind
+    source: /var/run/docker.sock
+    target: /var/run/docker.sock
