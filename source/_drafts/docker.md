@@ -1738,6 +1738,33 @@ For more information on using supervisord inside containers, see this Docker art
 - http://kubernetes.io/docs/getting-started-guides/
 
 
+
+## CI/CD
+
+
+
+一个简单的build脚本
+
+```sh
+# the build stage in the Jenkinsfile- it switches directory, then runs two
+# shell commands - the first sets up a script file so it can be executed
+# and the second calls the script:
+stage('Build') {
+    steps {
+      dir('ch11/exercises') {
+      sh 'chmod +x ./ci/01-build.bat'
+      sh './ci/01-build.bat'
+    }
+  }
+}
+
+# --pull所有镜像使用最新的
+docker-compose -f docker-compose.yml -f docker-compose-build.yml build --pull
+```
+
+
+
+
 ### 参考
 - https://www.cyberciti.biz/faq/linux-xen-vmware-kvm-intel-vt-amd-v-support/
 - [Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
