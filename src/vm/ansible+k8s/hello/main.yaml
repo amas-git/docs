@@ -1,0 +1,29 @@
+---
+# This is a hello test
+- hosts: localhost
+  gather_facts: false
+  
+  pre_tasks:
+      - name: Play shell
+        shell: |
+            echo =============
+            echo HELLO
+            touch /tmp/blablabla
+            echo =============
+      - name: Check Minikube Status
+        command: minikube status
+        register: minikube_status
+        changed_when: false
+        ignore_errors: true
+      - name: Start Minikube if it's not running.
+        command: minikube start
+        when: "not minikube_status.stdout or 'Running' not in minikube_status.stdout"
+
+  tasks:
+      - name: Get Current Date
+        command: date
+        register: var_date
+        changed_when: false
+      - name: Print var_date
+        debug:
+          msg: "{{ var_date.stdout }}"
