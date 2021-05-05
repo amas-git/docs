@@ -8,6 +8,75 @@
 >- 如何通过ansible操作aws?
 >- 如何测试编写的ansible role?
 
+## 安装
+
+Ansible由python编写，所以只要装好python, 剩下的事情就靠pip搞定
+
+```sh
+$ pip install ansible
+$ ansible --version
+ansible 2.9.5
+  config file = /etc/ansible/ansible.cfg
+  configured module search path = ['/home/amas/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python3.8/site-packages/ansible
+  executable location = /usr/bin/ansible
+  python version = 3.8.1 (default, Jan 22 2020, 06:38:00) [GCC 9.2.0
+```
+
+
+
+## Hello World
+
+```
+$ tree .
+.
+├── inventory.ini
+└── main.yaml
+
+```
+inventory.ini:
+```ini
+[localhost]
+127.0.0.1 ansible_connection=local
+```
+
+main.yaml:
+```yaml
+---
+# This is a hello test
+- hosts: localhost
+  gather_facts: false
+  
+  tasks:
+      - name: Get Current Date
+        command: date
+        register: var_date
+        changed_when: false
+      - name: Print var_date
+        debug:
+          msg: "{{ var_date.stdout }}"
+```
+
+
+
+```sh
+$ ansible-playbook main.yaml
+PLAY [localhost] ***************************************************************
+
+TASK [Get Current Date] ********************************************************
+ok: [localhost]
+
+TASK [Print var_date] **********************************************************
+ok: [localhost] => {
+    "msg": "Wed 16 Sep 2020 07:02:12 PM CST"
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+
+
 ## Inventory
 
 - invetory用于描述机器，以及ansible应该以怎样的方式操作这些机器.
@@ -173,7 +242,7 @@ playbook是ansible是用ansible运行的基本单元，playbook用yaml编写，�
 
 > block是一组tasks, 可以在block中对tasks出现的错误进行处理
 
-```
+```yaml
 ---
 - hosts: all
     tasks:
@@ -423,7 +492,15 @@ $ ansible-vault view <file>
 $ ansible-vault rekey <file>
 ```
 
+## Ansible上的k8s插件
 
+- k8s
+- k8s_info
+- k8s_scale
+- k8s_exec
+- k8s_service
+- k8s_log
+- geerlingguy.k8s
 
 ## 参考
 
