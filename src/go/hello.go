@@ -409,8 +409,19 @@ func play_ordone1() {
 	}
 }
 
+func retry(delay time.Duration, times int) {
+	for i :=0 ; i < times; i++ {
+		fmt.Printf("%d\n", i)
+
+		select {
+		case <-time.After(delay):
+		}
+	}
+}
+
 func main() {
 	fmt.Println("hello")
+	retry(1 * time.Second, 10)
 	//play_pipline()
 
 	// done := make(chan interface{})
@@ -439,7 +450,7 @@ func main() {
 	//play_tee()
 	//play_ordone1()
 
-	play_split()
+	//play_split()
 	// for v := range seq(10) {
 	// 	fmt.Println(v)
 	// }
