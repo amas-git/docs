@@ -184,40 +184,41 @@ func tee(done <-chan interface{}, in <-chan interface{}) (<-chan interface{}, <-
 	return out1, out2
 }
 
-func split(done <-chan interface{}, in <-chan interface{}, router map[string](func(interface{}) bool)) map[string](<-chan interface{}) {
-	chmap := make(map[string](chan interface{}), len(router))
-	rmap := make(map[string](<-chan interface{}), len(router))
-	for key := range router {
-		chmap[key] = make(chan interface{})
-		rmap[key] = chmap[key]
-	}
+// TODO: 这个还不能工作
+// func split(done <-chan interface{}, in <-chan interface{}, router map[string](func(interface{}) bool)) map[string](<-chan interface{}) {
+// 	chmap := make(map[string](chan interface{}), len(router))
+// 	rmap := make(map[string](<-chan interface{}), len(router))
+// 	for key := range router {
+// 		chmap[key] = make(chan interface{})
+// 		rmap[key] = chmap[key]
+// 	}
 
-	go func() {
-		for _, ch := range chmap {
-			defer close(ch)
-		}
+// 	go func() {
+// 		for _, ch := range chmap {
+// 			defer close(ch)
+// 		}
 
-		for v := range in {
-			fmt.Println(v)
-			for key, fn := range router {
-				//fmt.Printf("%v <- %v", key, v)
-				if fn(v) {
-					tch := chmap[key]
-					fmt.Println(key, v)
-					select {
-					case <-done:
-						return
-					case tch <- v:
-						{
-							tch = nil
-						}
-					}
-				}
-			}
-		}
-	}()
-	return rmap
-}
+// 		for v := range in {
+// 			fmt.Println(v)
+// 			for key, fn := range router {
+// 				//fmt.Printf("%v <- %v", key, v)
+// 				if fn(v) {
+// 					tch := chmap[key]
+// 					fmt.Println(key, v)
+// 					select {
+// 					case <-done:
+// 						return
+// 					case tch <- v:
+// 						{
+// 							tch = nil
+// 						}
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}()
+// 	return rmap
+// }
 
 func play_split() {
 	done := make(chan interface{})
@@ -410,7 +411,7 @@ func play_ordone1() {
 }
 
 func retry(delay time.Duration, times int) {
-	for i :=0 ; i < times; i++ {
+	for i := 0; i < times; i++ {
 		fmt.Printf("%d\n", i)
 
 		select {
@@ -419,9 +420,41 @@ func retry(delay time.Duration, times int) {
 	}
 }
 
+func play_ticker(max int) {
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+	for i := 0; i < max; i++ {
+		fmt.Printf("%s\n", <-ticker.C)
+	}
+}
+
+// 函数f在t时间内之多只能调用一次, 剩余的调用返回第一次调用的结果缓存
+func debounceFirst() {
+
+}
+
+func debounceLast() {
+
+}
+
+// 函数f在t时间内之多调用m次
+// throttle问题解决最常用的算法是token bucket
+// 当token不够用时候, 通常有三种选择
+// 1. 返回错误
+// 2. 返回最后一次调用的结果
+// 3. 入队列等待token狗的时候再执行
+// token bucket思路大概如下
+// 1. 设置token为整数, > coast的时候表示可以实际执行
+// 2. 没过t时间, token = token + refill, 间隔一定时间释放refill, 保证 token < max (max即调用配额)
+// 3. 每次调用结束后 token = token - coast
+func throttle() {
+
+}
+
 func main() {
 	fmt.Println("hello")
-	retry(1 * time.Second, 10)
+	play_ticker(4)
+	retry(1*time.Second, 10)
 	//play_pipline()
 
 	// done := make(chan interface{})
