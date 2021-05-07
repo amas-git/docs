@@ -163,3 +163,195 @@ os.Setenv("SPF_ID", "13") // 通常是在应用程序之外完成的
 id := Get("id") // 13
 ```
 
+
+
+
+
+#### 4. 将服务视为资源, 用URL表示
+
+```
+Treat backing services as attached resources.
+—The Twelve-Factor App
+```
+
+
+
+#### 5. 构建, 发布, 运行
+
+```
+Strictly separate build and run stages.
+—The Twelve-Factor App
+```
+
+- BUILD
+  - 从代码仓库获取指定版本
+  - 获取依赖
+  - 编译
+  - 每次build需要有唯一ID和时间戳
+- RELEASE
+  - 发布的时候, 是将build和对应的Deployment的配置所绑定
+- RUN
+  - release被发布到Deployment环境中
+
+```
+CODE -> BUILD  ->
+                | -> RELEASE -> RUN
+        CONFIG ->
+```
+
+
+
+
+
+#### 6. 进程
+
+```
+Execute the app as one or more stateless processes.
+—The Twelve-Factor App
+```
+
+服务进程无状态, 状态都保存到后端服务中(如数据库,缓存服务)
+
+#### 7. 数据隔离
+
+服务是自给自足的, 如果需要外部访问数据, 可以提供API.
+
+#### 8. 尽可能的水平扩展
+
+#### 9. 一次性
+
+快速启动, 优雅关机
+
+为什么要这么干呢? 云环境复杂易变, 服务迁移非常频繁, 所以我们的服务尽可能小, 可以快速启动, 优雅停止.这样会最大限度的减少停机时间.
+
+#### 10. 保持开发/生产环境尽可能相同
+
+- 开发分支生命周期尽可能端, 迅速合并到主干, 快速上生产
+- 开发/生产环境使用一致的软件,利用容器解决
+
+- 开发者熟悉部署, 熟悉生产环境, 解决运营研发孤岛问题
+
+#### 11. 日志
+
+将日志视为事件流
+
+服务不间断运行, 服务不断产生日志即为服务运行时产生的时间, 随进程开始开始, 随进程终结终结. 将日志写 到STDOUT, 免于落本地盘, 省去日志管理成本,另一方面将STDOUT流交给日志服务, 统一管理, 分析,方便查询.
+
+#### 12. 管理进程
+
+用一次性进程管理服务, 而不是手动管理.
+
+
+
+
+
+### 缓存
+
+- LRU : https://github.com/hashicorp/golang-lru
+
+
+
+### 插件
+
+- go plugin
+- hashcorp plugin
+
+### Hexagonal Architecture
+
+
+
+
+
+### 重试
+
+- backoff算法
+
+### 限流
+
+### 优雅降级
+
+### 优雅关机
+
+### 熔断
+
+
+
+### 超时
+
+如果你认为失败, 那么要快速失败
+
+
+
+### Idempotence
+
+```
+
+```
+
+### Redundancy
+
+
+
+### Auto Scaling
+
+
+
+### 健康检查
+
+- Liveness: 进程活着
+- Shallow: 进程活着且本地状态正常
+- Deep: 进程或者且可以正常服务
+
+### 服务的管理能力
+
+- 配置和控制
+  - 配置文件标准化: JSON/YAML/TOML
+  - 利用环境变量进行配置
+  - 配置与代码分离
+  - 配置变更需要有版本管理
+- 监控,报警,日志
+- 发布和更新
+- 服务发现
+
+```go
+github.com/spf13/cobra
+github.com/spf13/viper
+
+
+package main
+import (
+    "fmt"
+    "os"
+    "github.com/spf13/cobra"
+)
+var strp string
+var intp int
+var boolp bool
+var rootCmd = &cobra.Command{
+    Use: "flags",
+    Long: "A simple flags experimentation command, built with Cobra.",
+    Run: flagsFunc,
+}
+
+func init() {
+    rootCmd.Flags().StringVarP(&strp, "string", "s", "foo", "a string")
+    rootCmd.Flags().IntVarP(&intp, "number", "n", 42, "an integer")
+    rootCmd.Flags().BoolVarP(&boolp, "boolean", "b", false, "a boolean")
+}
+
+func flagsFunc(cmd *cobra.Command, args []string) {
+    fmt.Println("string:", strp)
+    fmt.Println("integer:", intp)
+    fmt.Println("boolean:", boolp)
+    fmt.Println("args:", args)
+}
+
+
+func main() {
+    if err := rootCmd.Execute(); err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+}
+```
+
