@@ -1,0 +1,40 @@
+config:
+  - namespace: amas.org
+  - port: 1983
+  - db_url: "url"
+logs:  
+cmds:
+  name:
+  desc:
+  alias:
+  - name: ""
+    desc: ""
+    flags:
+      - id: h
+        name: help
+        desc: show help message
+    cmds:
+      - name: run
+        alias: r
+        flags:
+         - id: h
+           name: help
+           desc: show help message
+      - name: start
+        desc:
+      - name: stop
+        desc:
+      - name: help
+        desc:
+objeccts:
+  - type: Music
+    name: "string"
+apis:
+  - path: "v1/healthz"
+    request:
+    response:
+    rate_limit:  
+  - path: "v1/add"  
+    method: post
+    header:
+    body: Music

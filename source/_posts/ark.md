@@ -37,12 +37,12 @@ Li: 蠡/lí/流动性(Liquidity)存储的最小单元, 小勺子的意思
 LI extends ATOM
   ID
   NAMINGSPACE
-  NAME amas
+  NAME BTC
   AMO  100
   TAG  xrp
   STATUS [good|bad|disabled]
   TX extends ATOM
-    $TIME $ID $AMO $RENAMINGSPACE
+    $TIME $ID $AMO $TAG
 ```
 
 
@@ -70,3 +70,16 @@ HIST:
 
 ```
 
+### URI
+
+```
+li://$namespace.$host:$port/$id
+```
+
+
+
+##  指令
+
+- buy A:B  9000@19.4
+- sell  A:B
+- view A 

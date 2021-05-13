@@ -1,0 +1,3 @@
+hello ${USER}
+
+${$src}

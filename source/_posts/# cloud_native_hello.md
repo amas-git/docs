@@ -268,13 +268,36 @@ Execute the app as one or more stateless processes.
 
 ### 限流
 
+```sh
+$ go get golang.org/x/time/rate@latest
+```
+
+
+
+```
+Before we start writing any code, let’s take a moment to explain how token-bucket rate
+limiters work. The description from the official x/time/rate documentation says:
+A Limiter controls how frequently events are allowed to happen. It implements a “token
+bucket” of size b , initially full and refilled at rate r tokens per second.
+Putting that into the context of our API application…
+
+ 1. We will have a bucket that starts with b tokens in it.
+ 2. Each time we receive a HTTP request, we will remove one token from the bucket.
+ 3. Every 1/r seconds, a token is added back to the bucket — up to a maximum of b total
+tokens.
+ 4.  If we receive a HTTP request and the bucket is empty, then we should return a
+429 Too Many Requests response
+```
+
+
+
 ### 优雅降级
 
 ### 优雅关机
 
 ### 熔断
 
-
+ token buket
 
 ### 超时
 
