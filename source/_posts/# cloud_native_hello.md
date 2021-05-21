@@ -378,3 +378,9 @@ func main() {
 }
 ```
 
+### 性能测试
+
+```sh
+ $ go test -gcflags=-N -benchmem -test.count=3 -test.cpu=1 -test.benchtime=1s -bench=.
+```
+

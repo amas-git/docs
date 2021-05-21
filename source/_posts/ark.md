@@ -42,7 +42,7 @@ LI extends ATOM
   TAG  xrp
   STATUS [good|bad|disabled]
   TX extends ATOM
-    $TIME $ID $AMO $TAG
+    $TIME $ID $AMO $TAG $SRC $DST
 ```
 
 
@@ -73,7 +73,9 @@ HIST:
 ### URI
 
 ```
-li://$namespace.$host:$port/$id
+li://$name.$namespace.$host:$port/$id/@amount
+li://$name.$namespace.$host:$port/$id/@amount_in
+li://$name.$namespace.$host:$port/$id/@amount_out
 ```
 
 
@@ -83,3 +85,29 @@ li://$namespace.$host:$port/$id
 - buy A:B  9000@19.4
 - sell  A:B
 - view A 
+
+
+
+
+
+
+
+### 询价
+
+- 某个交易所的价格
+- bitrue持有BTC的价格
+- 
+
+```
+$ 1.5btc
+$time $price(usd)
+$ 1.5btc:trx
+$time $price(trx)
+$ btc 24hh
+$ btc 24hm
+$ li://bitrue/btc 24hm
+$ li://hotbit/btc 1m
+$ li://hotbit/btc/@price
+$ 
+```
+
