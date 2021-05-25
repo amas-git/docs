@@ -1431,6 +1431,72 @@ ${SVC}_SERVICE_PORT
 
 
 
+## HELM
+
+如何解决软件的安装,升级,维护,卸载?
+
+```sh
+$ helm search repo content
+$ helm repo add bitnami https://charts.bitnami.com/bitnami
+$ helm reop list
+
+$ helm install ${name} ${package}                       # 默认安装某包
+$ helm 
+$ helm install ${name} ${package}  --dry-run            #  - 模拟安装
+$ helm install --namespace ${ns} ${name}                #  - 安装到某名字空间
+$ helm install --namespace ${ns} ${name} --create-namespace # 如没有该名字空间则创建
+$ helm install ${name} ${package} --set ${key}=${value} #  - 定制安装某包
+$ helm install ${name} ${package} --value value.yaml    #  - 定制安装某包
+$ helm install ${name} --generate-name                  # 安装,自动生成名字(避免冲突问题)
+$ helm install ${name} --generate-name --name-template "xxx-{{randAlpha 7|lower}}" # 名字模板
+# install比较重要的几个参数:
+#   --wait: 正常helm得知manifest已经被k8s成功apply之后, 即认为成功, 并不管pod,svc等是否真正运行起来,--wait后, helm不断check k8s的后续状态, 直道成功d 
+
+$ helm upgrate --inatall ${name}                        # 如已安装则升级,如未安装则安装
+
+$ helm get note ${name}                                 # 获得Release Note
+$ helm ls                                               # 列出已安装内容
+
+$ helm get value ${name}                                # 查看安装配置
+$ helm get value --all                                  # 查看所有可配置项
+$ helm get manifest ${name}                             # 查看模板化之后的内容
+$ helm template ${name}                                 # 查看实际安装的内容
+
+$ helm uninstall ${name}                                # 卸载
+$ helm uninstall ${name} --keep-history                 # 卸载,但保留安装历史
+
+
+$ helm list                                             # 列出已经安装的包
+$ helm list --all-namespaces
+
+$ helm repo uptate                                      # 更新包
+# --force
+# --cleanup-on-fail
+
+$ helm upgrade ${name} ${package} --reuse-values        # 升级
+
+
+# TASK:
+$ helm history  ${name}                                 # 安装历史
+$ helm rollback ${name} ${seq}
+
+
+```
+
+
+
+### Helm安装的五个阶段
+
+```
+1. 加载chart
+2. 解析安装配置(--set  --value)
+3. 执行模板
+4. Render the YAML
+5. 发送到k8s
+```
+
+### Helm Release
+
 
 
 ## 参考
