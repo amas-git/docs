@@ -1493,11 +1493,24 @@ $ helm package
        --version
 # .helmignore 不想被打包的文件可以加入其中       
 
+
 # 签名
 $ helm package --sign --key ${email} --keyring ${cert} ${chart}
+$ helm veryfy ${chart.tgz} --keyring ${public_key}
+$ helm install --verify --keyring ${public_key} ${chart}
+
+# 下载chart
+$ helm pull ${chart} --version ${version}
+
+# 删除repo
+$ helm repo remove ${chart}
 
 # 更新依赖
 $ helm dependency update
+
+
+# 插件安装
+$ helm plugin install
 ```
 
 
@@ -1817,6 +1830,49 @@ dependencies:
 
 
 ### Helm测试
+
+
+
+### Chart 仓库
+
+包含index.yaml
+
+```yaml
+apiVersion: v1
+entries:
+  superapp:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2020-04-27T17:46:52.60919-05:00"
+    description: A Helm chart for Kubernetes
+    digest: cd1f8d949aeb6a7a3c6720bfe71688d4add794881b78ad9715017581f7867db4
+    name: superapp
+    type: application
+    urls:
+    - superapp-0.1.0.tgz
+    version: 0.1.0
+generated: "2020-04-27T17:46:52.607943-05:00"
+```
+
+```sh
+$ mkdir -p charts
+$ helm repo index charts
+$ cat charts/index.yaml
+$ helm create ${chart}
+$ helm pacage ${chart} --destination charts
+$ helm repo index charts
+$ (cd ${chart} && python3 -m http.server --bind 127.0.0.1:8080)
+$ (cd ${chart} && python -m SimpleHTTPServer:8080)
+$ helm repo add ${name} http://localhost:8080 --username ${user} --password ${password}
+```
+
+
+
+````
+使用github建立chart仓库
+````
+
+
 
 ## 参考
 
