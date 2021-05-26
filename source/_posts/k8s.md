@@ -1450,7 +1450,8 @@ $ helm install ${name} ${package} --value value.yaml    #  - 定制安装某包
 $ helm install ${name} --generate-name                  # 安装,自动生成名字(避免冲突问题)
 $ helm install ${name} --generate-name --name-template "xxx-{{randAlpha 7|lower}}" # 名字模板
 # install比较重要的几个参数:
-#   --wait: 正常helm得知manifest已经被k8s成功apply之后, 即认为成功, 并不管pod,svc等是否真正运行起来,--wait后, helm不断check k8s的后续状态, 直道成功d 
+#   --wait: 正常helm得知manifest已经被k8s成功apply之后, 即认为成功, 并不管pod,svc等是否真正运行起来,--wait后, helm不断check k8s的后续状态, 直道成功
+#   --atomic:
 
 $ helm upgrate --inatall ${name}                        # 如已安装则升级,如未安装则安装
 
@@ -1481,6 +1482,22 @@ $ helm history  ${name}                                 # 安装历史
 $ helm rollback ${name} ${seq}
 
 
+# 打包
+$ helm create  hello
+$ helm lint    hello                                   # 检查
+$ helm package hello
+$ helm package 
+       --dependency-update (-u) 
+       --destination (-d) 
+       --app-version
+       --version
+# .helmignore 不想被打包的文件可以加入其中       
+
+# 签名
+$ helm package --sign --key ${email} --keyring ${cert} ${chart}
+
+# 更新依赖
+$ helm dependency update
 ```
 
 
@@ -1497,7 +1514,309 @@ $ helm rollback ${name} ${seq}
 
 ### Helm Release
 
+### Helm Chart
 
+```sh
+$ helm create hello
+Creating hello
+$ tree .
+└── hello
+    ├── charts
+    ├── Chart.yaml                    # 安装包的元数据
+    ├── templates                     # k8s相关资源模板
+    │   ├── deployment.yaml
+    │   ├── _helpers.tpl
+    │   ├── ingress.yaml
+    │   ├── NOTES.txt                 # helm get note 所显示的内容
+    │   ├── serviceaccount.yaml
+    │   ├── service.yaml
+    │   └── tests
+    │       └── test-connection.yaml
+    └── values.yaml                   # 模板默认值
+$ helm install my-hello hello --dry-run
+NAME: my-hello
+LAST DEPLOYED: Wed May 26 09:21:56 2021
+NAMESPACE: default
+STATUS: pending-install
+REVISION: 1
+HOOKS:
+---
+# Source: hello/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "my-hello-test-connection"
+  labels:
+    helm.sh/chart: hello-0.1.0
+    app.kubernetes.io/name: hello
+    app.kubernetes.io/instance: my-hello
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['my-hello:80']
+  restartPolicy: Never
+MANIFEST:
+---
+# Source: hello/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: my-hello
+  labels:
+    helm.sh/chart: hello-0.1.0
+    app.kubernetes.io/name: hello
+    app.kubernetes.io/instance: my-hello
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: hello/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-hello
+  labels:
+    helm.sh/chart: hello-0.1.0
+    app.kubernetes.io/name: hello
+    app.kubernetes.io/instance: my-hello
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: hello
+    app.kubernetes.io/instance: my-hello
+---
+# Source: hello/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-hello
+  labels:
+    helm.sh/chart: hello-0.1.0
+    app.kubernetes.io/name: hello
+    app.kubernetes.io/instance: my-hello
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: hello
+      app.kubernetes.io/instance: my-hello
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hello
+        app.kubernetes.io/instance: my-hello
+    spec:
+      serviceAccountName: my-hello
+      securityContext:
+        {}
+      containers:
+        - name: hello
+          securityContext:
+            {}
+          image: "nginx:1.16.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {}
+
+NOTES:
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace default -l "app.kubernetes.io/name=hello,app.kubernetes.io/instance=my-hello" -o jsonpath="{.items[0].metadata.name}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace default port-forward $POD_NAME 8080:80
+
+```
+
+### 模板
+
+```json
+# 注释
+{{- /* 这是注释 */ -}}
+# Pipelines, 模板函数在https://github.com/Masterminds/sprig这个项目里, 独立于helm
+product: {{ .Values.product | default "rocket" | quote }}
+labels:
+        {{- include "anvil.selectorLabels" . | nindent 8 }}
+
+{{- with .Values.nodeSelector }}
+  nodeSelector:
+    {{- toYaml . | nindent 8 }}
+{{- end }}
+
+# trim
+{{ "hello" -}}
+{{- "hello" }}
+
+# 模板函数
+# Helm内置了https://github.com/Masterminds/sprig
+
+# 动态获取k8s信息
+{{ (lookup "apps/v1" "Deployment" "target").metadata.annotations }}
+{{ (lookup "v1" "ConfigMap" "anvil" "").items }}
+
+# 分支
+{{- if .Value.igress.enabled -}}
+{{- else -}}
+{{- end }}
+
+# 变量
+{{ $var := Values.character }} # 创建var并赋值
+character: {{ $var | default 'amas' | quote }}
+{{ $var = "xxx" }}             # 赋值
+
+# 循环
+{{- range Values.xs }}
+  - {{ . | quote }}
+{{- end}}
+
+{{- range $key, $value := .Values.map }}
+  - {{ $key }} : {{ $value }}
+{{- end}}
+```
+
+```json
+# Helm内置
+.Release.Name
+.Release.Namespace
+.Release.IsInstall
+.Release.IsUpgrade
+.Release.Service
+.CHart.Name
+.Chart.Version
+.Chart.AppVersion
+.Chart.Annotations
+
+# Helm内置 / k8s能力
+.Capabilities.APIVersion
+.Capabilities.KubVersion.Version
+.Capabilities.KubeVersion.Major
+.Capabilities.KubeVersion.Minor
+# Helm内置 
+.Template.Name
+.Template.BasePath
+
+# 
+.Files.Get ${name}
+.Files.GetBytes
+.Files.Glob
+.Files.AsConfig
+.Files.AsSecrets
+.Files.Lines
+```
+
+Helm如何寻找kubenates?
+
+- 通过$KUBECONFIG 环境变量
+
+
+
+可以这么练习模板:
+
+```sh
+$ helm create hello
+$ echo 'name: {{ .Values.name}}' >> hello/template/hello.txt
+$ helm template hello --set name=zhoujiabo
+...
+# Source: hello/templates/hello.txt
+name: zhoujiabo
+...
+```
+
+### Chart.yaml
+
+```
+# Semantic Version Range
+${Major}.${Minor}.${Patch}
+```
+
+
+
+```yaml
+apiVersion:
+name:
+type: library|  # 可以是一般的chart或者是库
+description:
+dependencies:
+  - name:
+    version:
+    # ^1.2.3 : >= 1.2.3
+    # ^1.2.x : >= 1.2.3
+    # ^2.3   : >= 2.3 且 < 3
+    # ^2.x   : >= 2.0.0 且 < 3
+    
+    # ~1.2.3 : >= 1.2.3 且 < 1.3.0
+    # ~1     : >= 1     且 < 2
+    # ~2.3   : >= 2.3   且 < 2.4
+    # ~1.2.x : >= 1.2.0 且 < 1.3.0
+    repository: ${url-to-find-chart}
+    
+```
+
+### JSON Schema
+
+究竟你的value文件怎么才算是合法呢, 那就要提一下shcema了.
+
+```json
+{
+    "$schema": "http://json-schema.org/schema#",
+    "type": "object",
+    "properties": {
+        "image": {
+            "type": "object", 
+            "properties": {
+                "pullPolicy": {
+                    "type": "string", 
+                    "enum": ["Always", "IfNotPresent"] 
+                },
+                "repository": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
+```
+
+
+
+### 模板函数
+
+ https://helm.sh/docs/chart_template_guide/function_list/
+
+
+
+### Helm Hook
+
+
+
+### Helm测试
 
 ## 参考
 
