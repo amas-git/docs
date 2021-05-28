@@ -1021,15 +1021,91 @@ $ kubectl edit pod $pod
 
 ```
 
-```yaml
 
+存储的使用, 我们以最简单的使用节点机上的存储为例:
+```yaml
+# myapp.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+spec:
+  containers:
+  - name: myapp
+    image: nginx
+    volumeMounts:
+    - name: myapp-store
+      mountPath: /data
+  volumes:
+  - name: myapp-store
+    hostPath:
+      path: /data/share
+```
+
+> 注意: 通常我们不会直接建立POD,   而是由Deployment通过容器模板来产生POD, 另外本质上由RC来管理的POD, 本质上有高可用的保证, RC会保证运行最小的实例数量, 总之不要在生产环境中手动起POD
+
+```sh
+$ kubectl apply -f myapp.yaml
+# 查看资源部署情况
+$ kubectl describe myapp
+$ kubectl get pod
+NAME                  READY   STATUS             RESTARTS   AGE
+myapp                 1/1     Running            0          6m52s
+$ kubectl exec myapp -- sh -c "echo hello > /data/xxx"
+$ minikube ssh -- cat /data/share/xxx
+hello
+
+# 结论: 因为POD会在机器之间飘来飘去, 所以实际我们也并不会太用到节点机器上的存储资源
 ```
 
 
 
+修改POD的hosts文件
+
+```yaml
+# myapp.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+spec:
+  hostAliases:
+  - ip: "127.0.0.1"
+    hostnames:
+    - "foo.local"
+    - "bar.local"
+  containers:
+  - name: myapp
+    image: nginx
+```
+
+```sh
+$ kubectl apply -f myapp.yaml
+$ kubectl exec myapp -- cat /etc/hosts
+# Kubernetes-managed hosts file.
+127.0.0.1       localhost
+::1     localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+fe00::0 ip6-mcastprefix
+fe00::1 ip6-allnodes
+fe00::2 ip6-allrouters
+172.17.0.8      myapp
+
+# Entries added by HostAliases.
+127.0.0.1       foo.local       bar.local
+```
+
 
 
 ## DEPLOYMENT
+
+> DEPLOYMENT+REPLICA SET代替最初的RC, 实现应用管理
+>
+> 主要职责:
+>
+> 1. 定义POD和REPLICA SET
+> 2. 滚动升级和失败回滚
+> 3. 伸缩
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -1041,11 +1117,13 @@ spec:
   progressDeadlineSeconds: 5 # 发布允许执行的最长时间(秒)
   minReadySeconds: 0         # 新创建的POD变为Ready状态所允许的最小等待时间，看到readiness后升级下一个POD
   revisionHistoryLimit: 14   # 保存的发布历史数量，默认10
+  rollbackTo:                # 如果失败回退到哪个
+      revision: $n           # 回退到哪个版本
   strategy:
       type: [rollingUpdate|Recreate] # Recreate简单粗暴，会downtime, rollingUpdate为默认
                                      # 滚动升级不会出现Downtime, 通过新床架一个RS来完成滚动
       maxUnavailable: [n|n%] # 发布过程中允许不可用的POD数
-      maxSurge: [n|n%]       # 默认25%，发布过程中允许使用的额外POD数
+      maxSurge: [n|n%]       # 默认25%，发布过程中允许使用的额外POD数, 向上取证, 所以不会为0, 至少为1
   selector:
     matchLabels:
       ${label_key}: ${label_value}
@@ -1053,22 +1131,125 @@ spec:
   replicas: 1 # 创建RS
   template:
     metadata:
+      creationTimestamp:
       labels:
         run: $name
     spec:
       containers:
       - name: $name
-        image: 
+        image:
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30 # 优雅停机等待时间
 ```
 
 
 
 ```sh
-$ kubectl run $pod --image=$image --replicas=$n
+# 注意, run命令可以创建pod和replica set, 但是新版本会推荐使用kubectl create depoyment来代替
+$ kubectl run ng --image=nginx --replicas=3
+# 删除刚才
+$ kubectl delete deployments.apps ng
+
+# 建立一个Deployment, --record命令可以在annotation种保留一些有用的信息
+$ kubectl create deployment ng --image=nginx # 默认replica=1
+$ kubectl describe deployments.app ng
+Name:                   ng
+...
+Labels:                 app=ng
+Annotations:            deployment.kubernetes.io/revision: 3
+Selector:               app=ng
+Replicas:               3 desired | 3 updated | 3 total | 3 available | 0 unavailable
+StrategyType:           RollingUpdate
+MinReadySeconds:        0
+RollingUpdateStrategy:  25% max unavailable, 25% max surge # 注意这个是滚动升级策略
+Pod Template:
+  Labels:  app=ng
+  Containers:
+   nginx:
+    Image:        nginx:latest
+
+
+# 1. 查看建立的deployment资源
+$ kubectl get deploment.app ng -o yaml
+# 2. 查看建立的ReplicaSet资源, 注意RS的命名方式是, ${name}-${pod-template-hash}
+$ kubectl get rs
+NAME            DESIRED   CURRENT   READY   AGE
+ng-59487c8b6d   1         1         1       9m8s
+# 3. 查看建立的Pod资源
+$ kubectl get pod
+NAME                  READY   STATUS             RESTARTS   AGE
+ng-59487c8b6d-fsdpq   1/1     Running            0          10m
+
+# 扩容, 执行完扩容之后, Deployment中的spec.replica会相应修改
+# 扩容过程中, 会创建新的RS, 新的RS会逐步扩容, 老的RS会缩容
+$ kubectl scale deployments $name --replicas=2
+
+# 使用yaml定义Deployment资源
+$ kubectl create -f $depoyment.yaml --record
+
+# 更新镜像
+# kubectl set image deployments.apps ${.metadata.name} ${.spec.template.spec.containers[].name}
+$ kubectl set image deployments.apps ng nginx=nginx:1.9.1 
+
+# 修改Depolyment, 会打开编辑器, 修改结束包保存后自动提交
+$ kubectl edit deployments.apps ${.metadata.name}
+# 编辑完之后,k8s开始执行rollout, 你可以查看这个进度
+$ kubectl rollout status deployment ${.metadata.name} --watch 
+Waiting for deployment "ng" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "ng" rollout to finish: 1 out of 3 new replicas have been updated...
+Waiting for deployment "ng" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "ng" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "ng" rollout to finish: 2 out of 3 new replicas have been updated...
+Waiting for deployment "ng" rollout to finish: 2 old replicas are pending termination...
+Waiting for deployment "ng" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "ng" rollout to finish: 1 old replicas are pending termination...
+deployment "ng" successfully rolled out
+
+
+# 查看升级历史, 哈哈, 这时没有--recorded就尴尬了, CHANGE-CAUSE会是<none>
+$ kubectl rollout history deployment ng
+deployment.apps/ng 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+3         <none>
+# 查看下具体某个版本是什么样子
+$  kubectl rollout history deployment ng --revision 1
+$  kubectl rollout history deployment ng --revision 1 -o yaml
+
+# ** 一次失败的升级 **
+# 我们可以编辑下deployment, 修改image为一个不存在的版本
+$ kubectl rollout status deployment ng
+error: deployment "ng" exceeded its progress deadline
+$ kubectl get pod 
+NAME                  READY   STATUS             RESTARTS   AGE
+ng-648fc58687-f27gm   0/1     ImagePullBackOff   0          121m # ImagePullBackOff  
+$ kubectl rollout undo deployment
+deployment.apps/ng rolled back
+$ kubectl rollout status deployment ng
+deployment "ng" successfully rolled out
+
+# ** 一次失败的升级之pause修复 **
+# 修改image为不存在的版本
+$ kubectl rollout pause deployment ng
+deployment.apps/ng paused
+$ kubectl describe deployments.apps ng
+...
+Conditions:
+  Type           Status   Reaso
+  ----           ------   ------
+  Available      True     MinimumReplicasAvailable
+  Progressing    Unknown  DeploymentPaused
+# 修改为正常的版本后继续发布
+$ kubectl rollout resume deployment ng  
+
+
 $ kubectl delete deployments --all
 $ kubectl delete deployments --selector="k1=v1,k2=v2"
-# 扩展
-$ kubectl scale deployments $name --replicas=2
+
 
 # 滚动升级
 $ kubectl apply -f $name-deployment.yaml # 更新后，k8s将自动触发rollout
@@ -1087,12 +1268,29 @@ $ kubectl rollout history deploment $name --reversion=2
 # 回滚到指定版本
 $ kubectl rollout undo deployments $name 		
 
+# 自动扩容
+$ kubectl autoscale deployment $name --min=10 --max=15 --cpu-percent=80
+
 $ kubectl replace
 $ kubectl patch
 $ kubectl set image
 ```
 
 ## SERVICE
+
+SERVICE主要提供负载均衡和服务发现这两个职责.
+
+
+
+既然要提供负载均衡, 那么SERIVCE自然可以进行流量转发, 包括
+
+	- 将流量路由到POD种
+ - 将流量路由到外部IP
+   	- 没有SELECTOR的SERVICE + ENDPOINT
+    - HEADLESS SERVICE
+      	-  不会给Service分配ClusterIP
+      	- kube-proxy也不会搭理这个SERVICE
+      	- 通常也不会给这个SERVICE注册内部的DNS
 
 Service的域名:
 
@@ -1105,6 +1303,27 @@ $svc.$ns.svc.cluster.local
 	- L4
 
 
+
+> 一方面Service通过ClusterIP或DNS或NodePort来暴露自己, 另一方面用Endpoint链接背后提供服务的POD
+
+
+
+### HEADLESS SERVICE
+
+```
+
+```
+
+
+
+### SERVICE的类型
+
+- ClusterIP：默认类型，自动分配一个仅cluster内部可以访问的虚拟IP
+- NodePort：在ClusterIP基础上为Service在每台机器上绑定一个端口，这样就可以通过 <NodeIP>:NodePort 来访问该服务
+- LoadBalancer：在NodePort的基础上，借助cloud provider创建一个外部的负载均
+  衡器，并将请求转发到 <NodeIP>:NodePort
+- ExternalName：将服务通过DNS CNAME记录方式转发到指定的域名（通
+  过 spec.externlName 设定）。需要kube-dns版本在1.7以上
 
 ## REPLICASETS
 
@@ -1150,6 +1369,7 @@ $ kubectl delete rs $name --cascade=false
 
 ## INGRESS
 
+- 提供暴露集群服务的功能(HTTP/HTTPS)
 - L7
 
 ```yml
@@ -1325,6 +1545,39 @@ description: This is a very high priority Pod clas
 
 ## SECRET
 
+恩,用来保管秘密.
+
+```sh
+$ kubectl create secret generic my-secret --from-literal user=amas --from-literal password=123456  
+secret/my-secret created
+$ kubectl get secrets my-secret -o yaml
+apiVersion: v1
+data:
+  password: MTIzNDU2
+  user: YW1hcw==
+kind: Secret
+metadata:
+...
+type: Opaque
+$ echo -n MTIzNDU2 | base64 --decode
+123456
+```
+
+
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysecret
+  type: Opaque
+data:
+  password: ${base64}
+  username: ${base64}
+```
+
+
+
 ```yml
 apiVersion: v1
 kind: Secret
@@ -1338,7 +1591,71 @@ data:
 ```
 
 ```bash
-$ kubectl create secret tls $secret-name --cert $cert-pem-file --key $key-pem-file
+$ kubectl create secret [tls|generic|docker-registry] $secret-name --cert $cert-pem-file --key $key-pem-file
+```
+
+
+
+创建访问 docker-registry的秘密
+
+```sh
+$ kubectl create secret docker-registry myregistrykey --docker-server
+=DOCKER_REGISTRY_SERVER --docker-username=DOCKER_USER --docker-passwo
+rd=DOCKER_PASSWORD --docker-email=DOCKER_EMAIL
+secret "myregistrykey" created.
+
+# 也可以从配置文件创建秘密
+$ kubectl create secret docker-registry myregistrykey --from-file="~/.docker/config.json"
+```
+
+
+
+那怎么引用秘密呢?
+
+- volume
+- 环境变量
+
+
+
+```yaml
+# 1. Volume方式
+# POD 
+spec:
+  volumes:
+  - name: secrets
+    secret:
+      secretName: $secret
+  containers:
+  ...
+  volumeMounts:
+    - name: secrets
+      mountPath: "/etc/secrets"
+      readOnly: true
+```
+
+```yaml
+# 2. 环境变量方式
+# POD
+spec:
+  containers:
+    - name: app
+      ...
+      env:
+      - name: USER
+        valueFrom:
+          secretKeyRef:
+            name: $secret
+            key: $key
+```
+
+```yaml
+# 3. 引用docker-register的秘密
+spec:
+  containers:
+    - name: foo
+      image: $image
+  imagePullSecrets:
+    - name: myregistrykey
 ```
 
 
@@ -1409,11 +1726,38 @@ subjects:
 
 
 
+
+
+## PV和PVC
+
+听起来像是塑料, 实际上是解决永久存储问题, PV和PVC的关系类似于POD和NODE之间的关系, PV/NODE提供资源, 而PVC和POD消耗资源.
+
+
+
+## NAMESPACE
+
+1. 删除某个namespace, 该namespace之下的资源也会被删除
+2. default和kube-system不能被删除
+3. PV不属于任何namespace, PVC属于某个namespace
+
 ## QoS
 
 - Best-Effort
 - Bustable
 - Guaranteed
+
+
+
+## 调度问题
+
+> 1. 如何将POD调度到制定的NODE上?
+
+```sh
+# 将NODE设置为维护模式
+$ kubectl cordon ${node}
+```
+
+
 
 ## 服务发现
 
