@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp
+spec:
+  hostAliases:
+  - ip: "127.0.0.1"
+    hostnames:
+    - "foo.local"
+    - "bar.local"
+  containers:
+  - name: myapp
+    image: nginx
+    volumeMounts:
+    - name: myapp-store
+      mountPath: /data
+    lifecycle:
+      postStart:
+        exec:
+          command: ["echo", "hello"]
+  volumes:
+  - name: myapp-store
+    hostPath:
+      path: /data/share
