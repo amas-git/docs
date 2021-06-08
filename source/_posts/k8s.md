@@ -140,7 +140,7 @@ metadata:
   selfLink: /api/v1/namespaces/default/services/hello
   uid: 37bf6aee-6dbb-461b-9624-0ec88ca53153
 spec:
-  clusterIP: 10.96.221.248
+  clusterIP: 10.96.221.248 | None
   externalTrafficPolicy: Cluster
   ports:
   - nodePort: 30112
@@ -235,6 +235,14 @@ spec:
       name: default-token-vc276
       readOnly: true
   dnsPolicy: ClusterFirst
+  nodeSelector: # 节点选择, 可以按照标签筛选节点
+    ${key}: ${value}
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        
   enableServiceLinks: true
   nodeName: minikube
   priority: 0
@@ -893,7 +901,7 @@ $ kubectl get pods --selector="k1=v1,k2=v2,..." # or -l
 
 
 
-##  PODS
+##  POD
 
 ```yaml
 containers:
@@ -940,6 +948,7 @@ spec:
 	containers:
 		- image:
 		  imagePullPolicy: [IfNotPresent|Always|]
+		  imagePullSecrets: ${secret} #-----------[ 访问register需要的秘密 ]
 		  name:
 		  resources:     #------------------------[ CPU | 内存]
 		  	requests:
@@ -978,7 +987,7 @@ spec:
             failureThreshold:   ${n}
           startupProbe:   # ----------------------[] ， 设置之后，readiness和liveness会失效，直到starup成功
           terminationMessagePath: ${file}
-          terminationMessagePolicy: [FileFall|backToLogsOnError] # 文件或是
+          terminationMessagePolicy: [File恶病年代：骑士、瘟疫、百年战争与金雀花王朝的凋落|backToLogsOnError] # 文件或是
           volumeMounts:
            - mountPath:
              name:
@@ -1001,6 +1010,21 @@ spec:
                                               # 调度队列中按照这个来排序
                                               # 资源不够的时候，调度器会试图回收低优先级的Pod
     initContainers:        
+    affinity:                                 # 调度亲和性策略(nodeAffnity)
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:   # 选择必须满足条件的节点
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key:
+              operator: In
+              values: []
+        preferredDuringSchedulingIgnoredDuringExecution:  # 最优选择条件
+          weight: 1
+            preference:
+              matchExpressions:
+      podAffinity:
+      podAntiAffinity:
+
 ```
 
 ```bash
@@ -1129,7 +1153,7 @@ spec:
       ${label_key}: ${label_value}
     run: $name
   replicas: 1 # 创建RS
-  template:
+  template:   # POD模板
     metadata:
       creationTimestamp:
       labels:
@@ -1276,6 +1300,53 @@ $ kubectl patch
 $ kubectl set image
 ```
 
+
+
+## STATEFULLSET
+
+- 有状态服务, 删除后存储会保留
+- 稳定的DNS(重启或迁移后POD名字, HOST名字不变), 所以STATEFULLSET总是要和HeadlessService一起使用
+- 有序部署, 有序收缩
+
+```sh
+# DNS格式, 其中service_name是headless service的名字
+$name-${1..N}.${service_name}.${namespace}.svc.${cluster_domain:=cluster.local}
+```
+
+```yaml
+# 注意这个HeadlessService要在StatefulSet之前创建
+apiVersion: v1
+kind: Service
+metadata:
+spec:
+  ports:
+  - port: 80
+    name: ${name}
+  clusterIP: None
+#-----------------------
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name:
+spec:
+  serviceName: ${headless_service}
+  replicas: ${1..N}
+  template:
+  podManagementPolicy: [*OrderedReady|Parallel] # 前一个POD变为READY后再创建下一个|并行创建
+  volumeClaimTemplates:
+  - metadata:
+      name: ${vc_name}
+    spec:
+      storageClassName:
+      accessModes: [ ReadWriteOnce ]
+      resources:
+        requests: 
+          storage: 1Gi
+  
+```
+
+
+
 ## SERVICE
 
 SERVICE主要提供负载均衡和服务发现这两个职责.
@@ -1400,9 +1471,9 @@ spec:
 
 
 
-## DAEMONSETS
+## DAEMONSET
 
-> 在全部或部分节点上运行一组POD
+> 在全部或部分节点上运行一组POD, 所以常被用作系统监控, 日志手机, 系统软件等场景(fluent,logstash,prometheus node exporter, collectd, gmond,kube-proxy,kube-dns,ceph)
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -1434,6 +1505,23 @@ spec:
           hostPath:
             path: $name
 ```
+
+```sh
+# kube-proxy就是一个daemonset方式在运行
+$ kubectl get daemonsets.apps --all-namespaces
+NAMESPACE     NAME         DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR                 AGE
+kube-system   kube-proxy   1         1         1       1            1           beta.kubernetes.io/os=linux   20d
+
+```
+
+
+
+```sh
+# 可以启动时设置kubelet启动一些POD,将POD定义yaml放到制定目录种即可
+$ kubelet --pod-manifest-path=/etc/kubernetes/manifests
+```
+
+
 
 ## JOB
 
@@ -1655,7 +1743,7 @@ spec:
     - name: foo
       image: $image
   imagePullSecrets:
-    - name: myregistrykey
+    - name: ${docker-register-secret}
 ```
 
 
@@ -1673,9 +1761,45 @@ authentication:
 $ kubectl auth can-i create pods
 ```
 
+
+
+##  ROLE
+
+```yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+metadata:
+  namespace: ${namespace}
+  name: ${role_name}
+rules:
+  - apiGroups: [""] # The API group "" indicates the core API Group.
+    resources: ["pods"]
+    verbs: ["get", "watch", "list"]
+    nonResourceURLs: []
+```
+
+
+
 ## SERVICE  ACCOUNT
 
-> SA为运行在POD中的进程提供身份
+> SA为运行在POD中的进程提供身份, 启动容器的时候会自动挂到`/run/secrets/kubernetes.io/serviceaccount` 目录下
+
+
+
+- SA只在某个命名空间下是唯一的
+- TokenControrller会不断检测SA, 并为之创建secret
+- 每个namespace都会自动建立一个
+
+
+
+
+
+```sh
+$ kubectl create ns amas 
+$ kubectl get sa --all-namespaces | grep amas
+```
+
+
 
 ```yaml
 apiVersion: v1
@@ -1689,9 +1813,27 @@ spec:
 ```
 
 ```bash
-# 
 $ kubectl get secrets $secrets
 $ kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "$secrets"}]}'
+
+
+$ kubectl exec ${pod} ls /run/secrets/kubernetes.io/serviceaccount
+ca.crt
+namespace
+token
+```
+
+
+
+如何加密这些秘密请参考: https://kubernetes.io/zh/docs/tasks/administer-cluster/encrypt-data/
+
+```sh
+# 生成长度为32字节的随机密钥
+$ head -c 32 /dev/urandom | base64
+dcgWs4zOC7Gh0589p1jItLsuRcEsub2tyXg8/zkfe7M=
+
+# secrets保存到etcd中, 如下命令可以获得
+$ ETCDCTL_API=3 etcdctl get /registry/secrets/default/secret1 [...] | hexdump -C
 ```
 
 
@@ -1746,6 +1888,13 @@ subjects:
 - Bustable
 - Guaranteed
 
+## NODE
+
+```sh
+# 给节点打标签
+$ kubectl label nodes ${node-name} ${key}=${value}
+```
+
 
 
 ## 调度问题
@@ -1762,6 +1911,14 @@ $ kubectl cordon ${node}
 ## 服务发现
 
 ### DNS
+
+```sh
+# 调试DNS, 启动busybox进入集群内部执行dig命令即可查看集群内dns解析
+$ kubectl run -i --tty --image busybox dns-test --restart=Never --rm /bin/sh
+# dig
+```
+
+
 
 ### ENV
 
