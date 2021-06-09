@@ -879,11 +879,71 @@ graph TD;
 
 
 
-## kubectl label
+## kubectl
 
 ```bash
+# 可以查看资源对象的缩写,所属APIGROUP等
+$  kubectl api-resources
+NAME                              SHORTNAMES   APIGROUP                       NAMESPACED   KIND
+bindings                                                                      true         Binding
+componentstatuses                 cs                                          false        ComponentStatus
+configmaps                        cm                                          true         ConfigMap
+endpoints                         ep                                          true         Endpoints
+events                            ev                                          true         Event
+limitranges                       limits                                      true         LimitRange
+namespaces                        ns                                          false        Namespace
+nodes                             no                                          false        Node
+persistentvolumeclaims            pvc                                         true         PersistentVolumeClaim
+persistentvolumes                 pv                                          false        PersistentVolume
+pods                              po                                          true         Pod
+podtemplates                                                                  true         PodTemplate
+replicationcontrollers            rc                                          true         ReplicationController
+resourcequotas                    quota                                       true         ResourceQuota
+secrets                                                                       true         Secret
+serviceaccounts                   sa                                          true         ServiceAccount
+services                          svc                                         true         Service
+mutatingwebhookconfigurations                  admissionregistration.k8s.io   false        MutatingWebhookConfiguration
+validatingwebhookconfigurations                admissionregistration.k8s.io   false        ValidatingWebhookConfiguration
+customresourcedefinitions         crd,crds     apiextensions.k8s.io           false        CustomResourceDefinition
+apiservices                                    apiregistration.k8s.io         false        APIService
+controllerrevisions                            apps                           true         ControllerRevision
+daemonsets                        ds           apps                           true         DaemonSet
+deployments                       deploy       apps                           true         Deployment
+replicasets                       rs           apps                           true         ReplicaSet
+statefulsets                      sts          apps                           true         StatefulSet
+tokenreviews                                   authentication.k8s.io          false        TokenReview
+localsubjectaccessreviews                      authorization.k8s.io           true         LocalSubjectAccessReview
+selfsubjectaccessreviews                       authorization.k8s.io           false        SelfSubjectAccessReview
+selfsubjectrulesreviews                        authorization.k8s.io           false        SelfSubjectRulesReview
+subjectaccessreviews                           authorization.k8s.io           false        SubjectAccessReview
+horizontalpodautoscalers          hpa          autoscaling                    true         HorizontalPodAutoscaler
+cronjobs                          cj           batch                          true         CronJob
+jobs                                           batch                          true         Job
+certificatesigningrequests        csr          certificates.k8s.io            false        CertificateSigningRequest
+leases                                         coordination.k8s.io            true         Lease
+endpointslices                                 discovery.k8s.io               true         EndpointSlice
+events                            ev           events.k8s.io                  true         Event
+ingresses                         ing          extensions                     true         Ingress
+ingresses                         ing          networking.k8s.io              true         Ingress
+networkpolicies                   netpol       networking.k8s.io              true         NetworkPolicy
+runtimeclasses                                 node.k8s.io                    false        RuntimeClass
+poddisruptionbudgets              pdb          policy                         true         PodDisruptionBudget
+podsecuritypolicies               psp          policy                         false        PodSecurityPolicy
+clusterrolebindings                            rbac.authorization.k8s.io      false        ClusterRoleBinding
+clusterroles                                   rbac.authorization.k8s.io      false        ClusterRole
+rolebindings                                   rbac.authorization.k8s.io      true         RoleBinding
+roles                                          rbac.authorization.k8s.io      true         Role
+priorityclasses                   pc           scheduling.k8s.io              false        PriorityClass
+csidrivers                                     storage.k8s.io                 false        CSIDriver
+csinodes                                       storage.k8s.io                 false        CSINode
+storageclasses                    sc           storage.k8s.io                 false        StorageClass
+volumeattachments                              storage.k8s.io                 false        VolumeAttachment
 
 ```
+
+
+
+
 
 ## LABELS
 
@@ -1042,7 +1102,8 @@ $ kubectl exec -it $pod [sh|ash|bash|zsh]
 $ kubectl cp $pod/$path $local-path
 $ kubectl label pod $pod "k=v"
 $ kubectl edit pod $pod
-
+# 利用selecor获得pod的名字
+$ kubectl get pods --selector=$key=$value --output=jsonpath={.items..metadata.name}
 ```
 
 
@@ -1119,7 +1180,41 @@ fe00::2 ip6-allrouters
 127.0.0.1       foo.local       bar.local
 ```
 
+## SECURITYCONTEXT
 
+SC有因作用域不同可分三类:
+
+- 容器级别安全
+- POD级别安全(Pod Security Context)
+- 集群级别POD安全策略(Pod Security Policy)
+
+```yaml
+
+```
+
+-privileged 运行特权容器 
+
+defaultAddCapabilities 可添加到容器的Capabilities 
+
+requiredDropCapabilities 会从容器中删除的Capabilities
+
+ volumes 控制容器可以使用哪些volume 
+
+hostNetwork host网络 hostPorts 允许的host端口列表 
+
+hostPID 使用host PID namespace 
+
+hostIPC 使用host IPC namespace 
+
+seLinux SELinux Context 
+
+runAsUser user ID 
+
+supplementalGroups 允许的补充用户组 
+
+fsGroup volume FSGroup 
+
+readOnlyRootFilesystem 只读根文件系统
 
 ## DEPLOYMENT
 
@@ -1396,7 +1491,7 @@ $svc.$ns.svc.cluster.local
 - ExternalName：将服务通过DNS CNAME记录方式转发到指定的域名（通
   过 spec.externlName 设定）。需要kube-dns版本在1.7以上
 
-## REPLICASETS
+## REPLICASET
 
 rs主要解决三种问题
 
@@ -1434,6 +1529,26 @@ $ kubectl get hpa
 $ kubectl delete rs $name
 # 删除RS,保留POD
 $ kubectl delete rs $name --cascade=false
+```
+
+## REPLICATIONCONTROLLER
+
+RC是也是一种资源对象, 通常我们不直接使用, 而是有Deployment来达到目的. 不仅支持滚动升级, 而且支持发布记录回滚等等
+
+```yaml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: nginx
+spec:
+  selector:
+    $key: $value
+    matchLabels:
+      $key: $value
+    matchExpressions:
+      - key: $key
+        operator: [In|Or|And|Not]
+        values: []
 ```
 
 
@@ -1525,14 +1640,22 @@ $ kubelet --pod-manifest-path=/etc/kubernetes/manifests
 
 ## JOB
 
+JOB负责处理短暂的一次性任务, 有三种类型
+
+- 非并行JOB, 创建一个POD直到其执行成功
+- 固定结束次数的JOB, .spec.completions来设置需要达到的成功次数
+- .spec.parallelism用来控制同时可以运行多少个POD
+- 带工作队列的JOB
+
 ```yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
 name: $job
 spec:
-  parallelism:
-  completions:
+  parallelism: ${n:=1}
+  completions: ${n:=1}
+  activeDeadlineSeconds: ${time} # 
   template:
     spec:
     containers:
@@ -1544,6 +1667,12 @@ spec:
         - $arg2
 restartPolicy: OnFailure
 ```
+
+## JOBCONTROLLER
+
+> JOB CONTROLLER负责管理JOB, 并保证其运行,
+>
+> JOB中POD的restartPolicy只能是OnFailure和Never
 
 
 
@@ -1560,7 +1689,7 @@ kind: CronJob
 metadata:
   name: $cron-job
 spec:
-  schedule: "0 */5 * * *"
+  schedule: "0 */5 * * *" # 参考cron
   jobTemplate:
     spec:
       template:
@@ -1569,7 +1698,15 @@ spec:
           - name: $job
             image:
           restartPolicy: OnFailure
+        startDeadlineSeconds: # 任务开始的截止期限  
+        concurrencyPolicy: [Allow|Forbid|Replace]
 ```
+
+```
+$ 
+```
+
+
 
 ## CONFIGMAP
 
@@ -1772,10 +1909,29 @@ metadata:
   namespace: ${namespace}
   name: ${role_name}
 rules:
-  - apiGroups: [""] # The API group "" indicates the core API Group.
+  - apiGroups: [""]                 # The API group "" indicates the core API Group.
     resources: ["pods"]
     verbs: ["get", "watch", "list"]
     nonResourceURLs: []
+```
+
+
+
+## ROLEBINDING
+
+```yaml
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1alpha1
+metadata:
+  name: read-pods
+  namespace: default
+subjects:
+  - kind: ServiceAccount # May be "User", "Group" or "ServiceAccount"
+    name: default
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
 ```
 
 
