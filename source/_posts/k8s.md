@@ -126,7 +126,7 @@ $ kubectl get svc hello -o yaml
 $ kubectl get endpoints hello -o yaml
 ```
 
-### Service 
+### SERVICE
 ```yaml
 apiVersion: v1
 kind: Service
@@ -512,7 +512,6 @@ minikube start --vm-driver ${1-"virtualbox"}
 
 - k8s的发布周期为9个月
 	- v1.6.x: 2019年9月～2020年7月
-	
 
 ----
 ## LET'S GO
@@ -606,7 +605,6 @@ $ kubelet --version
      
  3. 安装Pod network add-on
      - SEE: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
-     
  >Pod Network Add-on
  >
  >这个东西可以让Pod之间可以互相访问, 简单的话使用Flannel, 生产环境为了安全可使用Calico
@@ -1104,6 +1102,11 @@ $ kubectl label pod $pod "k=v"
 $ kubectl edit pod $pod
 # 利用selecor获得pod的名字
 $ kubectl get pods --selector=$key=$value --output=jsonpath={.items..metadata.name}
+
+
+# 运行镜像,进入到k8s集群内部
+$ kubectl run --image busybox -it --rm --restart Never hello -- /bin/sh
+/ #
 ```
 
 
@@ -1444,9 +1447,20 @@ spec:
 
 ## SERVICE
 
-SERVICE主要提供负载均衡和服务发现这两个职责.
+SERVICE主要提供负载均衡和服务发现这两个职责. SERVICE背后是一组POD也可以是其它名字空间的服务或者干脆就是集群外部的服务, 链入SERVICE的可以是自定义LB或云厂商LB
+
+- 云厂商LB -> SERVICE -> PODS
+- 自定义LB -> INGRESS -> SERVICE -> PODS
+- 集群内部 -> SERVICE -> 集群外部 : SERIVCE还可以把内部流量转移到集群外部
 
 
+
+SRRVICE分为四种, 通过:
+
+- ClusterIP: 自动为SERVICE分配一个ClusterIP, 用于集群内部访问
+- NodePort: 将SERVICE的ClusterIP绑定到节点机器上某个端口, 通过`${node_ip}:${node_port}`提供访问
+- LoadBanance: 基于NodePort, 将外部云厂商的流量转发到NodePort上
+- ExternalName: 将服务通过DNS CNAME的方式转发到指定的域名
 
 既然要提供负载均衡, 那么SERIVCE自然可以进行流量转发, 包括
 
@@ -1461,35 +1475,197 @@ SERVICE主要提供负载均衡和服务发现这两个职责.
 Service的域名:
 
 ```sh
-$svc.$ns.svc.cluster.local
+$svc.$ns.svc.${clusterDomain:=cluster.local}
 ```
-
-
-
-	- L4
-
 
 
 > 一方面Service通过ClusterIP或DNS或NodePort来暴露自己, 另一方面用Endpoint链接背后提供服务的POD
 
+```yaml
+apiVerion: v1
+kind: Service
+metadata:
+spec:
+  ports:
+  - port:
+    protocal:
+    targetPort:
+    nodePort: 30000~32767 # 如果不设定, 则自动分配
+  clusterIP:  
+  selector: # 后端的POD要用selector来选择
+  sessionAffinity: [None]
+  type: [ClusterIP|None|NodePort|LoadBalancer|ExternalName]
+```
 
+### CLUSTERIP(默认)
+
+> 给SERVICE分配一个ClusterIP, 
+
+### NODEPORT
+
+> REQUEST -> NODE_PORT -> SERVICE -> PODS
+>
+> 将SERVICE暴露到Node上的指定端口(这个端口的范围在: 30000-32767之间)
 
 ### HEADLESS SERVICE
 
-```
+> HEADLESS服务就是没有ClusterIP的服务(.spec.clusterIP=None)
+>
+> ```yaml
+> spec:
+>   clusterIP: None
+> ```
+> 为什么我们不需要ClusterIP呢? 
+>
+>  有时候我们不需要负载均衡,或者不希望kube-proxy处理某些流量,这时候我们直接将后端POD的IP放到DNS里. 还有些时候SERVICE后端的服务不在集群之外
+>
+> 没有ClusterIP我们怎样请求这个SERVICE呢?
+>
+> 只能通过DNS了, 如果我们在HEADLESS SERVICE中运用了selector,  那么被选中的后端IP就会加入到DNS记录里, 使用DNS来访问服务九号, 对于没有selector的, 那么可以用externalName来指定流量的去向
 
 ```
+SERVICE -> 
+```
+
+```yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9376
+---
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: my-service
+subsets:
+  - addresses:
+      - ip: 1.2.3.4
+    ports:
+      - port: 9376
+```
+
+```yaml
+apiVersion: v1
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service
+spec:
+  type: ExternalName
+  externalName: my.database.example.com
+```
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+   selector:
+     app: nginx
+   type: ClusterIP
+   clusterIP: None
+```
+
+### LOADBALANCE
+
+> REQUEST -> CLOUD_LB -> SERVICE -> PODS
+>
+> 当SERVICE的流量来自外部的LB时, 可以将.spec.type设置为LoadBanlance
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc
+spec:
+  selector:
+    run: svc 
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9376
+  clusterIP: 10.0.171.239
+  type: LoadBalancer
+  externalIPs:
+    - xxx.xxx.xxx.xxx
+status:
+  loadBalancer:
+    ingress:
+    - ip: 192.0.2.127
+```
 
 
 
-### SERVICE的类型
+### EXTERNALNAME
 
-- ClusterIP：默认类型，自动分配一个仅cluster内部可以访问的虚拟IP
-- NodePort：在ClusterIP基础上为Service在每台机器上绑定一个端口，这样就可以通过 <NodeIP>:NodePort 来访问该服务
-- LoadBalancer：在NodePort的基础上，借助cloud provider创建一个外部的负载均
-  衡器，并将请求转发到 <NodeIP>:NodePort
-- ExternalName：将服务通过DNS CNAME记录方式转发到指定的域名（通
-  过 spec.externlName 设定）。需要kube-dns版本在1.7以上
+### 源IP问题
+
+>  假如一个请求通过SERVICE转发到某个POD,  那么在这个POD中我们看到请求来源的IP是谁呢?
+
+
+
+1. 将如SERVICE有ClusterIP,  如果请求SERVICE的POD和SERVICE在同一NODE, 则源IP就是POD IP,如果在不同NODE则要看网络插件是怎么处理的
+2. 如果SERVICE是NodePort的, 那么源IP被SNAT, 源IP地址会被改为NODE IP
+3. 如果SERVICE是LoadBalance, 那么源IP被SNAT, 改为NODE IP
+
+> 关于如何解决SNAT的问题, 请小天再继续研究一下
+
+### SERVICE和kube-proxy
+
+首先我们要了解ClusterIP实际上是在集群内部构建的虚拟网络, k8s集群保证ClusterIP可以跨物理节点访问. 那么这个虚拟网络是由谁负责管理呢? 
+
+我们知道, 每个节点上都会运行kube-proxy, 这些kube-proxy有责任保证将网络数据转发给对应的SERVICE/POD, 对于有ClusterIP的SERVICE, kube-proxy会通过api观察集群内部SERVICE和ENDPOINT的变化, 来修改本地的路由策略. 修改策略又可能采用两种方法:
+
+1. iptables
+2. ipvs
+
+iptables工作在用户空间, ipvs则工作在内核空间, ipvs提供更多的转发策略:
+
+- `rr`：轮替（Round-Robin）
+- `lc`：最少链接（Least Connection），即打开链接数量最少者优先
+- `dh`：目标地址哈希（Destination Hashing）
+- `sh`：源地址哈希（Source Hashing）
+- `sed`：最短预期延迟（Shortest Expected Delay）
+- `nq`：从不排队（Never Queue）
+
+
+
+### 多端口 Service
+
+SERVICE暴露多个端口时, 必须设置每个端口的名字, 并且不能重名
+
+ ```yaml
+ apiVersion: v1
+ kind: Service
+ metadata:
+   name: my-service
+ spec:
+   selector:
+     app: MyApp
+   ports:
+     - name: http
+       protocol: TCP
+       port: 80
+       targetPort: 9376
+     - name: https
+       protocol: TCP
+       port: 443
+       targetPort: 9377
+ ```
+
+
 
 ## REPLICASET
 
@@ -1517,6 +1693,8 @@ spec:
           ports:
             - containerPort:
 ```
+
+
 
 ```bash
 # 扩容
@@ -2030,6 +2208,139 @@ subjects:
 
 听起来像是塑料, 实际上是解决永久存储问题, PV和PVC的关系类似于POD和NODE之间的关系, PV/NODE提供资源, 而PVC和POD消耗资源.
 
+## PV
+
+> PV代表集群种的存储资源, 通常是网络存储资源
+>
+> 当我们在POD种需要存储的时候, 实际上我们需要的是Volume, 
+> 1. Provisioning，即PV的创建，可以直接创建PV（静态方式），也可以使用
+> StorageClass动态创建
+> 2. Binding，将PV分配给PVC
+> 3. Using，Pod通过PVC使用该Volume
+> 4. Releasing，Pod释放Volume并删除PVC
+> 5. Reclaiming，回收PV，可以保留PV以便下次使用，也可以直接从云存储中删除
+> 根据这5个阶段，Volume的状态有以下4种
+> Available：可用
+> Bound：已经分配给PVC
+> Released：PVC解绑但
+
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv0003
+spec:
+  capacity:
+  storage: 5Gi
+  accessModes:       # PV支持的访问策略, 可以是多个
+    - ReadWriteOnce  # ReadWriteOnce  : 单个POD可读写
+                     # ReadWriteMany  : 多个POD可读写
+                     # ReadOnlyMany   : 多个POD可读
+  persistentVolumeReclaimPolicy: [Recycle|Retain|Delete ] # PV的回收策略
+                                                          # Retain: 手动清理
+                                                          # Recycle: 自动删除数据
+                                                          # Delete: 删除存储资源(如一些云存储)
+  nfs:
+    path: /tmp
+    server: 172.17.0.2
+```
+
+POD通过定义PVC来获得存储资源, 一个PVC从哪个PV中获得资源, 一看size二看accessMode
+
+## STORAGECLASS
+
+> PV之上是STORAGECLASS, 当我们需要PV的时候, 可以通过STORAGECLASS来构建
+
+## PVC
+
+> PVC代表POD对存储资源的需求, 主要就2点, 一个是大小, 一个是访问模式(AccessMode)
+>
+> 
+
+```
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+name: myclaim
+spec:
+accessModes:
+- ReadWriteOnce
+resources:
+requests:
+storage: 8Gi
+storageClassName: slow
+selector:
+matchLabels:
+release: "stable"
+matchExpressions:
+- {key: environment, operator: In, values: [dev]}
+```
+
+
+
+## RESOURCEQUOTE
+
+资源配合可以控制以下资源的数量
+
+- cpu/memory
+- 存储
+- 对象数量
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: object-counts
+spec:
+  hard:
+    configmaps: "10"
+    persistentvolumeclaims: "4"
+    replicationcontrollers: "20"
+    secrets: "10"
+    services: "10"
+    services.loadbalancers: "2"
+    pods: "4"
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi
+```
+
+
+
+## LIMITRANGE
+
+k8s默认不对容器使用的资源做限制, LIMITRAGE可以给namespace设置资源限制
+
+```
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: mylimits
+spec:
+  limits:
+  - max:
+      cpu: "2"
+      memory: 1Gi
+    min:
+      cpu: 200m
+      memory: 6Mi
+    type: Pod
+  - default:
+      cpu: 300m
+      memory: 200Mi
+    defaultRequest:
+      cpu: 200m
+      memory: 100Mi
+    max:
+      cpu: "2"
+      memory: 1Gi
+    min:
+      cpu: 100m
+      memory: 3Mi
+    type: Container
+```
+
 
 
 ## NAMESPACE
@@ -2037,6 +2348,10 @@ subjects:
 1. 删除某个namespace, 该namespace之下的资源也会被删除
 2. default和kube-system不能被删除
 3. PV不属于任何namespace, PVC属于某个namespace
+
+
+
+
 
 ## QoS
 
@@ -2063,6 +2378,8 @@ $ kubectl cordon ${node}
 ```
 
 
+
+### HPA
 
 ## 服务发现
 

@@ -1,0 +1,12 @@
+#!/bin/sh
+function body() {
+    echo "TIME: $(date)"
+    echo "HOST: $(cat /etc/hostname)"
+}
+
+body=$(body)
+echo HTTP/1.1 200 OK
+echo Content-Length: ${#body}
+echo
+echo "$body" 
+
